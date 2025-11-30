@@ -29,11 +29,14 @@ class PortalLeaveController(http.Controller):
                 ('active', '=', True),
             ], order='name')
 
-            # Get employees for delegation (excluding current user)
+            # Get ALL active employees for delegation (excluding current user)
+            # Using sudo() to bypass access restrictions for reading
             employees = request.env['hr.employee'].sudo().search([
                 ('id', '!=', employee.id),
                 ('active', '=', True)
             ], order='name')
+
+            _logger.info(f"Found {len(employees)} employees for delegation dropdown")
 
             # Get leave allocations for current employee
             allocations = request.env['hr.leave.allocation'].sudo().search([
@@ -168,16 +171,23 @@ class PortalLeaveController(http.Controller):
 
             # Add delegation if provided
             delegate_id = post.get('delegate_employee_id')
-            if delegate_id and delegate_id.strip() and delegate_id != 'None':
+            if delegate_id and delegate_id.strip() and delegate_id != 'None' and delegate_id != '':
                 try:
                     delegate_id_int = int(delegate_id)
                     if delegate_id_int == employee.id:
                         return request.redirect('/my/leave/apply?error=You cannot delegate to yourself')
-                    vals['delegate_employee_id'] = delegate_id_int
-                except ValueError:
-                    pass
 
-            # Create leave request
+                    # Verify delegate employee exists
+                    delegate_employee = request.env['hr.employee'].sudo().browse(delegate_id_int)
+                    if delegate_employee.exists():
+                        vals['delegate_employee_id'] = delegate_id_int
+                        _logger.info(f"Delegation set to employee ID: {delegate_id_int}")
+                    else:
+                        _logger.warning(f"Invalid delegate employee ID: {delegate_id_int}")
+                except ValueError:
+                    _logger.warning(f"Invalid delegate_id value: {delegate_id}")
+
+            # Create leave request with sudo to bypass access restrictions
             leave = request.env['hr.leave'].sudo().create(vals)
 
             if not leave:
