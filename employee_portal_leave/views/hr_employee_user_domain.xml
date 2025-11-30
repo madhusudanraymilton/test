@@ -1,0 +1,17 @@
+<odoo>
+    <record id="hr_employee_form_inherit_user" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.user</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+
+            <!-- Remove the default domain -->
+            <field name="user_id" position="attributes">
+                <attribute name="domain">[]</attribute>
+                <!-- OR you can set specific domain -->
+                <!-- <attribute name="domain">[('id','!=',False)]</attribute> -->
+            </field>
+
+        </field>
+    </record>
+</odoo>
