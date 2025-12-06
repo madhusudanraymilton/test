@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Add team leader fields to employee form -->
+        <record id="view_employee_form_inherit_team_leader" model="ir.ui.view">
+            <field name="name">hr.employee.form.inherit.team.leader</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <!-- Add team leader section -->
+                <xpath expr="//sheet" position="inside">
+                    <group string="Team Leader Info" col="2" modifiers="{'invisible': [('is_team_leader', '=', False)]}">
+                        <field name="team_member_ids" widget="many2many_tags"/>
+                    </group>
+                </xpath>
+
+                <!-- Add is_team_leader field near department -->
+                <xpath expr="//field[@name='department_id']/parent::group" position="after">
+                    <group>
+                        <field name="is_team_leader" widget="boolean_button"/>
+                        <field name="team_leader_id" modifiers="{'invisible': [('is_team_leader', '=', True)]}"/>
+                    </group>
+                </xpath>
+
+                <!-- Add portal access button -->
+                <xpath expr="//header" position="inside">
+                    <button name="action_create_portal_user"
+                            type="object"
+                            string="Grant Portal Access"
+                            modifiers="{'invisible': [('is_team_leader', '=', False), ('user_id', '=', False), ('user_id.groups_id', 'not in', [ref('base.group_portal')])]}"
+                            class="btn-primary"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Employee tree view with team leader info -->
+        <!--<record id="view_employee_tree_inherit_team_leader" model="ir.ui.view">
+            <field name="name">hr.employee.tree.inherit.team.leader</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='job_title']" position="after">
+                    <field name="is_team_leader" widget="boolean_button" options="{'terminology': 'team_leader'}"/>
+                    <field name="team_leader_id" widget="many2one"/>
+                </xpath>
+            </field>
+        </record>-->
+    </data>
+</odoo>

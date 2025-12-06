@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Portal leave requests template -->
+        <template id="portal_my_leaves" name="My Leave Requests">
+            <t t-call="portal.portal_layout">
+                <t t-set="title">Leave Requests</t>
+                <t t-set="active">leaves</t>
+
+                <div class="container mt-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Leave Requests</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Messages -->
+                                    <t t-if="request.params.get('message') == 'approved'">
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                            Leave request approved successfully!
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    </t>
+                                    <t t-if="request.params.get('message') == 'refused'">
+                                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                            Leave request refused.
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    </t>
+                                    <t t-if="request.params.get('error') == 'access'">
+                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                            You don't have permission to perform this action.
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    </t>
+
+                                    <!-- Leave requests table -->
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Employee</th>
+                                                <th>Leave Type</th>
+                                                <th>From Date</th>
+                                                <th>To Date</th>
+                                                <th>Status</th>
+                                                <th>Team Leader Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="leaves" t-as="leave">
+                                                <tr>
+                                                    <td>
+                                                        <span t-esc="leave.employee_id.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-esc="leave.holiday_status_id.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-esc="leave.request_date_from"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-esc="leave.request_date_to"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-attf-class="badge bg-{{ {
+                                                            'draft': 'secondary',
+                                                            'confirm': 'info',
+                                                            'validate': 'success',
+                                                            'refuse': 'danger'
+                                                        }.get(leave.state, 'secondary') }}">
+                                                            <t t-esc="leave.state"/>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span t-attf-class="badge bg-{{ {
+                                                            'draft': 'secondary',
+                                                            'pending': 'warning',
+                                                            'approved': 'success',
+                                                            'refused': 'danger'
+                                                        }.get(leave.team_leader_approval, 'secondary') }}">
+                                                            <t t-esc="leave.team_leader_approval"/>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <t t-if="leave.team_leader_approval == 'pending' and request.env.user.has_group('base.group_portal')">
+                                                            <a t-att-href="'/my/leave/approve/' + str(leave.id)"
+                                                               class="btn btn-sm btn-success me-1">
+                                                                Approve
+                                                            </a>
+                                                            <a t-att-href="'/my/leave/refuse/' + str(leave.id)"
+                                                               class="btn btn-sm btn-danger">
+                                                                Refuse
+                                                            </a>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="text-muted">No actions available</span>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="not leaves">
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted">
+                                                        No leave requests found.
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+
+                                    <!-- Pagination -->
+                                    <t t-if="pager['page_count'] > 1">
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <t t-call="portal.pager"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Add leaves link to portal menu -->
+        <template id="portal_menu_leaves" inherit_id="portal.portal_menu">
+            <xpath expr="//div[@id='content']" position="inside">
+                <a t-attf-class="{{ 'nav-link ' + ('active' if active == 'leaves' else '') }}"
+                   href="/my/leaves">
+                    <i class="fa fa-calendar me-1"></i>
+                    Leave Requests
+                </a>
+            </xpath>
+        </template>
+    </data>
+</odoo>

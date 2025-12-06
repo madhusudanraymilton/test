@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_leave_team_leader,hr.leave.team.leader,model_hr_leave,base.group_portal,1,1,0,0
+access_hr_employee_team_leader,hr.employee.team.leader,model_hr_employee,base.group_portal,1,0,0,0

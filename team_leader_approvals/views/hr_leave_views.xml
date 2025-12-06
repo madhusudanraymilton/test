@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Add team leader approval fields to leave form -->
+        <record id="view_hr_leave_form_inherit_team_leader" model="ir.ui.view">
+            <field name="name">hr.leave.form.inherit.team.leader</field>
+            <field name="model">hr.leave</field>
+            <field name="inherit_id" ref="hr_holidays.hr_leave_view_form"/>
+            <field name="arch" type="xml">
+                <!-- Add team leader status before state -->
+                <xpath expr="//field[@name='state']" position="before">
+                    <group string="Team Leader Approval">
+                        <field name="team_leader_approval" widget="statusbar"
+                               statusbar_visible="draft,pending,approved,refused"
+                               options="{'clickable': '0'}"/>
+                        <field name="team_leader_id" readonly="1"/>
+                        <field name="team_leader_approval_date" readonly="1"/>
+                    </group>
+                </xpath>
+
+                <!-- Add team leader approval buttons -->
+                <xpath expr="//header" position="inside">
+                    <button name="action_team_leader_approve"
+                            type="object"
+                            string="Approve (Team Leader)"
+                            attrs="{'invisible': [('team_leader_approval', '!=', 'pending')] or [('employee_id.is_team_leader', '=', True)]}"
+                            class="btn-primary"/>
+                    <button name="action_team_leader_refuse"
+                            type="object"
+                            string="Refuse (Team Leader)"
+                            attrs="{'invisible': [('team_leader_approval', '!=', 'pending')] or [('employee_id.is_team_leader', '=', True)]}"
+                            class="btn-secondary"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Leave tree view with team leader status -->
+        <record id="view_hr_leave_tree_inherit_team_leader" model="ir.ui.view">
+            <field name="name">hr.leave.tree.inherit.team.leader</field>
+            <field name="model">hr.leave</field>
+            <field name="inherit_id" ref="hr_holidays.hr_leave_view_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='state']" position="after">
+                    <field name="team_leader_approval" widget="selection_badge"/>
+                    <field name="team_leader_id" widget="many2one"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,35 @@
+/* Custom styles for team leader approvals */
+
+/* Status badge styling */
+.badge.bg-pending {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+/* Team leader specific styles */
+.team-leader-badge {
+    background-color: #4CAF50;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Portal specific styles */
+.portal-leave-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Responsive design for portal */
+@media (max-width: 768px) {
+    .portal-leave-table {
+        font-size: 14px;
+    }
+
+    .portal-leave-table .btn {
+        padding: 2px 8px;
+        font-size: 12px;
+    }
+}
