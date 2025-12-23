@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<!-- Copyright (c) 2016-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>; ) --> 
+<!-- See LICENSE file for full copyright and licensing details. --> 
+<!-- License URL : https://store.webkul.com/license.html/ -->
+<odoo>
+    <record id="res_config_settings_view_form_school" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.school.management</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="15"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="Education Management" data-string="Education Management" name="wk_school_management" groups="wk_school_management.wk_school_management_admin_group">
+                    <block title="Fee Management" name="fee_element_container">
+                        <setting id="fee_element" string="Fee Element" help="The element to be used for as a late fee element.">
+                            <field name="product_id" class="text-center" style="width: 60%;" options="{'no_create_edit': True, 'no_create': True, 'no_edit': True}"/>
+                        </setting>
+                        <setting id="no_of_days" string="Auto fee slip confirmation" help="Cron will automatically update the fee slip status to confirm  before the start date.">
+                            <field name="no_of_days" required="1" class="text-center" style="width: 10%; min-width: 4rem;"/><span> Days</span>
+                            <br/>
+                        </setting>
+                         <setting id="scholarship_element" string="Scholarship Element" help="The element to be used for as a scholarship element.">
+                            <field name="scholarship_product_id" class="text-center" style="width: 60%;" options="{'no_create_edit': True, 'no_create': True, 'no_edit': True}"/>
+                        </setting>
+                    </block>
+                    <block title="Attendance Management" name="attendance_container">
+                        <setting id="card_layout_container" string="ID Card Layout" help="The layout in which the student ID card will get printed.">
+                            <field name="card_layout" required="1" class="text-center" style="width: 50%; min-width: 4rem;"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_school_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module':'wk_school_management'}</field>
+    </record>
+
+</odoo>

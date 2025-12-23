@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2016-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>) -->
+<!-- See LICENSE file for full copyright and licensing details. -->
+<!-- License URL : https://store.webkul.com/license.html/ -->
+<odoo>
+    <data>
+        <template id="layout" inherit_id="web.layout" name="Web layout">
+            <xpath expr="//html//head//script" position="after">
+                <t t-set="google_maps_api_key" t-value="request.env['ir.config_parameter'].sudo().get_param('base_geolocalize.google_map_api_key')"/>
+                <script t-attf-src="//maps.google.com/maps/api/js?key=#{google_maps_api_key}&#38;loading=async" async="async"></script>
+            </xpath>
+        </template>
+
+        <template id="application_form_template" name="Admission Enquiry">
+            <t t-call="website.layout">
+                <div class="app_form">
+                    <form id="application_form" enctype="multipart/form-data" role="form" t-attf-action="/application/submit/"  method="POST">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div style="background:#F7F9FB">
+                            <div class="text-center pt-5 pb-4" style="color:#0F172A;font-family: Inter;font-size: 28px;font-weight: 800;line-height: 41.15px;">
+                                Registration Form
+                                <h6 class="text-center mt-2" style="color:#334155">
+                                    You are applying for <t t-out="school.name"/><span id="branch_name"/>
+                                    <input type="hidden" name="company_id" t-att-value="school.id"/>
+                                </h6>
+                            </div>
+                            <div class="d-flex flex-column mb-3" style="padding:0% 10%">
+                                <div class="row">
+                                    <div class="col-md-8 col-12">
+                                        <div class="mb-3" style="border: 1px solid #E1E7EF;border-radius:8px;background:white;box-shadow: 0px 0px 24px -4px #00000008;">
+                                            <div class="p-4">
+                                                <div style="color:#0F172A;font-family: Inter;font-size: 24px;font-weight: 600;line-height: 29.05px;">
+                                                    Applicant Information
+                                                </div>
+                                                <div class="row mt-3 align-items-center">
+                                                    <!-- Image section: On small screens, order first and full width; on md+, right side -->
+                                                    <div class="col-12 col-md-2 order-1 order-md-3 mb-3 mb-md-0 d-flex justify-content-sm-left justify-content-md-left justify-content-lg-left">
+                                                        <div>
+                                                            <input autocomplete="off" type="file" class="form-control" id="student_image" name="student_image" accept=".jpg,.jpeg"
+                                                                style="display: none;"/>
+                                                            <div class="image-preview" style="cursor:pointer;">
+                                                                <img class="student-image d-none" style="width:95px;height:95px;"/>
+                                                                <svg class="student-image-placeholder opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" style="border:1px solid;width:95px;height:95px;">
+                                                                    <g fill="currentColor">
+                                                                        <path d="M 10 11 C 4.08 11 2 14 2 16 L 2 19 L 18 19 L 18 16 C 18 14 15.92 11 10 11 Z"/>
+                                                                        <circle cx="10" cy="5.5" r="4.5"/>
+                                                                    </g>
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- First Name -->
+                                                    <div class="col-12 col-md-5 order-2 order-md-1 mb-3 mb-md-0">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>First Name</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="name" type="text" class="form-control" name="first_name" required="1" placeholder="First Name"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Last Name -->
+                                                    <div class="col-12 col-md-5 order-3 order-md-2">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Last Name</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="last_name" type="text" class="form-control" name="last_name" placeholder="Last Name"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Gender</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <label> 
+                                                                    <input value="male" type="radio" name="gender" class="form-check-input me-1" checked="checked"/>
+                                                                    <span class="me-1">Male</span>
+                                                                </label>
+                                                                <label>
+                                                                    <input value="female" type="radio" name="gender" class="form-check-input me-1" />
+                                                                    <span class="me-1">Female</span>
+                                                                </label>
+                                                                <label>
+                                                                    <input value="other" type="radio" name="gender" class="form-check-input me-1" />
+                                                                    <span class="me-1">Other</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div t-if="branches" class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Branch</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <select autocomplete="off" id="child_id" class="form-select" name="child_id" required="1">
+                                                                <t t-foreach="branches" t-as="branch">
+                                                                    <option t-att-value="branch['id']" t-out="branch['name']"/>
+                                                                </t>
+                                                                </select>                                            
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row my-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Date of Birth</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="dob" type="date" class="form-control" name="dob" required="1"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Grade</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <select autocomplete="off" id="grade_id" class="form-select" name="grade_id" required="1">
+                                                                <option value="">
+                                                                    Select Grade
+                                                                </option>
+                                                                <t t-foreach="classes" t-as="cls">
+                                                                    <option t-att-value="cls['id']" t-out="cls['name']"/>
+                                                                </t>
+                                                                </select>                                            
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row my-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Email</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="email" type="email" class="form-control" name="email" required="1"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Mobile No.</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="phone" type="tel" class="form-control" name="phone" required="1" inputmode="numeric" minlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Any identified need/disability?</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <select autocomplete="off" id="disability" class="form-select" name="medical_disability" required="1">
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                                </select>                                                              
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Blood Group</span>
+                                                            </div>
+                                                            <div>
+                                                                <select name="blood_group" id="blood_group" class="form-select">
+                                                                    <option value="">Select Blood Group</option>
+                                                                    <t t-foreach="blood_groups.items()" t-as="blood_group">
+                                                                        <option t-att-value="blood_group[0]" t-out="blood_group[1]"/>
+                                                                    </t>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row my-2">
+                                                    <div class="col-12 mb-sm-1" id="medical_issue_field" style="display: none;">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Please Specify</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="medical_issue" type="text" class="form-control" name="known_medical_disability"/>                                         
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-12 mb-4">
+                                        <div>
+                                            <h5>
+                                                <i class="fa fa-map-marker text-danger" aria-hidden="true"></i> Location
+                                            </h5>
+                                            <p id="company_adress" style="opacity:0.9;"/>
+                                            <a id="directionBtn" t-att-href="school.sudo().partner_id.google_map_link()" target="_blank" class="btn mb-4" style="color:white;background:#714b67">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="align-text-top" role="img" style="height: 1em; width: 1em">
+                                                    <rect width="24" height="24" opacity="0"/>
+                                                    <path role="presentation" fill="currentColor" d="M13.67 22h-.06a1 1 0 0 1-.92-.8l-1.54-7.57a1 1 0 0 0-.78-.78L2.8 11.31a1 1 0 0 1-.12-1.93l16-5.33A1 1 0 0 1 20 5.32l-5.33 16a1 1 0 0 1-1 .68z"/>
+                                                </svg>
+                                                Get Directions
+                                            </a>
+                                        </div>
+                                        <div id="address_map" style="height:350px;"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8 col-12">
+                                        <div style="border: 1px solid #E1E7EF;border-radius:8px;background:white;box-shadow: 0px 0px 24px -4px #00000008;">
+                                            <div class="p-4">
+                                                <div style="color:#0F172A;font-family: Inter;font-size: 24px;font-weight: 600;line-height: 29.05px;">
+                                                    Parents &amp; Other Details
+                                                </div>
+                                                <div class="row my-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Mother's Name</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="m_name" type="text" class="form-control s_website_form_input" name="mother_name" required="1" placeholder="Mother's Name"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Father's Name</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="father_name" type="text" class="form-control" name="father_name" required="1" placeholder="Father's Name"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row my-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Mother's Contact</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" type="tel" class="form-control" name="mothers_contact" required="1" inputmode="numeric" minlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Father's Contact</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" type="tel" class="form-control" name="fathers_contact" required="1" inputmode="numeric" minlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row my-3">
+                                                    <div class="col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Parent Email</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="parent_email" type="text" class="form-control" name="parent_email" required="1"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row my-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Mother's Occupation</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" type="text" class="form-control" name="mothers_occupation" required="1"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Father's Occupation</span>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" type="text" class="form-control" name="fathers_occupation" required="1"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Street Address</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="address" type="text" class="form-control" name="street" placeholder="Street Address"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>City</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="c_address" type="text" class="form-control" name="city" placeholder="Enter City"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>State</span>
+                                                            </div>
+                                                            <div class="col state_div">
+                                                                <select autocomplete="off" id="student_state" class="form-select" name="state_id">
+                                                                    <option value="0" t-att-selected="'selected'">
+                                                                        Select State
+                                                                    </option>
+                                                                    <t t-foreach="states" t-as="state">
+                                                                        <option t-att-data-country="state['country_id'][0]" t-att-value="state['id']" t-out="state['name']" />
+                                                                    </t>
+                                                                </select>
+                                                            </div>  
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Postal/ZIP Code</span>
+                                                            </div>
+                                                            <div>
+                                                                <input autocomplete="off" id="address" type="text" class="form-control" name="zip"  placeholder="Select ZIP Code"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 col-12 mb-sm-1">
+                                                        <div class="d-flex flex-column">
+                                                            <div class="mb-2">
+                                                                <span>Country</span>
+                                                            </div>
+                                                            <div>
+                                                                <select autocomplete="off" id="student_country" class="form-select" name="country_id" placeholder="Country">
+                                                                    <option value="0" t-att-selected="'selected'">
+                                                                        Enter Country
+                                                                    </option>
+                                                                    <t t-foreach="country" t-as="cntry">
+                                                                        <option t-att-value="cntry['id']" t-out="cntry['name']" />
+                                                                    </t>
+                                                                </select> 
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="d-flex flex-column">
+                                                        <div class="mb-2">
+                                                            <span>Ask your queries</span>
+                                                        </div>
+                                                        <div>
+                                                            <input autocomplete="off" id="queries" type="text" class="form-control" name="queries"  placeholder="Ask Here" style="height:90px;"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div t-if="document_ids" class="document_section row mt-2">
+                                    <div class="document_class col-md-8 col-12">
+                                        <div style="border: 1px solid #E1E7EF;border-radius:8px;background:white;box-shadow: 0px 0px 24px -4px #00000008;">
+                                            <div class="p-4">
+                                                <div style="color:#0F172A;font-family: Inter;font-size: 24px;font-weight: 600;line-height: 29.05px;">
+                                                    Documents Upload
+                                                    <p style="color:#f35726;font-size:medium;">
+                                                        (Documents should be in PDF/JPEG format)
+                                                    </p>
+                                                </div>
+                                                <t t-foreach="document_ids" t-as="document_id">
+                                                    <div class="row mt-1">
+                                                        <div class="col-md-6 col-12 mb-sm-1">
+                                                            <div class="p-2" style="border: 1px solid #E1E7EF;border-radius:5px;">
+                                                                <t t-out="document_id.name"/>
+                                                                <span style="color:red;"> *</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6 col-12">
+                                                            <input autocomplete="off" t-att-name="document_id.name" required="1" type="file" class="form-control" accept=".jpeg,.pdf"/>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- <div class="row my-2">
+                                    <div class="col-md-8 text-center">
+                                        <t t-set="recaptcha_public_key" t-value="request.env['ir.config_parameter'].sudo().get_param('recaptcha_public_key')"/>
+                                        <script type="text/javascript" src="https://www.recaptcha.net/recaptcha/api.js"></script> 
+                                        <div class="g-recaptcha" data-sitekey="recaptcha_public_key"/>
+                                    </div>
+                                </div> -->
+                                <div class="row my-2">
+                                    <div class="col-md-8 col-12">
+                                        <button id="application_submit" class="btn" style="color:white;background-color:#2563EA;width: 100%;border-radius:4px;">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </t>
+        </template>
+
+        <template id="application_submit_template" name="SubmitFeedback">
+            <t t-call="website.layout">
+                <div class="container" style="max-height: 1000px;">
+                    <center>
+                        <div>
+                            <img src="/wk_school_management/static/src/img/app_submitted.png" alt="Smiley face"
+                                height="100" width="100"/>
+                        </div>
+                        <div class="main">
+                            <h4>Congratulations, Your Enquiry form has been successfully submitted.</h4>
+                            <p>
+                                Your application number for tracking: <strong><t t-out="application_number"/></strong>
+                            </p>
+                        </div>
+                    </center>
+                </div>
+            </t>
+        </template>
+
+        <record id="menu_school_application" model="website.menu">
+            <field name="name">Admission Enquiry</field>
+            <field name="url">/OnlineRegistration</field>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" type="int">50</field>
+        </record>
+
+        <template id="class_assignment" name="class_assignment">
+            <table class="table">
+                <thead>
+                    <tr style="background-color:#edf1f9;">
+                        <th scope="col">Title</th>
+                        <th scope="col">Grade</th>
+                        <th scope="col">Teacher</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Created On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="assignment_ids">
+                        <t t-foreach='assignment_ids[:5]' t-as='assignment_id'>
+                            <tr class='dashboard_onclick text-muted' style="cursor:pointer;font-size:14px;" t-attf-href="/odoo/teacher-class-assignment/{{assignment_id.id}}">
+                                <td><t t-out="assignment_id.name"/></td>
+                                <td><t t-out="assignment_id.grade_id.name"/></td>
+                                <td><t t-out="assignment_id.teacher_id.name"/></td>
+                                <td>
+                                    <t t-if="assignment_id.state == 'new'">
+                                        <span class="badge" style="color:#2563EA !important;background-color:#cfdbf7 !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">New</span>
+                                    </t>
+                                    <t t-elif="assignment_id.state == 'progress'">
+                                        <span class="badge" style="color:#B35309 !important;background-color:#ffe9c4 !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">In Progress</span>
+                                    </t>
+                                    <t t-else="" >
+                                        <span class="badge" style="color:#047857 !important;background-color:#caf7ea !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">Completed</span>
+                                    </t>
+                                </td>
+                                <td><t t-out="time.strftime('%Y-%m-%d %H:%M',time.strptime(str(assignment_id.create_date),'%Y-%m-%d %H:%M:%S.%f'))"/></td>
+                            </tr>
+                        </t>
+                    </t>    
+
+                    <t t-else="">
+                        <tr class="text-center" style="border-bottom-style: hidden;">
+                            <td colspan="5" class="pb-4">
+                                <img style="height:100px" src="/wk_school_management/static/src/img/empty_stat.png"
+                                        id="no_assignment_logo"/>
+                                <div style="font-size:14px;font-weight:600;">No Assignments at the moment!</div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <div t-if="assignment_ids and len(assignment_ids) > 5" class="text-center" style="font-family: 'Lato', sans-serif;;font-size: 16px;font-weight: 700;line-height: 19.36px;">
+                <a href="/odoo/teacher-class-assignment" target="_blank" style="color:#2563EA;cursor:pointer;">View All</a>
+            </div>
+        </template>
+
+        <template id="student_assignment" name="student_assignment">
+            <table class="table">
+                <thead>
+                    <tr style="background-color:#edf1f9;">
+                        <th scope="col">Student</th>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Assignment</th>
+                        <th scope="col">Total Marks</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="assignment_ids">
+                        <t t-foreach='assignment_ids[:5]' t-as='assignment_id'>
+                            <tr class='dashboard_onclick text-muted' style="cursor:pointer;font-size:14px;" t-attf-href="/odoo/student-assignment/{{assignment_id.id}}">
+                                <td><t t-out="assignment_id.student_id.name"/></td>
+                                <td><t t-out="assignment_id.subject_id.name"/></td>
+                                <td><t t-out="assignment_id.assignment_id.name"/></td>
+                                <td><t t-out="assignment_id.total_marks"/></td>
+                                <td>
+                                    <t t-if="assignment_id.state == 'new'">
+                                        <span class="badge" style="color:#2563EA !important;background-color:#cfdbf7 !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">New</span>
+                                    </t>
+                                    <t t-elif="assignment_id.state == 'submit'">
+                                        <span class="badge" style="color:#B35309 !important;background-color:#ffe9c4 !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">Submitted</span>
+                                    </t>
+                                    <t t-else="" >
+                                        <span class="badge" style="color:#047857 !important;background-color:#caf7ea !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">Evaluated</span>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>    
+
+                    <t t-else="">
+                        <tr class="text-center" style="border-bottom-style: hidden;">
+                            <td colspan="6" class="pb-4">
+                                <img style="height:100px" src="/wk_school_management/static/src/img/empty_stat.png"
+                                        id="no_assignment_logo"/>
+                                <div style="font-size:14px;font-weight:600;">No Assignments at the moment!</div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <div t-if="assignment_ids and len(assignment_ids) > 5" class="text-center" style="font-family: 'Lato', sans-serif;;font-size: 16px;font-weight: 700;line-height: 19.36px;">
+                <a href="/odoo/student-assignment" target="_blank" style="color:#2563EA;cursor:pointer;">View All</a>
+            </div>
+        </template>
+
+        <template id="scheduled_classes" name="scheduled_classes">
+            <table class="table mb-0">
+                <thead>
+                    <tr style="background-color:#edf1f9;">
+                        <th scope="col">Name</th>
+                        <th scope="col">Teacher</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Time</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="timetable_ids">
+                        <t t-foreach='timetable_ids[:5]' t-as='timetable_id'>
+                            <tr class='dashboard_onclick text-muted' style="font-size:14px;cursor:pointer;" t-attf-href="/odoo/student-class-timetable/{{timetable_id.id}}">
+                                <td><t t-out="timetable_id.name"/></td>
+                                <td><t t-out="timetable_id.teacher_id.name"/></td>
+                                <td><t t-out="timetable_id.class_date"/></td>
+                                <td><t t-out="timetable_id.timeslot_id.name"/></td>
+                                <td><t t-out="timetable_id.location_id.name"/></td>
+                                <td>
+                                    <t t-if="timetable_id.state == 'draft'">
+                                        <span class="badge" style="color:#2563EA !important;background-color:#cfdbf7 !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">To do</span>
+                                    </t>
+                                    <t t-elif="timetable_id.state == 'running'">
+                                        <span class="badge" style="color:#B35309 !important;background-color:#ffe9c4 !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">Running</span>
+                                    </t>
+                                    <t t-else="" >
+                                        <span class="badge" style="color:#047857 !important;background-color:#caf7ea !important;font-size:14px;font-family: 'Lato', sans-serif;font-weight:600;">Completed</span>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <tr class="text-center" style="border-bottom-style: hidden;">
+                            <td colspan="6">
+                                <img style="height:150px" src="/wk_school_management/static/src/img/empty_ds_class.png"
+                                    id="no_class_logo"/>
+                                <div class="mb-5" style="font-size:14px;font-weight:600;">Currently there is no class scheduled!</div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <div t-if="timetable_ids and len(timetable_ids) > 5" class="text-center p-4" style="font-family: 'Lato', sans-serif;;font-size: 16px;font-weight: 700;line-height: 19.36px;">
+                <a href="/odoo/student-class-timetable?view_type=list" target="_blank" style="color:#2563EA;cursor:pointer;">View All</a>
+            </div>
+        </template>
+
+        <template id="notice_board" name="notice_board">
+            <table class="table table-hover">
+                <thead>
+                    <tr style="background-color:#edf1f9;">
+                        <th scope="col">Title</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="notice_ids">
+                        <t t-foreach='notice_ids[:3]' t-as='notice_id'>
+                            <tr class='dashboard_onclick text-muted' style="cursor:pointer;font-size:14px;" t-attf-href="/odoo/school-notice-board/{{notice_id.id}}">
+                                <td><t t-out="notice_id.name"/></td>
+                                <td><t t-out="notice_id.start_date"/></td>
+                            </tr>
+                        </t>
+                    </t>    
+
+                    <t t-else="">
+                        <tr class="text-center" style="border-bottom-style: hidden;">
+                            <td colspan="2">
+                                <img src="/wk_school_management/static/src/img/empty_ds_notice.png"
+                                    id="no_notice_logo"/>
+                                <div style="font-size:14px;font-weight:600;">No notifications found at the moment!</div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </template>
+
+        <template id="lesson_plan" name="lesson_plan">
+            <table class="table table-hover">
+                <thead>
+                    <tr style="background-color:#edf1f9;">
+                        <th scope="col">Title</th>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Prepared By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="lesson_plan_ids">
+                        <t t-foreach='lesson_plan_ids[:3]' t-as='lesson_id'>
+                            <tr class='dashboard_onclick text-muted' style="cursor:pointer;font-size:14px;" t-attf-href="/odoo/teacher-lesson-plan/{{lesson_id.id}}">
+                                <td><t t-out="lesson_id.name"/></td>
+                                <td><t t-out="lesson_id.subject_id.name"/></td>
+                                <td><t t-out="lesson_id.responsible_id.name"/></td>
+                            </tr>
+                        </t>
+                    </t>    
+
+                    <t t-else="">
+                        <tr class="text-center" style="border-bottom-style: hidden;">
+                            <td colspan="3">
+                                <img src="/wk_school_management/static/src/img/empty_ds_notice.png"
+                                    id="no_notice_logo"/>
+                                <div style="font-size:14px;font-weight:600;">No lesson plan found at the moment!</div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <div t-if="lesson_plan_ids and len(lesson_plan_ids) > 3" class="text-center" style="font-family: 'Lato', sans-serif;;font-size: 16px;font-weight: 700;line-height: 19.36px;">
+                <a href="/odoo/teacher-lesson-plan?view_type=list" target="_blank" style="color:#2563EA;cursor:pointer;">View All</a>
+            </div>
+        </template>
+
+        <template id="teacher_subjects">
+            <t t-foreach="subjects" t-as="subject">
+                <span class="badge rounded-pill border my-1 bg-success" style="color:white !important;font-size:12px;font-family: 'Inter', sans-serif;">
+                    <t t-out="subject.grade_id.name"/>(<t t-out="subject.name"/>)
+                </span>
+            </t>
+        </template>
+
+        <template id="portal_application_search" name="Application">
+            <t t-call="website.layout">
+                <div class="container-fluid" style="height:60vh;">
+                    <div style="padding:5% 15%;">
+                        <div style="padding:5%;box-shadow: 0px 4px 16px 0px #00000014;border-radius: 6px;background-color:#F7F9FB">
+                            <div style="font-size:2vw;font-family: Arial;color: #222222;font-weight:bold;margin-bottom:2%;text-align:center;">
+                                Search for your Application
+                            </div>
+                            <form class="application_search" role="form" t-attf-action="/application/status"  method="POST">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="row">
+                                    <div class="col-md-8 col-12 mb-sm-2">
+                                        <input type="text" id="application_number" name="application_number" class="form-control" required="1" placeholder="Enter your application no." style="font-weight: 400;font-size: 20px;"/>
+                                    </div>
+                                    <div class="col-md-4 col-12 mt-sm-2">
+                                        <button type="submit" class="btn btn-success oe_search_button ">
+                                            Search
+                                        </button>
+                                        <a href="/application_search">
+                                            <button type="button" class="btn oe_reset_button" style="background:#7c6576;color:white;border-color:#7c6576;" onclick="window.location.reload(true)">
+                                                Reset
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <template id="portal_application_status" name="Application">
+            <t t-call="website.layout">
+                <div class="container-fluid" style="height:60vh;">
+                    <div style="padding:5% 15%;">
+                        <h3 class="text-center" style="color:#2563EA;text-decoration:underline;">Admission Application Details</h3>
+                        <div style="padding:5% 20%;box-shadow: 0px 4px 16px 0px #00000014;border-radius: 6px;background-color:#F7F9FB">
+                            <div class="col-md-8">
+                                <span class="fw-bold">Applicant's Name : </span>
+                                <span><t t-out="application_id.student_name"/></span>
+                            </div>
+                            <div class="col-md-8 my-2">
+                                <span class="fw-bold">Application Number : </span>
+                                <span><t t-out="application_id.name"/></span>
+                            </div>
+                            <div class="col-md-8 my-2">
+                                <span class="fw-bold">Applied Grade : </span>
+                                <span><t t-out="application_id.grade_id.name"/></span>
+                            </div>
+                            <div class="col-md-8 my-2">
+                                <span class="fw-bold">Application Status : </span>
+                                <span>
+                                    <t t-if="application_id.state == 'new'">
+                                        <span class="badge rounded-pill border" style="color:#2563EA !important;background-color:#cfdbf7 !important;font-size:15px;font-family: 'Inter', sans-serif;">New</span>
+                                    </t>
+                                    <t t-elif="application_id.state == 'confirm'">
+                                        <span class="badge rounded-pill border" style="color:#B35309 !important;background-color:#ffe9c4 !important;font-size:15px;font-family: 'Inter', sans-serif;">Confirmed</span>
+                                    </t>
+                                    <t t-elif="application_id.state == 'enroll'">
+                                        <span class="badge rounded-pill border" style="color:#047857 !important;background-color:#caf7ea !important;font-size:15px;font-family: 'Inter', sans-serif;">Enrolled</span>
+                                    </t>
+                                    <t t-else="" >
+                                        <span class="badge rounded-pill border" style="color:#B81C1C !important;background-color:#f9e0e0 !important;font-size:15px;font-family: 'Inter', sans-serif;">Cancelled</span>
+                                    </t>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <template id="no_application_found" name="Application">
+            <t t-call="website.layout">
+                <div class="container-fluid" style="height:60vh;">
+                    <div style="padding:5% 15%;">
+                        <div style="padding:5%;box-shadow: 0px 4px 16px 0px #00000014;border-radius: 6px;background-color:#F7F9FB">
+                            <div class="error_message my-3" style="color:red">
+                                <h4>Sorry!</h4>
+                                <span>No application found with the application number: <t t-out="application_number"/></span>
+                            </div>
+                            <div style="font-size:2vw;font-family: Arial;color: #222222;font-weight:bold;margin-bottom:2%;text-align:center;">
+                                Search for your Application
+                            </div>
+                            <form class="application_search" role="form" t-attf-action="/application/status"  method="POST">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <input type="text" id="application_number" name="application_number" class="form-control" required="1" placeholder="Enter your application no." style="font-weight: 400;font-size: 20px;"/>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="submit" class="btn btn-success oe_search_button ">
+                                            Search
+                                        </button>
+                                        <a href="/application_search">
+                                            <button type="button" class="btn oe_reset_button" style="background:#7c6576;color:white;border-color:#7c6576;" onclick="window.location.reload(true)">
+                                                Reset
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>    

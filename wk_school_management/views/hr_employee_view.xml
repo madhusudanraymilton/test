@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2016-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>) -->
+<!-- See LICENSE file for full copyright and licensing details. -->
+<!-- License URL : https://store.webkul.com/license.html/ -->
+<odoo>
+
+    <data>
+     
+        <record id="view_employee_form_inherit" model="ir.ui.view">
+                <field name="name">hr.employee.from</field>
+                <field name="model">hr.employee</field>
+                <field name="inherit_id" ref="hr.view_employee_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='mobile_phone']" position="before">
+                        <field name="is_teacher"/>
+                    </xpath>
+                    <xpath expr="//field[@name='department_id']" position="before">
+                        <field name="is_supervisor"/>
+                    </xpath>
+                    <xpath expr="//header" position="inside">
+                        <button name="action_create_user" string="Grant Portal Access" type="object" groups="wk_school_management.wk_school_management_officer_group" invisible="not active or user_id != False"/>
+                    </xpath>
+                    <xpath expr="//page[@name='hr_settings']//field[@name='user_id']" position="attributes">
+                        <attribute name="readonly">1</attribute>
+                    </xpath>
+                    <xpath expr="//page[@name='public']" position="after">
+                        <page name="subjects" string="Subject Expertise">
+                            <field name="subject_ids"
+                                groups="wk_school_management.wk_school_management_staff_group"
+                                options="{'no_create_edit': True, 'no_create': True, 'no_edit': True}"/>
+                        </page>
+                    </xpath>
+                </field>
+        </record>
+
+        <record id="open_view_teacher_list_my" model="ir.actions.act_window">
+            <field name="name">Teachers</field>
+            <field name="res_model">hr.employee</field>
+            <field name="view_mode">kanban,list,form,activity,graph,pivot</field>
+            <field name="domain">[('is_teacher','=',True)]</field>
+            <field name="context">{'chat_icon': True,'default_is_teacher':True}</field>
+            <field name="view_id" eval="False"/>
+            <field name="path">school-employees</field>
+            <field name="search_view_id" ref="hr.view_employee_filter"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Add a new Teacher
+                </p><p>
+                    With just a quick glance on the Odoo Teacher screen, you
+                    can easily find all the information you need for each person;
+                    contact data, job position, availability, etc.
+                </p>
+            </field>
+        </record>
+
+        <record id="view_users_simple_form_inherit_school" model="ir.ui.view">
+                <field name="name">res.users.simplified.form</field>
+                <field name="model">res.users</field>
+                <field name="inherit_id" ref="hr.view_users_simple_form_inherit_hr"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='create_employee']" position="attributes">
+                        <attribute name="invisible">1</attribute>
+                    </xpath>
+                </field>
+        </record>
+
+    </data>
+</odoo>    
