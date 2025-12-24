@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <menuitem name="Library" id="main_books_menu" web_icon="nthub_library,static/description/icon.png"
+                  groups="nthub_library.library_group_user"/>
+
+        <menuitem name="Book Information" id="menu_1_books" parent="main_books_menu" sequence="15"/>
+        <menuitem name="Books" id="menu_2_information" parent="menu_1_books" action="action_book_data" sequence="30"/>
+        <menuitem name="Configration" id="menu_1_setting" parent="main_books_menu" sequence="100">
+            <menuitem name="Author" id="menu_1_author"
+                      action="action1_author" sequence="0"/>
+        </menuitem>
+        <menuitem name="Borrows" id="menu_2_borrow" parent="main_books_menu"
+                  action="action_borrowed" sequence="10"/>
+
+        <menuitem name="Publisher" id="menu_1_publisher" parent="menu_1_setting"
+                  action="action2_publisher" sequence="30"/>
+
+        <menuitem id="library_configration" parent="main_books_menu"
+                  action="library_conf" name="Report Message"/>
+
+        <menuitem name="Book Copies" id="menu_1_copies" parent="menu_1_books"
+                  action="action_copies" sequence="40"/>
+
+        <menuitem name="Book Category" id="menu_1_category" parent="menu_1_books"
+                  action="action_category" sequence="0"/>
+
+        <menuitem name="Borrowers" id="library_borrowers" parent="menu_1_setting"
+                  action="contacts.action_contacts" sequence="40"/>
+        <menuitem id="dash_menu" name="Dashboard" parent="main_books_menu"
+                  action="open_board_my_dash_action" sequence="5"/>
+    </data>
+</odoo>
