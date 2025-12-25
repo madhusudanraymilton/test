@@ -22,7 +22,7 @@
                     <page string="Books to Return">
                         <field name="borrowing_line_ids" readonly="1">
                             <list>
-                             <!--   <field name="member_id"/>  -->
+                                <field name="member_id"/>
                                 <field name="book_id"/>
                                 <field name="due_date"/>
                                 <field name="days_overdue" decoration-danger="days_overdue > 0"/>

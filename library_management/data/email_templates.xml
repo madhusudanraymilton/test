@@ -78,7 +78,7 @@
     <record id="email_template_fine_notification" model="mail.template">
         <field name="name">Library: Fine Notification</field>
         <field name="model_id" ref="model_library_fine"/>
-        <field name="subject">Library Fine - {{ object.book_id.title }}</field>
+        <field name="subject">Library Fine - {{ object.borrowing_id.book_id.title }}</field>
         <field name="email_from">{{ (object.create_uid.email_formatted or user.email_formatted) }}</field>
         <field name="email_to">{{ object.member_id.email }}</field>
         <field name="body_html" type="html">
@@ -89,7 +89,7 @@
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                     <tr style="background-color: #f5f5f5;">
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>Book Title:</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.title }}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.borrowing_id.book_id.title }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>Fine Amount:</strong></td>
@@ -116,7 +116,7 @@
     <record id="email_template_fine_payment_confirmation" model="mail.template">
         <field name="name">Library: Fine Payment Confirmation</field>
         <field name="model_id" ref="model_library_fine"/>
-        <field name="subject">Fine Payment Confirmation - {{ object.book_id.title }}</field>
+        <field name="subject">Fine Payment Confirmation - {{ object.borrowing_id.book_id.title }}</field>
         <field name="email_from">{{ (object.create_uid.email_formatted or user.email_formatted) }}</field>
         <field name="email_to">{{ object.member_id.email }}</field>
         <field name="body_html" type="html">
@@ -127,7 +127,7 @@
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                     <tr style="background-color: #f5f5f5;">
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>Book Title:</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.title }}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.borrowing_id.book_id.title }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 10px; border: 1px solid #ddd;"><strong>Amount Paid:</strong></td>

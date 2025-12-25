@@ -33,11 +33,13 @@ class LibraryAuthor(models.Model):
         max_width=1024,
         max_height=1024
     )
-    book_ids = fields.One2many(
+    book_ids = fields.Many2many(
         comodel_name='library.book',
-        inverse_name='author_ids',
+        relation='library_book_author_rel',
+        column1='author_id',
+        column2='book_id',
         string='Books',
-        compute='_compute_books'
+        compute='_compute_book_ids'
     )
     book_count = fields.Integer(
         string='Number of Books',
@@ -49,8 +51,7 @@ class LibraryAuthor(models.Model):
         default=True
     )
 
-    @api.depends('name')
-    def _compute_books(self):
+    def _compute_book_ids(self):
         """Compute books written by this author"""
         for author in self:
             author.book_ids = self.env['library.book'].search([
@@ -77,7 +78,7 @@ class LibraryAuthor(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Books by %s') % self.name,
             'res_model': 'library.book',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('author_ids', 'in', self.id)],
             'context': {'default_author_ids': [(6, 0, [self.id])]},
         }

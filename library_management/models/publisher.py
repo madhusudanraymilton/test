@@ -79,7 +79,7 @@ class LibraryPublisher(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Books by %s') % self.name,
             'res_model': 'library.book',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('publisher_id', '=', self.id)],
             'context': {'default_publisher_id': self.id},
         }

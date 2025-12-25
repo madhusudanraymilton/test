@@ -24,7 +24,6 @@ This module provides a complete library management solution with:
         'base',
         'web',
         'mail',
-        'portal',
     ],
     'data': [
         # Security
@@ -35,8 +34,6 @@ This module provides a complete library management solution with:
         'wizards/return_book_wizard_views.xml',
 
         # Views
-
-        'views/dashboard.xml',
         'views/author_views.xml',
         'views/publisher_views.xml',
         'views/category_views.xml',
@@ -53,13 +50,9 @@ This module provides a complete library management solution with:
     'demo': [
         'data/demo_data.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'library_management/static/src/css/dashboard.css',
-            'library_management/static/src/js/dashboard.js',
-        ],
+    'external_dependencies': {
+        'python': ['qrcode'],
     },
-    'images': ['static/description/icon.png'],
     'license': 'LGPL-3',
     'installable': True,
     'application': True,

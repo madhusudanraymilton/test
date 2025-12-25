@@ -138,7 +138,8 @@
     </record>
 
     <!-- Search View -->
-   <!-- <record id="view_library_book_search" model="ir.ui.view">
+    <!--
+    <record id="view_library_book_search" model="ir.ui.view">
         <field name="name">library.book.search</field>
         <field name="model">library.book</field>
         <field name="arch" type="xml">

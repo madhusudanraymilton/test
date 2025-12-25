@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Kanban View -->
     <record id="view_library_borrowing_kanban" model="ir.ui.view">
         <field name="name">library.borrowing.kanban</field>
         <field name="model">library.borrowing</field>
@@ -48,7 +47,6 @@
         </field>
     </record>
 
-    <!-- Calendar View -->
     <record id="view_library_borrowing_calendar" model="ir.ui.view">
         <field name="name">library.borrowing.calendar</field>
         <field name="model">library.borrowing</field>
@@ -61,7 +59,6 @@
         </field>
     </record>
 
-    <!-- Tree View -->
     <record id="view_library_borrowing_tree" model="ir.ui.view">
         <field name="name">library.borrowing.tree</field>
         <field name="model">library.borrowing</field>
@@ -80,34 +77,38 @@
         </field>
     </record>
 
-    <!-- Form View -->
     <record id="view_library_borrowing_form" model="ir.ui.view">
         <field name="name">library.borrowing.form</field>
         <field name="model">library.borrowing</field>
         <field name="arch" type="xml">
             <form string="Borrowing">
                 <header>
-                    <button name="action_confirm_borrow" string="Confirm Borrowing" type="object" class="btn-primary" invisible="status != 'draft'"/>
-                    <button name="action_return_book" string="Return Book" type="object" class="btn-success" invisible="status != 'borrowed'"/>
-                    <button name="action_send_reminder" string="Send Reminder" type="object" invisible="status not in ['borrowed', 'overdue']"/>
-                    <field name="status" widget="statusbar" statusbar_visible="draft,borrowed,returned"/>
+                    <button name="action_confirm_borrow" string="Confirm Borrowing" type="object" class="btn-primary"
+                            invisible="[('status', '!=', 'draft')]"/>
+                    <button name="action_return_book" string="Return Book" type="object" class="btn-success"
+                            invisible="[('status', '!=', 'borrowed')]"/>
+                    <button name="action_send_reminder" string="Send Reminder" type="object"
+                            invisible="[('status', 'not in', ['borrowed', 'overdue'])]"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,borrowed,overdue,returned"
+                           clickable="True"/>
                 </header>
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="%(action_library_fine)d" type="action"
-                                class="oe_stat_button" icon="fa-money"
-                                invisible="fine_amount == 0"
-                                context="{'search_default_borrowing_id': id}">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="fine_amount" widget="monetary"/>
-                                </span>
-                                <span class="o_stat_text">Fine Amount</span>
-                            </div>
-                        </button>
+                    <div class="o_notebook">
+                        <div class="o_button_box" name="button_box">
+                            <button name="%(action_library_fine)d" type="action" class="o_stat_button" icon="fa-money"
+                                    invisible="[('fine_amount', '=', 0)]"
+                                    context="{'search_default_borrowing_id': id}">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="fine_amount" widget="monetary"/>
+                                    </span>
+                                    <span class="o_stat_text">Fine Amount</span>
+                                </div>
+                            </button>
+                        </div>
                     </div>
-                    <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
+                    <div class="o_title">
+                        <label for="name" class="o_form_label o_edit_only"/>
                         <h1>
                             <field name="name" readonly="1"/>
                         </h1>
@@ -132,12 +133,14 @@
                         </group>
                         <group>
                             <field name="days_overdue" readonly="1"/>
-                            <field name="fine_id" readonly="1" invisible="not fine_id"/>
+                            <field name="fine_id" readonly="1" attrs="{'invisible': [('fine_id', '=', False)]}"/>
                         </group>
                     </group>
-                    <group>
-                        <field name="notes" placeholder="Add any notes..."/>
-                    </group>
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add any notes..."/>
+                        </page>
+                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids"/>
@@ -147,9 +150,8 @@
             </form>
         </field>
     </record>
-
-    <!-- Search View -->
-   <!-- <record id="view_library_borrowing_search" model="ir.ui.view">
+    <!--
+    <record id="view_library_borrowing_search" model="ir.ui.view">
         <field name="name">library.borrowing.search</field>
         <field name="model">library.borrowing</field>
         <field name="arch" type="xml">
@@ -180,7 +182,6 @@
     </record>
     -->
 
-    <!-- Graph View -->
     <record id="view_library_borrowing_graph" model="ir.ui.view">
         <field name="name">library.borrowing.graph</field>
         <field name="model">library.borrowing</field>
@@ -192,7 +193,6 @@
         </field>
     </record>
 
-    <!-- Action -->
     <record id="action_library_borrowing" model="ir.actions.act_window">
         <field name="name">Borrowings</field>
         <field name="res_model">library.borrowing</field>
@@ -208,7 +208,6 @@
         </field>
     </record>
 
-    <!-- Report Actions -->
     <record id="action_library_borrowing_report" model="ir.actions.act_window">
         <field name="name">Borrowing History Report</field>
         <field name="res_model">library.borrowing</field>

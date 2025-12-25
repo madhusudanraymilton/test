@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Kanban View -->
     <record id="view_library_member_kanban" model="ir.ui.view">
         <field name="name">library.member.kanban</field>
         <field name="model">library.member</field>
@@ -53,7 +52,6 @@
         </field>
     </record>
 
-    <!-- Tree View -->
     <record id="view_library_member_tree" model="ir.ui.view">
         <field name="name">library.member.tree</field>
         <field name="model">library.member</field>
@@ -71,7 +69,6 @@
         </field>
     </record>
 
-    <!-- Form View -->
     <record id="view_library_member_form" model="ir.ui.view">
         <field name="name">library.member.form</field>
         <field name="model">library.member</field>
@@ -166,9 +163,8 @@
             </form>
         </field>
     </record>
-
-    <!-- Search View -->
-  <!--  <record id="view_library_member_search" model="ir.ui.view">
+    <!--
+    <record id="view_library_member_search" model="ir.ui.view">
         <field name="name">library.member.search</field>
         <field name="model">library.member</field>
         <field name="arch" type="xml">
@@ -193,7 +189,6 @@
     </record>
     -->
 
-    <!-- Action -->
     <record id="action_library_member" model="ir.actions.act_window">
         <field name="name">Members</field>
         <field name="res_model">library.member</field>
@@ -209,7 +204,6 @@
         </field>
     </record>
 
-    <!-- Report Actions -->
     <record id="action_library_member_report" model="ir.actions.act_window">
         <field name="name">Member Activity Report</field>
         <field name="res_model">library.member</field>

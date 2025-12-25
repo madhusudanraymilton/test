@@ -88,7 +88,7 @@ class LibraryCategory(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Books in %s') % self.complete_name,
             'res_model': 'library.book',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('category_ids', 'in', self.id)],
             'context': {'default_category_ids': [(6, 0, [self.id])]},
         }

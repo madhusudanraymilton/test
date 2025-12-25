@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Tree View -->
     <record id="view_library_publisher_tree" model="ir.ui.view">
         <field name="name">library.publisher.tree</field>
         <field name="model">library.publisher</field>
@@ -15,7 +14,6 @@
         </field>
     </record>
 
-    <!-- Form View -->
     <record id="view_library_publisher_form" model="ir.ui.view">
         <field name="name">library.publisher.form</field>
         <field name="model">library.publisher</field>
@@ -72,8 +70,9 @@
         </field>
     </record>
 
-    <!-- Search View -->
-  <!--  <record id="view_library_publisher_search" model="ir.ui.view">
+
+    <!--
+    <record id="view_library_publisher_search" model="ir.ui.view">
         <field name="name">library.publisher.search</field>
         <field name="model">library.publisher</field>
         <field name="arch" type="xml">
@@ -88,7 +87,6 @@
     </record>
     -->
 
-    <!-- Action -->
     <record id="action_library_publisher" model="ir.actions.act_window">
         <field name="name">Publishers</field>
         <field name="res_model">library.publisher</field>

@@ -161,7 +161,7 @@ class LibraryMember(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Borrowings of %s') % self.name,
             'res_model': 'library.borrowing',
-            'view_mode': 'tree,form,calendar',
+            'view_mode': 'list,form,calendar',
             'domain': [('member_id', '=', self.id)],
             'context': {'default_member_id': self.id},
         }
@@ -173,7 +173,7 @@ class LibraryMember(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Fines of %s') % self.name,
             'res_model': 'library.fine',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('member_id', '=', self.id)],
             'context': {'default_member_id': self.id},
         }

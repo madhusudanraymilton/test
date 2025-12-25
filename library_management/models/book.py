@@ -168,6 +168,10 @@ class LibraryBook(models.Model):
                     img.save(buffer, format='PNG')
                     book.qr_code = base64.b64encode(buffer.getvalue())
                 except ImportError:
+                    # QR code library not installed, skip silently
+                    book.qr_code = False
+                except Exception:
+                    # Any other error, skip silently
                     book.qr_code = False
             else:
                 book.qr_code = False
@@ -202,7 +206,7 @@ class LibraryBook(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Borrowings of %s') % self.title,
             'res_model': 'library.borrowing',
-            'view_mode': 'tree,form,calendar',
+            'view_mode': 'list,form,calendar',
             'domain': [('book_id', '=', self.id)],
             'context': {'default_book_id': self.id},
         }

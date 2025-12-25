@@ -65,7 +65,8 @@
     </record>
 
     <!-- Search View -->
-    <!--<record id="view_library_author_search" model="ir.ui.view">
+    <!--
+    <record id="view_library_author_search" model="ir.ui.view">
         <field name="name">library.author.search</field>
         <field name="model">library.author</field>
         <field name="arch" type="xml">
@@ -79,7 +80,8 @@
                 </group>
             </search>
         </field>
-    </record>-->
+    </record>
+    -->
 
     <!-- Action -->
     <record id="action_library_author" model="ir.actions.act_window">
