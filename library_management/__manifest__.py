@@ -34,21 +34,23 @@ This module provides a complete library management solution with:
         'wizards/return_book_wizard_views.xml',
 
         # Views
+        'views/actions.xml',
         'views/author_views.xml',
         'views/publisher_views.xml',
         'views/category_views.xml',
         'views/book_views.xml',
         'views/member_views.xml',
-        'views/borrowing_views.xml',
         'views/fine_views.xml',
+        'views/borrowing_views.xml',
+        'views/dashboard.xml',
         'views/menu.xml',
 
         # Data
-        'data/automated_actions.xml',
-        'data/email_templates.xml',
+       # 'data/automated_actions.xml',
+       # 'data/email_templates.xml',
     ],
     'demo': [
-        'data/demo_data.xml',
+      #  'data/demo_data.xml',
     ],
     'external_dependencies': {
         'python': ['qrcode'],

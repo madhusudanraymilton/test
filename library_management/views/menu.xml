@@ -7,17 +7,18 @@
               sequence="10"/>
 
     <!-- Dashboard -->
-    <menuitem id="menu_library_dashboard"
+    <!--<menuitem id="menu_library_dashboard"
               name="Dashboard"
               parent="menu_library_root"
               action="action_library_dashboard"
               sequence="1"/>
+    -->
 
     <!-- Operations Menu -->
     <menuitem id="menu_library_operations"
               name="Operations"
               parent="menu_library_root"
-              sequence="10"/>
+              sequence="20"/>
 
     <menuitem id="menu_library_borrowing"
               name="Borrowings"
@@ -35,7 +36,7 @@
     <menuitem id="menu_library_catalog"
               name="Catalog"
               parent="menu_library_root"
-              sequence="20"/>
+              sequence="30"/>
 
     <menuitem id="menu_library_book"
               name="Books"
@@ -66,13 +67,13 @@
               name="Members"
               parent="menu_library_root"
               action="action_library_member"
-              sequence="30"/>
+              sequence="40"/>
 
     <!-- Reports Menu -->
     <menuitem id="menu_library_reports"
               name="Reports"
               parent="menu_library_root"
-              sequence="40"/>
+              sequence="50"/>
 
     <menuitem id="menu_library_report_borrowing_history"
               name="Borrowing History"
@@ -102,6 +103,15 @@
     <menuitem id="menu_library_configuration"
               name="Configuration"
               parent="menu_library_root"
-              sequence="100"
+              sequence="60"
               groups="group_library_admin"/>
+
+    <!-- Child menu for Configuration -->
+    <!--<menuitem id="menu_library_config_settings"
+              name="Settings"
+              parent="menu_library_configuration"
+              action="action_library_config_settings"
+              sequence="1"
+              groups="group_library_admin"/>-->
+
 </odoo>

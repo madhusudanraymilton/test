@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Book Action -->
+    <record id="action_library_book" model="ir.actions.act_window">
+        <field name="name">Books</field>
+        <field name="res_model">library.book</field>
+        <field name="view_mode">kanban,list,form</field>
+       <!-- <field name="context">{'search_default_active': 1, 'search_default_available': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add your first book
+            </p>
+            <p>
+                Start building your library catalog.
+            </p>
+        </field>
+    </record>
+
+    <!-- Author Action -->
+    <record id="action_library_author" model="ir.actions.act_window">
+        <field name="name">Authors</field>
+        <field name="res_model">library.author</field>
+        <field name="view_mode">list,form</field>
+       <!-- <field name="context">{'search_default_active': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first author
+            </p>
+            <p>
+                Add authors to your library catalog.
+            </p>
+        </field>
+    </record>
+
+    <!-- Publisher Action -->
+    <record id="action_library_publisher" model="ir.actions.act_window">
+        <field name="name">Publishers</field>
+        <field name="res_model">library.publisher</field>
+        <field name="view_mode">list,form</field>
+     <!--   <field name="context">{'search_default_active': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first publisher
+            </p>
+            <p>
+                Add publishers to your library catalog.
+            </p>
+        </field>
+    </record>
+
+    <!-- Category Action -->
+    <record id="action_library_category" model="ir.actions.act_window">
+        <field name="name">Categories</field>
+        <field name="res_model">library.category</field>
+        <field name="view_mode">list,form</field>
+      <!--  <field name="context">{'search_default_active': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first category
+            </p>
+            <p>
+                Organize your books with hierarchical categories.
+            </p>
+        </field>
+    </record>
+
+    <!-- Member Action -->
+    <record id="action_library_member" model="ir.actions.act_window">
+        <field name="name">Members</field>
+        <field name="res_model">library.member</field>
+        <field name="view_mode">kanban,list,form</field>
+      <!--  <field name="context">{'search_default_active': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register your first member
+            </p>
+            <p>
+                Add members who can borrow books from the library.
+            </p>
+        </field>
+    </record>
+
+    <!-- Member Activity Report Action -->
+    <record id="action_library_member_report" model="ir.actions.act_window">
+        <field name="name">Member Activity Report</field>
+        <field name="res_model">library.member</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="domain">[]</field>
+    </record>
+
+    <!-- Configuration Action -->
+   <!-- <record id="action_library_config_settings" model="ir.actions.act_window">
+        <field name="name">Library Settings</field>
+        <field name="res_model">library.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure library settings
+            </p>
+        </field>
+    </record>
+ -->
+    <!-- borrowing books action -->
+    <record id="action_library_borrowing" model="ir.actions.act_window">
+        <field name="name">Borrowings</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">kanban,list,form,calendar,graph,pivot</field>
+       <!-- <field name="context">{'search_default_borrowed': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first borrowing record
+            </p>
+            <p>
+                Track book borrowings and returns.
+            </p>
+        </field>
+    </record>
+
+    <!-- Report Borrowing Action -->
+    <record id="action_library_borrowing_report" model="ir.actions.act_window">
+        <field name="name">Borrowing History Report</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="domain">[]</field>
+    </record>
+
+    <!-- Overdue Books Report Action -->
+    <record id="action_library_overdue_report" model="ir.actions.act_window">
+        <field name="name">Overdue Books Report</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('status', '=', 'overdue')]</field>
+    </record>
+
+    <!-- Fines Action -->
+    <record id="action_library_fine" model="ir.actions.act_window">
+        <field name="name">Fines</field>
+        <field name="res_model">library.fine</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+      <!--  <field name="context">{'search_default_unpaid': 1}</field> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No fines recorded yet
+            </p>
+            <p>
+                Fines are automatically created for overdue book returns.
+            </p>
+        </field>
+    </record>
+
+    <!-- Fine Report Action -->
+    <record id="action_library_fine_report" model="ir.actions.act_window">
+        <field name="name">Fine Collection Report</field>
+        <field name="res_model">library.fine</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="domain">[]</field>
+    </record>
+
+
+
+</odoo>

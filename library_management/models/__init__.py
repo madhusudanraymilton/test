@@ -7,3 +7,4 @@ from . import book
 from . import member
 from . import borrowing
 from . import fine
+from . import library_config_settings
