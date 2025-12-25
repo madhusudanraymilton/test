@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Tree View -->
-    <record id="view_library_author_tree" model="ir.ui.view">
-        <field name="name">library.author.tree</field>
-        <field name="model">library.author</field>
-        <field name="arch" type="xml">
-            <list string="Authors">
-                <field name="name"/>
-                <field name="nationality"/>
-                <field name="date_of_birth"/>
-                <field name="book_count"/>
-            </list>
-        </field>
-    </record>
 
-    <!-- Form View -->
+     <!-- Form View -->
     <record id="view_library_author_form" model="ir.ui.view">
         <field name="name">library.author.form</field>
         <field name="model">library.author</field>
@@ -55,14 +42,32 @@
                         </page>
                     </notebook>
                 </sheet>
+                <!--
                 <div class="oe_chatter">
                     <field name="message_follower_ids"/>
                     <field name="activity_ids"/>
                     <field name="message_ids"/>
                 </div>
+                -->
             </form>
         </field>
     </record>
+
+    <!-- Tree View -->
+    <record id="view_library_author_tree" model="ir.ui.view">
+        <field name="name">library.author.tree</field>
+        <field name="model">library.author</field>
+        <field name="arch" type="xml">
+            <list string="Authors">
+                <field name="name"/>
+                <field name="nationality"/>
+                <field name="date_of_birth"/>
+                <field name="book_count"/>
+            </list>
+        </field>
+    </record>
+
+
 
     <!-- Search View -->
     <!--

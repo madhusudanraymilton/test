@@ -1,5 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- Form View -->
+    <record id="view_library_book_form" model="ir.ui.view">
+        <field name="name">library.book.form</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <form string="Book">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="available,borrowed,maintenance"/>
+                    <button name="action_set_available" string="Set Available" type="object" class="btn-primary" invisible="state == 'available'"/>
+                    <button name="action_set_maintenance" string="Set Maintenance" type="object" invisible="state == 'maintenance'"/>
+                </header>
+
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_borrowings" type="object"
+                                class="oe_stat_button" icon="fa-exchange"
+                                invisible="total_borrowed_count == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="active_borrowing_count"/>/<field name="total_borrowed_count"/>
+                                </span>
+                                <span class="o_stat_text">Borrowings</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <field name="cover_image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="title" class="oe_edit_only"/>
+                        <h1>
+                            <field name="title" placeholder="Book Title"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="isbn"/>
+                            <field name="author_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="publisher_id"/>
+                            <field name="category_ids" widget="many2many_tags"/>
+                            <field name="borrowing_ids" widget="one2many_list"/>
+                        </group>
+                        <group>
+                            <field name="publication_date"/>
+                            <field name="price" widget="monetary"/>
+                            <field name="total_copies"/>
+                            <field name="available_copies"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" placeholder="Write a description..."/>
+                        </page>
+                        <page string="QR Code" invisible="not isbn">
+                            <group>
+                                <field name="qr_code" widget="image" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!--
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+                -->
+            </form>
+        </field>
+    </record>
+
+
+
+    <!-- Tree View -->
+    <record id="view_library_book_tree" model="ir.ui.view">
+        <field name="name">library.book.tree</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <list string="Books">
+                <field name="title"/>
+                <field name="isbn"/>
+                <field name="author_ids" widget="many2many_tags"/>
+                <field name="publisher_id"/>
+                <field name="category_ids" widget="many2many_tags"/>
+                <field name="total_copies"/>
+                <field name="available_copies"/>
+                <field name="price" widget="monetary"/>
+                <field name="state" widget="badge" decoration-success="state == 'available'" decoration-warning="state == 'borrowed'" decoration-info="state == 'maintenance'"/>
+            </list>
+        </field>
+    </record>
+
+
+
+    <!-- Search View -->
+    <!--
+    <record id="view_library_book_search" model="ir.ui.view">
+        <field name="name">library.book.search</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <search string="Search Books">
+                <field name="title"/>
+                <field name="isbn"/>
+                <field name="author_ids"/>
+                <field name="publisher_id"/>
+                <field name="category_ids"/>
+                <filter string="Available" name="available" domain="[('available_copies', '>', 0)]"/>
+                <filter string="Borrowed" name="borrowed" domain="[('state', '=', 'borrowed')]"/>
+                <filter string="Under Maintenance" name="maintenance" domain="[('state', '=', 'maintenance')]"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <separator/>
+                <filter string="Published This Year" name="this_year" domain="[('publication_date', '&gt;=', context_today().strftime('%Y-01-01'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Publisher" name="group_publisher" context="{'group_by': 'publisher_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Publication Date" name="group_publication_date" context="{'group_by': 'publication_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    -->
+    <!-- Action -->
+
     <!-- Kanban View -->
     <record id="view_library_book_kanban" model="ir.ui.view">
         <field name="name">library.book.kanban</field>
@@ -51,119 +176,5 @@
             </kanban>
         </field>
     </record>
-
-    <!-- Tree View -->
-    <record id="view_library_book_tree" model="ir.ui.view">
-        <field name="name">library.book.tree</field>
-        <field name="model">library.book</field>
-        <field name="arch" type="xml">
-            <list string="Books">
-                <field name="title"/>
-                <field name="isbn"/>
-                <field name="author_ids" widget="many2many_tags"/>
-                <field name="publisher_id"/>
-                <field name="category_ids" widget="many2many_tags"/>
-                <field name="total_copies"/>
-                <field name="available_copies"/>
-                <field name="price" widget="monetary"/>
-                <field name="state" widget="badge" decoration-success="state == 'available'" decoration-warning="state == 'borrowed'" decoration-info="state == 'maintenance'"/>
-            </list>
-        </field>
-    </record>
-
-    <!-- Form View -->
-    <record id="view_library_book_form" model="ir.ui.view">
-        <field name="name">library.book.form</field>
-        <field name="model">library.book</field>
-        <field name="arch" type="xml">
-            <form string="Book">
-                <header>
-                    <field name="state" widget="statusbar" statusbar_visible="available,borrowed,maintenance"/>
-                    <button name="action_set_available" string="Set Available" type="object" class="btn-primary" invisible="state == 'available'"/>
-                    <button name="action_set_maintenance" string="Set Maintenance" type="object" invisible="state == 'maintenance'"/>
-                </header>
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_view_borrowings" type="object"
-                                class="oe_stat_button" icon="fa-exchange"
-                                invisible="total_borrowed_count == 0">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">
-                                    <field name="active_borrowing_count"/>/<field name="total_borrowed_count"/>
-                                </span>
-                                <span class="o_stat_text">Borrowings</span>
-                            </div>
-                        </button>
-                    </div>
-                    <field name="cover_image" widget="image" class="oe_avatar"/>
-                    <div class="oe_title">
-                        <label for="title" class="oe_edit_only"/>
-                        <h1>
-                            <field name="title" placeholder="Book Title"/>
-                        </h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="isbn"/>
-                            <field name="author_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create': False}"/>
-                            <field name="publisher_id"/>
-                            <field name="category_ids" widget="many2many_tags"/>
-                        </group>
-                        <group>
-                            <field name="publication_date"/>
-                            <field name="price" widget="monetary"/>
-                            <field name="total_copies"/>
-                            <field name="available_copies"/>
-                            <field name="active"/>
-                        </group>
-                    </group>
-                    <notebook>
-                        <page string="Description">
-                            <field name="description" placeholder="Write a description..."/>
-                        </page>
-                        <page string="QR Code" invisible="not isbn">
-                            <group>
-                                <field name="qr_code" widget="image" readonly="1"/>
-                            </group>
-                        </page>
-                    </notebook>
-                </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
-            </form>
-        </field>
-    </record>
-
-    <!-- Search View -->
-    <!--
-    <record id="view_library_book_search" model="ir.ui.view">
-        <field name="name">library.book.search</field>
-        <field name="model">library.book</field>
-        <field name="arch" type="xml">
-            <search string="Search Books">
-                <field name="title"/>
-                <field name="isbn"/>
-                <field name="author_ids"/>
-                <field name="publisher_id"/>
-                <field name="category_ids"/>
-                <filter string="Available" name="available" domain="[('available_copies', '>', 0)]"/>
-                <filter string="Borrowed" name="borrowed" domain="[('state', '=', 'borrowed')]"/>
-                <filter string="Under Maintenance" name="maintenance" domain="[('state', '=', 'maintenance')]"/>
-                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
-                <separator/>
-                <filter string="Published This Year" name="this_year" domain="[('publication_date', '&gt;=', context_today().strftime('%Y-01-01'))]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Publisher" name="group_publisher" context="{'group_by': 'publisher_id'}"/>
-                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Publication Date" name="group_publication_date" context="{'group_by': 'publication_date'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-    -->
-    <!-- Action -->
 
 </odoo>

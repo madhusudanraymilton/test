@@ -12,12 +12,12 @@ class LibraryBook(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'title'
 
-    name = fields.Char(
-        string='Title',
-        compute='_compute_name',
-        store=True,
-        index=True
-    )
+    #name = fields.Char(
+    #    string='Title',
+    #    compute='_compute_name',
+    #    store=True,
+    #    index=True
+    #)
     title = fields.Char(
         string='Book Title',
         required=True,
@@ -123,11 +123,11 @@ class LibraryBook(models.Model):
         ('isbn_unique', 'UNIQUE(isbn)', 'ISBN must be unique!'),
     ]
 
-    @api.depends('title')
-    def _compute_name(self):
-        """Compute name field for search and display"""
-        for book in self:
-            book.name = book.title
+    #@api.depends('title')
+    #def _compute_name(self):
+    #    """Compute name field for search and display"""
+    #    for book in self:
+    #        book.name = book.title
 
     @api.depends('total_copies', 'borrowing_ids.status')
     def _compute_available_copies(self):
