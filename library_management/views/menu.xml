@@ -7,12 +7,12 @@
               sequence="10"/>
 
     <!-- Dashboard -->
-    <!--<menuitem id="menu_library_dashboard"
+    <menuitem id="menu_library_dashboard"
               name="Dashboard"
               parent="menu_library_root"
               action="action_library_dashboard"
-              sequence="1"/>
-    -->
+              sequence="11"/>
+
 
     <!-- Operations Menu -->
     <menuitem id="menu_library_operations"

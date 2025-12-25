@@ -52,6 +52,12 @@ This module provides a complete library management solution with:
     'demo': [
       #  'data/demo_data.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'library_management/static/src/css/dashboard.css',
+            'library_management/static/src/js/dashboard.js',
+        ],
+    },
     'external_dependencies': {
         'python': ['qrcode'],
     },
