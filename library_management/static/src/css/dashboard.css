@@ -1,23 +1,50 @@
-.library_dashboard {
-    padding: 20px;
+.o_library_dashboard {
+    background-color: #f8f9fa;
+    min-height: 100vh;
 }
 
-.library_stat_card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+.o_library_dashboard .card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.library_stat_value {
-    font-size: 36px;
-    font-weight: bold;
-    color: #00A09D;
+.o_library_dashboard .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
 }
 
-.library_stat_label {
-    font-size: 14px;
-    color: #666;
-    margin-top: 5px;
+.o_library_dashboard .card-body {
+    padding: 1.5rem;
+}
+
+.o_library_dashboard h2 {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.o_library_dashboard h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.o_library_dashboard .text-muted {
+    font-size: 0.9rem;
+}
+
+.o_library_dashboard i {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .o_library_dashboard h3 {
+        font-size: 1.5rem;
+    }
+
+    .o_library_dashboard i {
+        font-size: 2rem !important;
+    }
 }

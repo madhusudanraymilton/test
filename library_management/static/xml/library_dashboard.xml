@@ -2,42 +2,96 @@
 <templates xml:space="preserve">
 
     <t t-name="library_management.LibraryDashboard">
-        <div class="o_library_dashboard p-4">
-            <h1>Library Management Dashboard</h1>
+        <div class="o_library_dashboard">
+            <div class="container-fluid p-4">
+                <!-- Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h2 class="mb-0">Library Management Dashboard</h2>
+                        <p class="text-muted">Overview of your library system</p>
+                    </div>
+                </div>
 
-            <div class="row mt-4">
-                <div class="col-3">
-                    <div class="card text-center shadow-sm">
-                        <div class="card-body">
-                            <h3>Total Books</h3>
-                            <h2>120</h2>
+                <!-- Statistics Cards Row 1 -->
+                <div class="row g-3 mb-3">
+                    <!-- Total Books -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card shadow-sm h-100" style="cursor: pointer;" t-on-click="() => this.openBooks()">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="fa fa-book fa-3x text-primary"></i>
+                                </div>
+                                <h3 class="mb-1" t-esc="dashboardData.totalBooks"/>
+                                <p class="text-muted mb-0">Total Books</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Books -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card shadow-sm h-100" style="cursor: pointer;" t-on-click="() => this.openAvailableBooks()">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="fa fa-check-circle fa-3x text-success"></i>
+                                </div>
+                                <h3 class="mb-1" t-esc="dashboardData.availableBooks"/>
+                                <p class="text-muted mb-0">Available Books</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Issued Books -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card shadow-sm h-100" style="cursor: pointer;" t-on-click="() => this.openIssuedBooks()">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="fa fa-exchange fa-3x text-warning"></i>
+                                </div>
+                                <h3 class="mb-1" t-esc="dashboardData.issuedBooks"/>
+                                <p class="text-muted mb-0">Issued Books</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Members -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card shadow-sm h-100" style="cursor: pointer;" t-on-click="() => this.openMembers()">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="fa fa-users fa-3x text-info"></i>
+                                </div>
+                                <h3 class="mb-1" t-esc="dashboardData.totalMembers"/>
+                                <p class="text-muted mb-0">Total Members</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-3">
-                    <div class="card text-center shadow-sm">
-                        <div class="card-body">
-                            <h3>Issued Books</h3>
-                            <h2>45</h2>
+                <!-- Statistics Cards Row 2 -->
+                <div class="row g-3">
+                    <!-- Overdue Books -->
+                    <div class="col-12 col-md-6">
+                        <div class="card shadow-sm h-100" style="cursor: pointer;" t-on-click="() => this.openOverdueBooks()">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="fa fa-clock-o fa-3x text-danger"></i>
+                                </div>
+                                <h3 class="mb-1" t-esc="dashboardData.overdueBooks"/>
+                                <p class="text-muted mb-0">Overdue Books</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-3">
-                    <div class="card text-center shadow-sm">
-                        <div class="card-body">
-                            <h3>Available Books</h3>
-                            <h2>75</h2>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-3">
-                    <div class="card text-center shadow-sm">
-                        <div class="card-body">
-                            <h3>Members</h3>
-                            <h2>30</h2>
+                    <!-- Unpaid Fines -->
+                    <div class="col-12 col-md-6">
+                        <div class="card shadow-sm h-100" style="cursor: pointer;" t-on-click="() => this.openUnpaidFines()">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="fa fa-money fa-3x" style="color: #ff6b6b;"></i>
+                                </div>
+                                <h3 class="mb-1" t-esc="dashboardData.unpaidFines"/>
+                                <p class="text-muted mb-0">Unpaid Fines</p>
+                            </div>
                         </div>
                     </div>
                 </div>
