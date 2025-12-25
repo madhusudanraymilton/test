@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="library_management.LibraryDashboard">
+        <div class="o_library_dashboard p-4">
+            <h1>Library Management Dashboard</h1>
+
+            <div class="row mt-4">
+                <div class="col-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h3>Total Books</h3>
+                            <h2>120</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h3>Issued Books</h3>
+                            <h2>45</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h3>Available Books</h3>
+                            <h2>75</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h3>Members</h3>
+                            <h2>30</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>
