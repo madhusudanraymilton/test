@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_library_category_tree" model="ir.ui.view">
+        <field name="name">library.category.tree</field>
+        <field name="model">library.category</field>
+        <field name="arch" type="xml">
+            <list string="Categories">
+                <field name="complete_name"/>
+                <field name="parent_id"/>
+                <field name="book_count"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_library_category_form" model="ir.ui.view">
+        <field name="name">library.category.form</field>
+        <field name="model">library.category</field>
+        <field name="arch" type="xml">
+            <form string="Category">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_books" type="object"
+                                class="oe_stat_button" icon="fa-book"
+                                invisible="book_count == 0">
+                            <field name="book_count" widget="statinfo" string="Books"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Category Name"/>
+                        </h1>
+                        <h3>
+                            <field name="complete_name" readonly="1"/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="parent_id"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Description..."/>
+                    </group>
+                    <notebook>
+                        <page string="Child Categories">
+                            <field name="child_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="book_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Books">
+                            <field name="book_ids" readonly="1">
+                                <list>
+                                    <field name="title"/>
+                                    <field name="isbn"/>
+                                    <field name="publisher_id"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+   <!-- <record id="view_library_category_search" model="ir.ui.view">
+        <field name="name">library.category.search</field>
+        <field name="model">library.category</field>
+        <field name="arch" type="xml">
+            <search string="Search Categories">
+                <field name="name"/>
+                <field name="complete_name"/>
+                <field name="parent_id"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                <filter string="Top Level" name="top_level" domain="[('parent_id', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Parent Category" name="group_parent" context="{'group_by': 'parent_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    -->
+
+    <!-- Action -->
+    <record id="action_library_category" model="ir.actions.act_window">
+        <field name="name">Categories</field>
+        <field name="res_model">library.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first category
+            </p>
+            <p>
+                Organize your books with hierarchical categories.
+            </p>
+        </field>
+    </record>
+</odoo>

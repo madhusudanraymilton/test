@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_library_author_tree" model="ir.ui.view">
+        <field name="name">library.author.tree</field>
+        <field name="model">library.author</field>
+        <field name="arch" type="xml">
+            <list string="Authors">
+                <field name="name"/>
+                <field name="nationality"/>
+                <field name="date_of_birth"/>
+                <field name="book_count"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_library_author_form" model="ir.ui.view">
+        <field name="name">library.author.form</field>
+        <field name="model">library.author</field>
+        <field name="arch" type="xml">
+            <form string="Author">
+                <sheet>
+                    <field name="photo" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Author Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_of_birth"/>
+                            <field name="nationality"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                            <field name="book_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Biography">
+                            <field name="biography" placeholder="Write a brief biography..."/>
+                        </page>
+                        <page string="Books">
+                            <field name="book_ids" readonly="1">
+                                <list>
+                                    <field name="title"/>
+                                    <field name="isbn"/>
+                                    <field name="publisher_id"/>
+                                    <field name="publication_date"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <!--<record id="view_library_author_search" model="ir.ui.view">
+        <field name="name">library.author.search</field>
+        <field name="model">library.author</field>
+        <field name="arch" type="xml">
+            <search string="Search Authors">
+                <field name="name"/>
+                <field name="nationality"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Nationality" name="group_nationality" context="{'group_by': 'nationality'}"/>
+                </group>
+            </search>
+        </field>
+    </record>-->
+
+    <!-- Action -->
+    <record id="action_library_author" model="ir.actions.act_window">
+        <field name="name">Authors</field>
+        <field name="res_model">library.author</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first author
+            </p>
+            <p>
+                Add authors to your library catalog.
+            </p>
+        </field>
+    </record>
+</odoo>

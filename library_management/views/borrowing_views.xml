@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Kanban View -->
+    <record id="view_library_borrowing_kanban" model="ir.ui.view">
+        <field name="name">library.borrowing.kanban</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" class="o_kanban_small_column" on_create="quick_create">
+                <field name="color"/>
+                <field name="status"/>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <field name="due_date"/>
+                <field name="days_overdue"/>
+                <progressbar field="status" colors='{"draft": "muted", "borrowed": "success", "returned": "info", "overdue": "danger"}'/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)} oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                    <span t-if="record.days_overdue.raw_value > 0" class="badge badge-danger">
+                                        <i class="fa fa-clock-o"/> <t t-esc="record.days_overdue.value"/> days overdue
+                                    </span>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <field name="book_id"/>
+                                    <br/>
+                                    <field name="member_id"/>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <i class="fa fa-calendar"/> <field name="due_date"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="status" widget="label_selection" options="{'classes': {'draft': 'secondary', 'borrowed': 'success', 'returned': 'info', 'overdue': 'danger'}}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Calendar View -->
+    <record id="view_library_borrowing_calendar" model="ir.ui.view">
+        <field name="name">library.borrowing.calendar</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <calendar string="Borrowings" date_start="borrow_date" date_stop="due_date" color="status" event_open_popup="true" quick_create="false">
+                <field name="book_id"/>
+                <field name="member_id"/>
+                <field name="status"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_library_borrowing_tree" model="ir.ui.view">
+        <field name="name">library.borrowing.tree</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <list string="Borrowings" decoration-danger="status == 'overdue'" decoration-success="status == 'returned'">
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <field name="borrow_date"/>
+                <field name="due_date"/>
+                <field name="return_date"/>
+                <field name="days_overdue" optional="hide"/>
+                <field name="fine_amount" widget="monetary" optional="hide"/>
+                <field name="status" widget="badge" decoration-success="status == 'borrowed'" decoration-danger="status == 'overdue'" decoration-info="status == 'returned'" decoration-muted="status == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_library_borrowing_form" model="ir.ui.view">
+        <field name="name">library.borrowing.form</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <form string="Borrowing">
+                <header>
+                    <button name="action_confirm_borrow" string="Confirm Borrowing" type="object" class="btn-primary" invisible="status != 'draft'"/>
+                    <button name="action_return_book" string="Return Book" type="object" class="btn-success" invisible="status != 'borrowed'"/>
+                    <button name="action_send_reminder" string="Send Reminder" type="object" invisible="status not in ['borrowed', 'overdue']"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,borrowed,returned"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_library_fine)d" type="action"
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="fine_amount == 0"
+                                context="{'search_default_borrowing_id': id}">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="fine_amount" widget="monetary"/>
+                                </span>
+                                <span class="o_stat_text">Fine Amount</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="member_id" options="{'no_create': True}"/>
+                            <field name="member_email" readonly="1"/>
+                            <field name="member_can_borrow" readonly="1" widget="boolean"/>
+                        </group>
+                        <group>
+                            <field name="book_id" options="{'no_create': True}"/>
+                            <field name="book_isbn" readonly="1"/>
+                            <field name="book_available_copies" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="borrow_date"/>
+                            <field name="due_date"/>
+                            <field name="return_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="days_overdue" readonly="1"/>
+                            <field name="fine_id" readonly="1" invisible="not fine_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Add any notes..."/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+   <!-- <record id="view_library_borrowing_search" model="ir.ui.view">
+        <field name="name">library.borrowing.search</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <search string="Search Borrowings">
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <filter string="Draft" name="draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Borrowed" name="borrowed" domain="[('status', '=', 'borrowed')]"/>
+                <filter string="Returned" name="returned" domain="[('status', '=', 'returned')]"/>
+                <filter string="Overdue" name="overdue" domain="[('status', '=', 'overdue')]"/>
+                <separator/>
+                <filter string="Due Today" name="due_today" domain="[('due_date', '=', context_today())]"/>
+                <filter string="Due This Week" name="due_week" domain="[('due_date', '&gt;=', context_today()), ('due_date', '&lt;=', (context_today() + relativedelta(weeks=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Has Fine" name="has_fine" domain="[('fine_amount', '>', 0)]"/>
+                <separator/>
+                <filter string="Borrow Date" name="filter_borrow_date" date="borrow_date"/>
+                <filter string="Due Date" name="filter_due_date" date="due_date"/>
+                <group expand="0" string="Group By">
+                    <filter string="Member" name="group_member" context="{'group_by': 'member_id'}"/>
+                    <filter string="Book" name="group_book" context="{'group_by': 'book_id'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Borrow Date" name="group_borrow_date" context="{'group_by': 'borrow_date'}"/>
+                    <filter string="Due Date" name="group_due_date" context="{'group_by': 'due_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    -->
+
+    <!-- Graph View -->
+    <record id="view_library_borrowing_graph" model="ir.ui.view">
+        <field name="name">library.borrowing.graph</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <graph string="Borrowing Statistics" type="bar">
+                <field name="borrow_date" interval="month"/>
+                <field name="book_id" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_library_borrowing" model="ir.actions.act_window">
+        <field name="name">Borrowings</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">kanban,list,form,calendar,graph,pivot</field>
+        <field name="context">{'search_default_borrowed': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first borrowing record
+            </p>
+            <p>
+                Track book borrowings and returns.
+            </p>
+        </field>
+    </record>
+
+    <!-- Report Actions -->
+    <record id="action_library_borrowing_report" model="ir.actions.act_window">
+        <field name="name">Borrowing History Report</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="domain">[]</field>
+    </record>
+
+    <record id="action_library_overdue_report" model="ir.actions.act_window">
+        <field name="name">Overdue Books Report</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('status', '=', 'overdue')]</field>
+    </record>
+</odoo>

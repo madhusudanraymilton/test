@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Kanban View -->
+    <record id="view_library_member_kanban" model="ir.ui.view">
+        <field name="name">library.member.kanban</field>
+        <field name="model">library.member</field>
+        <field name="arch" type="xml">
+            <kanban string="Members">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="photo"/>
+                <field name="membership_type"/>
+                <field name="can_borrow"/>
+                <field name="active_borrowings"/>
+                <field name="unpaid_fine_amount"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <img t-att-src="kanban_image('library.member', 'photo', record.id.raw_value)" alt="Member Photo"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <div class="o_kanban_record_subtitle">
+                                    <field name="email"/>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <span class="badge badge-pill" t-att-class="record.membership_type.raw_value == 'student' ? 'badge-info' : record.membership_type.raw_value == 'teacher' ? 'badge-success' : 'badge-secondary'">
+                                            <field name="membership_type"/>
+                                        </span>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <span t-if="record.can_borrow.raw_value" class="badge badge-success">Can Borrow</span>
+                                        <span t-else="" class="badge badge-danger">Cannot Borrow</span>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        Active: <field name="active_borrowings"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right" t-if="record.unpaid_fine_amount.raw_value > 0">
+                                        <span class="text-danger">Fine: <field name="unpaid_fine_amount" widget="monetary"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_library_member_tree" model="ir.ui.view">
+        <field name="name">library.member.tree</field>
+        <field name="model">library.member</field>
+        <field name="arch" type="xml">
+            <list string="Members">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="membership_type" widget="badge"/>
+                <field name="membership_date"/>
+                <field name="active_borrowings"/>
+                <field name="unpaid_fine_amount" widget="monetary"/>
+                <field name="can_borrow" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_library_member_form" model="ir.ui.view">
+        <field name="name">library.member.form</field>
+        <field name="model">library.member</field>
+        <field name="arch" type="xml">
+            <form string="Member">
+                <header>
+                    <button name="action_view_borrowings" string="View Borrowings" type="object" class="btn-primary" invisible="total_books_borrowed == 0"/>
+                    <button name="action_view_fines" string="View Fines" type="object" class="btn-warning" invisible="unpaid_fine_amount == 0"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_borrowings" type="object"
+                                class="oe_stat_button" icon="fa-exchange"
+                                invisible="total_books_borrowed == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="active_borrowings"/>/<field name="total_books_borrowed"/>
+                                </span>
+                                <span class="o_stat_text">Borrowings</span>
+                            </div>
+                        </button>
+                        <button name="action_view_fines" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="unpaid_fine_amount == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="unpaid_fine_amount" widget="monetary"/>
+                                </span>
+                                <span class="o_stat_text">Unpaid Fines</span>
+                            </div>
+                        </button>
+                    </div>
+                    <field name="photo" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Member Name"/>
+                        </h1>
+                        <h3>
+                            <field name="can_borrow" widget="boolean" readonly="1"/>
+                            <span invisible="can_borrow"> Cannot Borrow (Unpaid Fines)</span>
+                            <span invisible="not can_borrow"> Can Borrow</span>
+                        </h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="membership_type"/>
+                            <field name="user_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="membership_date"/>
+                            <field name="total_fine_paid" widget="monetary"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="address" placeholder="Enter full address..."/>
+                    </group>
+                    <notebook>
+                        <page string="Borrowing History">
+                            <field name="borrowing_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="book_id"/>
+                                    <field name="borrow_date"/>
+                                    <field name="due_date"/>
+                                    <field name="return_date"/>
+                                    <field name="status" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Fines">
+                            <field name="fine_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="borrowing_id"/>
+                                    <field name="fine_amount" widget="monetary"/>
+                                    <field name="payment_status" widget="badge"/>
+                                    <field name="created_date"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+  <!--  <record id="view_library_member_search" model="ir.ui.view">
+        <field name="name">library.member.search</field>
+        <field name="model">library.member</field>
+        <field name="arch" type="xml">
+            <search string="Search Members">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <filter string="Can Borrow" name="can_borrow" domain="[('can_borrow', '=', True)]"/>
+                <filter string="Has Unpaid Fines" name="has_fines" domain="[('unpaid_fine_amount', '>', 0)]"/>
+                <filter string="Active Borrowings" name="active_borrowings" domain="[('active_borrowings', '>', 0)]"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <separator/>
+                <filter string="Students" name="students" domain="[('membership_type', '=', 'student')]"/>
+                <filter string="Teachers" name="teachers" domain="[('membership_type', '=', 'teacher')]"/>
+                <filter string="Public" name="public" domain="[('membership_type', '=', 'public')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Membership Type" name="group_type" context="{'group_by': 'membership_type'}"/>
+                    <filter string="Membership Date" name="group_date" context="{'group_by': 'membership_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    -->
+
+    <!-- Action -->
+    <record id="action_library_member" model="ir.actions.act_window">
+        <field name="name">Members</field>
+        <field name="res_model">library.member</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register your first member
+            </p>
+            <p>
+                Add members who can borrow books from the library.
+            </p>
+        </field>
+    </record>
+
+    <!-- Report Actions -->
+    <record id="action_library_member_report" model="ir.actions.act_window">
+        <field name="name">Member Activity Report</field>
+        <field name="res_model">library.member</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="domain">[]</field>
+    </record>
+</odoo>

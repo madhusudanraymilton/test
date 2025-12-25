@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_return_book_wizard_form" model="ir.ui.view">
+        <field name="name">return.book.wizard.form</field>
+        <field name="model">return.book.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Return Books">
+                <group>
+                    <group>
+                        <field name="return_date"/>
+                        <field name="create_fines"/>
+                    </group>
+                    <group>
+                        <field name="total_fines" widget="monetary" readonly="1"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="notes" placeholder="Add return notes..."/>
+                </group>
+                <notebook>
+                    <page string="Books to Return">
+                        <field name="borrowing_line_ids" readonly="1">
+                            <list>
+                             <!--   <field name="member_id"/>  -->
+                                <field name="book_id"/>
+                                <field name="due_date"/>
+                                <field name="days_overdue" decoration-danger="days_overdue > 0"/>
+                                <field name="fine_amount" widget="monetary" sum="Total"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_return_books" string="Return Books" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_return_book_wizard" model="ir.actions.act_window">
+        <field name="name">Return Books</field>
+        <field name="res_model">return.book.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_library_borrowing"/>
+        <field name="binding_view_types">list</field>
+    </record>
+</odoo>

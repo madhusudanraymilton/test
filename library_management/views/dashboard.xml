@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Dashboard Action -->
+    <record id="action_library_dashboard" model="ir.actions.client">
+        <field name="name">Library Dashboard</field>
+        <field name="tag">library_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Statistics Actions for Kanban Boxes -->
+    <record id="action_library_books_stat" model="ir.actions.act_window">
+        <field name="name">All Books</field>
+        <field name="res_model">library.book</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[]</field>
+    </record>
+
+    <record id="action_library_available_books_stat" model="ir.actions.act_window">
+        <field name="name">Available Books</field>
+        <field name="res_model">library.book</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('available_copies', '>', 0)]</field>
+    </record>
+
+    <record id="action_library_members_stat" model="ir.actions.act_window">
+        <field name="name">All Members</field>
+        <field name="res_model">library.member</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[]</field>
+    </record>
+
+    <record id="action_library_active_borrowings_stat" model="ir.actions.act_window">
+        <field name="name">Active Borrowings</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('status', '=', 'borrowed')]</field>
+    </record>
+
+    <record id="action_library_overdue_stat" model="ir.actions.act_window">
+        <field name="name">Overdue Books</field>
+        <field name="res_model">library.borrowing</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('status', '=', 'overdue')]</field>
+    </record>
+
+    <record id="action_library_unpaid_fines_stat" model="ir.actions.act_window">
+        <field name="name">Unpaid Fines</field>
+        <field name="res_model">library.fine</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('payment_status', '=', 'unpaid')]</field>
+    </record>
+
+    <!-- Books by Category - Graph View -->
+    <record id="view_library_book_category_graph" model="ir.ui.view">
+        <field name="name">library.book.category.graph</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <graph string="Books by Category" type="pie">
+                <field name="category_ids"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Borrowing Trends - Graph View -->
+    <record id="view_library_borrowing_trend_graph" model="ir.ui.view">
+        <field name="name">library.borrowing.trend.graph</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <graph string="Borrowing Trends" type="line">
+                <field name="borrow_date" interval="week"/>
+                <field name="book_id" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Top Borrowed Books - Graph View -->
+    <record id="view_library_top_books_graph" model="ir.ui.view">
+        <field name="name">library.top.books.graph</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <graph string="Top Borrowed Books" type="bar">
+                <field name="book_id"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Pivot Views for Statistics -->
+    <record id="view_library_borrowing_pivot" model="ir.ui.view">
+        <field name="name">library.borrowing.pivot</field>
+        <field name="model">library.borrowing</field>
+        <field name="arch" type="xml">
+            <pivot string="Borrowing Analysis">
+                <field name="borrow_date" interval="month" type="row"/>
+                <field name="status" type="col"/>
+                <field name="book_id" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_library_fine_pivot" model="ir.ui.view">
+        <field name="name">library.fine.pivot</field>
+        <field name="model">library.fine</field>
+        <field name="arch" type="xml">
+            <pivot string="Fine Analysis">
+                <field name="created_date" interval="month" type="row"/>
+                <field name="payment_status" type="col"/>
+                <field name="fine_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+</odoo>

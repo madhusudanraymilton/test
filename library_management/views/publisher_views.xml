@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_library_publisher_tree" model="ir.ui.view">
+        <field name="name">library.publisher.tree</field>
+        <field name="model">library.publisher</field>
+        <field name="arch" type="xml">
+            <list string="Publishers">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="website" widget="url"/>
+                <field name="book_count"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_library_publisher_form" model="ir.ui.view">
+        <field name="name">library.publisher.form</field>
+        <field name="model">library.publisher</field>
+        <field name="arch" type="xml">
+            <form string="Publisher">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_books" type="object"
+                                class="oe_stat_button" icon="fa-book"
+                                invisible="book_count == 0">
+                            <field name="book_count" widget="statinfo" string="Books"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Publisher Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="website" widget="url"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="address" placeholder="Enter full address..."/>
+                    </group>
+                    <notebook>
+                        <page string="Books">
+                            <field name="book_ids">
+                                <list>
+                                    <field name="title"/>
+                                    <field name="isbn"/>
+                                    <field name="publication_date"/>
+                                    <field name="total_copies"/>
+                                    <field name="available_copies"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+  <!--  <record id="view_library_publisher_search" model="ir.ui.view">
+        <field name="name">library.publisher.search</field>
+        <field name="model">library.publisher</field>
+        <field name="arch" type="xml">
+            <search string="Search Publishers">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+    -->
+
+    <!-- Action -->
+    <record id="action_library_publisher" model="ir.actions.act_window">
+        <field name="name">Publishers</field>
+        <field name="res_model">library.publisher</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first publisher
+            </p>
+            <p>
+                Add publishers to your library catalog.
+            </p>
+        </field>
+    </record>
+</odoo>

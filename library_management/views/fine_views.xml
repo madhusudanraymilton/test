@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_library_fine_tree" model="ir.ui.view">
+        <field name="name">library.fine.tree</field>
+        <field name="model">library.fine</field>
+        <field name="arch" type="xml">
+            <list string="Fines" decoration-danger="payment_status == 'unpaid'" decoration-success="payment_status == 'paid'">
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <field name="borrowing_id"/>
+                <field name="fine_amount" widget="monetary" sum="Total"/>
+                <field name="fine_reason"/>
+                <field name="created_date"/>
+                <field name="payment_date"/>
+                <field name="payment_status" widget="badge" decoration-success="payment_status == 'paid'" decoration-danger="payment_status == 'unpaid'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_library_fine_form" model="ir.ui.view">
+        <field name="name">library.fine.form</field>
+        <field name="model">library.fine</field>
+        <field name="arch" type="xml">
+            <form string="Fine">
+                <header>
+                    <button name="action_mark_as_paid" string="Mark as Paid" type="object" class="btn-primary" invisible="payment_status == 'paid'"/>
+                    <button name="action_send_payment_reminder" string="Send Payment Reminder" type="object" invisible="payment_status == 'paid'"/>
+                    <field name="payment_status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="member_id" readonly="1"/>
+                            <field name="borrowing_id" readonly="1"/>
+                            <field name="book_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="fine_amount" widget="monetary" readonly="1"/>
+                            <field name="created_date" readonly="1"/>
+                            <field name="payment_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="fine_reason" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Add payment notes..."/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+   <!-- <record id="view_library_fine_search" model="ir.ui.view">
+        <field name="name">library.fine.search</field>
+        <field name="model">library.fine</field>
+        <field name="arch" type="xml">
+            <search string="Search Fines">
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <field name="borrowing_id"/>
+                <filter string="Unpaid" name="unpaid" domain="[('payment_status', '=', 'unpaid')]"/>
+                <filter string="Paid" name="paid" domain="[('payment_status', '=', 'paid')]"/>
+                <separator/>
+                <filter string="Created Date" name="filter_created_date" date="created_date"/>
+                <filter string="Payment Date" name="filter_payment_date" date="payment_date"/>
+                <group expand="0" string="Group By">
+                    <filter string="Member" name="group_member" context="{'group_by': 'member_id'}"/>
+                    <filter string="Payment Status" name="group_status" context="{'group_by': 'payment_status'}"/>
+                    <filter string="Created Date" name="group_created_date" context="{'group_by': 'created_date'}"/>
+                    <filter string="Payment Date" name="group_payment_date" context="{'group_by': 'payment_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    -->
+
+    <!-- Graph View -->
+    <record id="view_library_fine_graph" model="ir.ui.view">
+        <field name="name">library.fine.graph</field>
+        <field name="model">library.fine</field>
+        <field name="arch" type="xml">
+            <graph string="Fine Statistics" type="bar">
+                <field name="created_date" interval="month"/>
+                <field name="fine_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_library_fine" model="ir.actions.act_window">
+        <field name="name">Fines</field>
+        <field name="res_model">library.fine</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="context">{'search_default_unpaid': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No fines recorded yet
+            </p>
+            <p>
+                Fines are automatically created for overdue book returns.
+            </p>
+        </field>
+    </record>
+
+    <!-- Report Action -->
+    <record id="action_library_fine_report" model="ir.actions.act_window">
+        <field name="name">Fine Collection Report</field>
+        <field name="res_model">library.fine</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="domain">[]</field>
+    </record>
+</odoo>

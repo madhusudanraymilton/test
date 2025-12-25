@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Menu -->
+    <menuitem id="menu_library_root"
+              name="Library"
+              web_icon="library_management,static/description/icon.png"
+              sequence="10"/>
+
+    <!-- Dashboard -->
+    <menuitem id="menu_library_dashboard"
+              name="Dashboard"
+              parent="menu_library_root"
+              action="action_library_dashboard"
+              sequence="1"/>
+
+    <!-- Operations Menu -->
+    <menuitem id="menu_library_operations"
+              name="Operations"
+              parent="menu_library_root"
+              sequence="10"/>
+
+    <menuitem id="menu_library_borrowing"
+              name="Borrowings"
+              parent="menu_library_operations"
+              action="action_library_borrowing"
+              sequence="1"/>
+
+    <menuitem id="menu_library_fine"
+              name="Fines"
+              parent="menu_library_operations"
+              action="action_library_fine"
+              sequence="2"/>
+
+    <!-- Catalog Menu -->
+    <menuitem id="menu_library_catalog"
+              name="Catalog"
+              parent="menu_library_root"
+              sequence="20"/>
+
+    <menuitem id="menu_library_book"
+              name="Books"
+              parent="menu_library_catalog"
+              action="action_library_book"
+              sequence="1"/>
+
+    <menuitem id="menu_library_author"
+              name="Authors"
+              parent="menu_library_catalog"
+              action="action_library_author"
+              sequence="2"/>
+
+    <menuitem id="menu_library_publisher"
+              name="Publishers"
+              parent="menu_library_catalog"
+              action="action_library_publisher"
+              sequence="3"/>
+
+    <menuitem id="menu_library_category"
+              name="Categories"
+              parent="menu_library_catalog"
+              action="action_library_category"
+              sequence="4"/>
+
+    <!-- Members Menu -->
+    <menuitem id="menu_library_members"
+              name="Members"
+              parent="menu_library_root"
+              action="action_library_member"
+              sequence="30"/>
+
+    <!-- Reports Menu -->
+    <menuitem id="menu_library_reports"
+              name="Reports"
+              parent="menu_library_root"
+              sequence="40"/>
+
+    <menuitem id="menu_library_report_borrowing_history"
+              name="Borrowing History"
+              parent="menu_library_reports"
+              action="action_library_borrowing_report"
+              sequence="1"/>
+
+    <menuitem id="menu_library_report_overdue"
+              name="Overdue Books"
+              parent="menu_library_reports"
+              action="action_library_overdue_report"
+              sequence="2"/>
+
+    <menuitem id="menu_library_report_fine_collection"
+              name="Fine Collection"
+              parent="menu_library_reports"
+              action="action_library_fine_report"
+              sequence="3"/>
+
+    <menuitem id="menu_library_report_member_activity"
+              name="Member Activity"
+              parent="menu_library_reports"
+              action="action_library_member_report"
+              sequence="4"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_library_configuration"
+              name="Configuration"
+              parent="menu_library_root"
+              sequence="100"
+              groups="group_library_admin"/>
+</odoo>

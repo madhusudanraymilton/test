@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Email Template: Borrowing Confirmation -->
+    <record id="email_template_borrowing_confirmation" model="mail.template">
+        <field name="name">Library: Borrowing Confirmation</field>
+        <field name="model_id" ref="model_library_borrowing"/>
+        <field name="subject">Book Borrowing Confirmation - {{ object.book_id.title }}</field>
+        <field name="email_from">{{ (object.create_uid.email_formatted or user.email_formatted) }}</field>
+        <field name="email_to">{{ object.member_id.email }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <h2 style="color: #00A09D;">Book Borrowing Confirmation</h2>
+                <p>Dear <strong>{{ object.member_id.name }}</strong>,</p>
+                <p>You have successfully borrowed the following book:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Book Title:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.title }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>ISBN:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.isbn }}</td>
+                    </tr>
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Borrow Date:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ format_date(object.borrow_date) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Due Date:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ format_date(object.due_date) }}</td>
+                    </tr>
+                </table>
+                <p style="color: #d9534f;"><strong>Please return the book on or before the due date to avoid fines.</strong></p>
+                <p>Thank you for using our library!</p>
+                <p>Best regards,<br/>Library Management System</p>
+            </div>
+        </field>
+    </record>
+
+    <!-- Email Template: Overdue Notification -->
+    <record id="email_template_overdue_notification" model="mail.template">
+        <field name="name">Library: Overdue Book Notification</field>
+        <field name="model_id" ref="model_library_borrowing"/>
+        <field name="subject">Overdue Book Reminder - {{ object.book_id.title }}</field>
+        <field name="email_from">{{ (object.create_uid.email_formatted or user.email_formatted) }}</field>
+        <field name="email_to">{{ object.member_id.email }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <h2 style="color: #d9534f;">Overdue Book Reminder</h2>
+                <p>Dear <strong>{{ object.member_id.name }}</strong>,</p>
+                <p style="color: #d9534f;">This is a reminder that the following book is <strong>overdue</strong>:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Book Title:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.title }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Due Date:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ format_date(object.due_date) }}</td>
+                    </tr>
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Days Overdue:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f;">{{ object.days_overdue }} days</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Current Fine:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f;">{{ object.fine_amount }}</td>
+                    </tr>
+                </table>
+                <p><strong>Please return the book as soon as possible to avoid additional fines.</strong></p>
+                <p>You may contact the library for assistance.</p>
+                <p>Best regards,<br/>Library Management System</p>
+            </div>
+        </field>
+    </record>
+
+    <!-- Email Template: Fine Notification -->
+    <record id="email_template_fine_notification" model="mail.template">
+        <field name="name">Library: Fine Notification</field>
+        <field name="model_id" ref="model_library_fine"/>
+        <field name="subject">Library Fine - {{ object.book_id.title }}</field>
+        <field name="email_from">{{ (object.create_uid.email_formatted or user.email_formatted) }}</field>
+        <field name="email_to">{{ object.member_id.email }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <h2 style="color: #f0ad4e;">Library Fine Notice</h2>
+                <p>Dear <strong>{{ object.member_id.name }}</strong>,</p>
+                <p>A fine has been assessed for the following book return:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Book Title:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.title }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Fine Amount:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f; font-size: 18px;"><strong>{{ object.fine_amount }}</strong></td>
+                    </tr>
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Reason:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.fine_reason }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Fine Date:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ format_date(object.created_date) }}</td>
+                    </tr>
+                </table>
+                <p><strong>Please pay this fine at your earliest convenience.</strong></p>
+                <p style="color: #d9534f;"><em>Note: You cannot borrow new books until all fines are paid.</em></p>
+                <p>Thank you for your cooperation.</p>
+                <p>Best regards,<br/>Library Management System</p>
+            </div>
+        </field>
+    </record>
+
+    <!-- Email Template: Fine Payment Confirmation -->
+    <record id="email_template_fine_payment_confirmation" model="mail.template">
+        <field name="name">Library: Fine Payment Confirmation</field>
+        <field name="model_id" ref="model_library_fine"/>
+        <field name="subject">Fine Payment Confirmation - {{ object.book_id.title }}</field>
+        <field name="email_from">{{ (object.create_uid.email_formatted or user.email_formatted) }}</field>
+        <field name="email_to">{{ object.member_id.email }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <h2 style="color: #5cb85c;">Fine Payment Confirmation</h2>
+                <p>Dear <strong>{{ object.member_id.name }}</strong>,</p>
+                <p>We confirm that your fine payment has been received:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Book Title:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ object.book_id.title }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Amount Paid:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; color: #5cb85c; font-size: 18px;"><strong>{{ object.fine_amount }}</strong></td>
+                    </tr>
+                    <tr style="background-color: #f5f5f5;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Payment Date:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ format_date(object.payment_date) }}</td>
+                    </tr>
+                </table>
+                <p>Your account is now clear, and you can continue borrowing books from the library.</p>
+                <p>Thank you for your prompt payment!</p>
+                <p>Best regards,<br/>Library Management System</p>
+            </div>
+        </field>
+    </record>
+</odoo>

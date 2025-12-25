@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Demo Authors -->
+        <record id="author_1" model="library.author">
+            <field name="name">J.K. Rowling</field>
+            <field name="nationality">British</field>
+            <field name="date_of_birth">1965-07-31</field>
+            <field name="biography">British author best known for the Harry Potter fantasy series.</field>
+        </record>
+
+        <record id="author_2" model="library.author">
+            <field name="name">George Orwell</field>
+            <field name="nationality">British</field>
+            <field name="date_of_birth">1903-06-25</field>
+            <field name="biography">English novelist and essayist, journalist and critic.</field>
+        </record>
+
+        <record id="author_3" model="library.author">
+            <field name="name">Stephen King</field>
+            <field name="nationality">American</field>
+            <field name="date_of_birth">1947-09-21</field>
+            <field name="biography">American author of horror, supernatural fiction, suspense, and fantasy novels.</field>
+        </record>
+
+        <!-- Demo Publishers -->
+        <record id="publisher_1" model="library.publisher">
+            <field name="name">Bloomsbury Publishing</field>
+            <field name="email">info@bloomsbury.com</field>
+            <field name="phone">+44 20 7631 5600</field>
+            <field name="website">https://www.bloomsbury.com</field>
+            <field name="address">50 Bedford Square, London WC1B 3DP, United Kingdom</field>
+        </record>
+
+        <record id="publisher_2" model="library.publisher">
+            <field name="name">Penguin Books</field>
+            <field name="email">contact@penguin.com</field>
+            <field name="phone">+44 20 7139 3000</field>
+            <field name="website">https://www.penguin.com</field>
+            <field name="address">80 Strand, London WC2R 0RL, United Kingdom</field>
+        </record>
+
+        <!-- Demo Categories -->
+        <record id="category_fiction" model="library.category">
+            <field name="name">Fiction</field>
+            <field name="description">Fictional literature</field>
+        </record>
+
+        <record id="category_fantasy" model="library.category">
+            <field name="name">Fantasy</field>
+            <field name="parent_id" ref="category_fiction"/>
+            <field name="description">Fantasy fiction</field>
+        </record>
+
+        <record id="category_horror" model="library.category">
+            <field name="name">Horror</field>
+            <field name="parent_id" ref="category_fiction"/>
+            <field name="description">Horror fiction</field>
+        </record>
+
+        <record id="category_classics" model="library.category">
+            <field name="name">Classics</field>
+            <field name="description">Classic literature</field>
+        </record>
+
+        <!-- Demo Books -->
+        <record id="book_1" model="library.book">
+            <field name="title">Harry Potter and the Philosopher's Stone</field>
+            <field name="isbn">9780747532699</field>
+            <field name="description">The first book in the Harry Potter series.</field>
+            <field name="author_ids" eval="[(6, 0, [ref('author_1')])]"/>
+            <field name="publisher_id" ref="publisher_1"/>
+            <field name="category_ids" eval="[(6, 0, [ref('category_fantasy')])]"/>
+            <field name="publication_date">1997-06-26</field>
+            <field name="total_copies">5</field>
+            <field name="price">299.99</field>
+            <field name="state">available</field>
+        </record>
+
+        <record id="book_2" model="library.book">
+            <field name="title">1984</field>
+            <field name="isbn">9780451524935</field>
+            <field name="description">A dystopian social science fiction novel.</field>
+            <field name="author_ids" eval="[(6, 0, [ref('author_2')])]"/>
+            <field name="publisher_id" ref="publisher_2"/>
+            <field name="category_ids" eval="[(6, 0, [ref('category_fiction'), ref('category_classics')])]"/>
+            <field name="publication_date">1949-06-08</field>
+            <field name="total_copies">3</field>
+            <field name="price">199.99</field>
+            <field name="state">available</field>
+        </record>
+
+        <record id="book_3" model="library.book">
+            <field name="title">The Shining</field>
+            <field name="isbn">9780385121675</field>
+            <field name="description">Horror novel about a family's isolation in a haunted hotel.</field>
+            <field name="author_ids" eval="[(6, 0, [ref('author_3')])]"/>
+            <field name="publisher_id" ref="publisher_2"/>
+            <field name="category_ids" eval="[(6, 0, [ref('category_horror')])]"/>
+            <field name="publication_date">1977-01-28</field>
+            <field name="total_copies">2</field>
+            <field name="price">249.99</field>
+            <field name="state">available</field>
+        </record>
+
+        <!-- Demo Members -->
+        <record id="member_1" model="library.member">
+            <field name="name">John Doe</field>
+            <field name="email">john.doe@example.com</field>
+            <field name="phone">+1234567890</field>
+            <field name="address">123 Main Street, New York, NY 10001</field>
+            <field name="membership_date" eval="(datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')"/>
+            <field name="membership_type">public</field>
+        </record>
+
+        <record id="member_2" model="library.member">
+            <field name="name">Jane Smith</field>
+            <field name="email">jane.smith@example.com</field>
+            <field name="phone">+1234567891</field>
+            <field name="address">456 Oak Avenue, Boston, MA 02101</field>
+            <field name="membership_date" eval="(datetime.now() - timedelta(days=180)).strftime('%Y-%m-%d')"/>
+            <field name="membership_type">student</field>
+        </record>
+
+        <record id="member_3" model="library.member">
+            <field name="name">Robert Johnson</field>
+            <field name="email">robert.johnson@example.com</field>
+            <field name="phone">+1234567892</field>
+            <field name="address">789 Pine Road, Chicago, IL 60601</field>
+            <field name="membership_date" eval="(datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')"/>
+            <field name="membership_type">teacher</field>
+        </record>
+
+        <!-- Demo Borrowings -->
+        <record id="borrowing_1" model="library.borrowing">
+            <field name="member_id" ref="member_1"/>
+            <field name="book_id" ref="book_1"/>
+            <field name="borrow_date" eval="(datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')"/>
+            <field name="due_date" eval="(datetime.now() - timedelta(days=16)).strftime('%Y-%m-%d')"/>
+            <field name="return_date" eval="(datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d')"/>
+            <field name="status">returned</field>
+        </record>
+
+        <record id="borrowing_2" model="library.borrowing">
+            <field name="member_id" ref="member_2"/>
+            <field name="book_id" ref="book_2"/>
+            <field name="borrow_date" eval="(datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d')"/>
+            <field name="due_date" eval="(datetime.now() - timedelta(days=6)).strftime('%Y-%m-%d')"/>
+            <field name="status">borrowed</field>
+        </record>
+
+        <record id="borrowing_3" model="library.borrowing">
+            <field name="member_id" ref="member_3"/>
+            <field name="book_id" ref="book_3"/>
+            <field name="borrow_date" eval="(datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d')"/>
+            <field name="due_date" eval="(datetime.now() + timedelta(days=4)).strftime('%Y-%m-%d')"/>
+            <field name="status">borrowed</field>
+        </record>
+
+        <!-- Demo Fine -->
+        <record id="fine_1" model="library.fine">
+            <field name="borrowing_id" ref="borrowing_1"/>
+            <field name="member_id" ref="member_1"/>
+            <field name="fine_amount">30.00</field>
+            <field name="fine_reason">Book returned 6 days late</field>
+            <field name="payment_status">paid</field>
+            <field name="payment_date" eval="(datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')"/>
+            <field name="created_date" eval="(datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d')"/>
+        </record>
+    </data>
+</odoo>
