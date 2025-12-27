@@ -29,3 +29,12 @@ access_op_media_type_library,name_op_media_type_library,model_op_media_type,grou
 access_issue_media,name_issue_media,model_issue_media,group_op_library,1,1,1,1
 access_reserve_media,name_reserve_media,model_reserve_media,group_op_library,1,1,1,1
 access_return_media,name_return_media,model_return_media,group_op_library,1,1,1,1
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_op_library_card_student,op.library.card.student,model_op_library_card,wk_school_management.group_school_student,1,0,0,0
+access_op_library_card_teacher,op.library.card.teacher,model_op_library_card,wk_school_management.group_school_teacher,1,0,0,0
+access_op_library_card_admin,op.library.card.admin,model_op_library_card,wk_school_management.group_school_admin,1,1,1,1
+access_op_media_movement_student,op.media.movement.student,model_op_media_movement,wk_school_management.group_school_student,1,0,0,0
+access_op_media_movement_teacher,op.media.movement.teacher,model_op_media_movement,wk_school_management.group_school_teacher,1,1,1,0
+access_op_media_movement_admin,op.media.movement.admin,model_op_media_movement,wk_school_management.group_school_admin,1,1,1,1
+access_op_media_student,op.media.student,model_op_media,wk_school_management.group_school_student,1,0,0,0
+access_op_media_teacher,op.media.teacher,model_op_media,wk_school_management.group_school_teacher,1,0,0,0

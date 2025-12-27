@@ -22,9 +22,9 @@ from odoo import api, fields, models
 
 
 class OpStudent(models.Model):
-    _inherit = "op.student"
-    
-    library_card_id = fields.Many2one('op.library.card', 'Library Card')
+    _inherit = "student.student"
+
+    library_card_id = fields.Many2one('op.library.card', 'Library Card', ondelete="set null")
     media_movement_lines = fields.One2many(
         'op.media.movement', 'student_id', 'Movements')
     media_movement_lines_count = fields.Integer(compute='_compute_media_movement_lines')

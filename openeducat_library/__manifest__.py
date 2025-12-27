@@ -31,13 +31,14 @@
     'depends': [
         'account',
         'base_automation',
-        'openeducat_activity',
-        'openeducat_parent',
+        #'openeducat_activity',
+        #'openeducat_parent',  
         'wk_school_management',
     ],
     'data': [
         'security/op_security.xml',
         'security/ir.model.access.csv',
+        'data/library_sequence.xml', #add sequence 
         'data/custom_paperformat.xml',
         'data/media_queue_sequence.xml',
         'data/action_rule_data.xml',
@@ -61,6 +62,7 @@
         'views/media_type_view.xml',
         'views/student_view.xml',
         'views/faculty_view.xml',
+        'views/student_library_view.xml', #new integrating 
         'menus/op_menu.xml',
     ],
     'demo': [
