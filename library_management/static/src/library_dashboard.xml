@@ -1,0 +1,7 @@
+<templates owl="1">
+    <t t-name="library_management.CustomDashboard">
+        <div class="o_custom_dashboard">
+            <h1>Dashboard</h1>
+        </div>
+    </t>
+</templates>

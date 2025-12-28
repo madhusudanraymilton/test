@@ -53,10 +53,11 @@ This module provides a complete library management solution with:
       #  'data/demo_data.xml',
     ],
     'assets': {
-        'web.assets_backend': [
-            'library_management/static/src/css/dashboard.css',
-            'library_management/static/src/js/dashboard.js',
-            'library_management/static/src/xml/library_dashboard.xml',
+        'web.assets_web': [
+            #'library_management/static/src/css/dashboard.css',
+            'library_management/static/src/library_dashboard.xml',
+            'library_management/static/src/dashboard.js',
+            'library_management/static/src/dashboard_action.js',
         ],
     },
     'external_dependencies': {
