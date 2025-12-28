@@ -48,7 +48,7 @@ class OpLibraryCard(models.Model):
     _description = "Library Card"
 
     partner_id = fields.Many2one(
-        'res.partner', 'Student/Faculty', required=True)
+        'res.partner', 'Student/Faculty', required=False)
     number = fields.Char('Number', size=256, readonly=True)
     library_card_type_id = fields.Many2one(
         'op.library.card.type', 'Card Type', required=True)
@@ -57,8 +57,13 @@ class OpLibraryCard(models.Model):
     type = fields.Selection(
         [('student', 'Student'), ('faculty', 'Faculty')],
         'Type', default='student', required=True)
-    student_id = fields.Many2one('op.student', 'Student',
-                                 domain=[('library_card_id', '=', False)])
+    # Hide/deprecate the original student_id field
+    student_id = fields.Many2one('op.student', string='OpenEducat Student', 
+                                   readonly=True, copy=False)
+    
+    # Make wk_student_id the primary student field
+    wk_student_id = fields.Many2one('student.student', string='Student',
+                                     ondelete='restrict', tracking=True, index=True)
     faculty_id = fields.Many2one('op.faculty', 'Faculty',
                                  domain=[('library_card_id', '=', False)])
     active = fields.Boolean(default=True)
@@ -94,4 +99,37 @@ class OpLibraryCard(models.Model):
         if not self.student_id and self.faculty_id:
             self.partner_id = self.faculty_id.partner_id
 
+    #New Add field
+    @api.depends('type', 'wk_student_id', 'faculty_id')
+    def _compute_partner_id(self):
+        """Override to use wk_student_id instead of student_id"""
+        for card in self:
+            if card.type == 'student' and card.wk_student_id:
+                card.partner_id = card.wk_student_id.partner_id
+            elif card.type == 'faculty' and card.faculty_id:
+                card.partner_id = card.faculty_id.partner_id
+            else:
+                card.partner_id = False
+    
+    @api.onchange('wk_student_id')
+    def _onchange_wk_student_id(self):
+        """Auto-fill partner when student is selected"""
+        if self.wk_student_id and self.type == 'student':
+            self.partner_id = self.wk_student_id.partner_id
+    
+    def unlink(self):
+        """Prevent deletion if there are active book movements"""
+        for card in self:
+            active_movements = self.env['op.media.movement'].search([
+                ('library_card_id', '=', card.id),
+                ('state', '!=', 'return_done')
+            ])
+            if active_movements:
+                raise UserError(_(
+                    'Cannot delete library card %s because it has %d active book movement(s). '
+                    'Please return all books first.'
+                ) % (card.number, len(active_movements)))
+        return super().unlink()
+
+    ##End Add Field
 

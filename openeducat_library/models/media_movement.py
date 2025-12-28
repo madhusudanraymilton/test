@@ -44,7 +44,14 @@ class OpMediaMovement(models.Model):
     type = fields.Selection(
         [('student', 'Student'), ('faculty', 'Faculty')],
         'Student/Faculty', required=True)
-    student_id = fields.Many2one('op.student', 'Student')
+    # Hide/deprecate original student_id
+    student_id = fields.Many2one('op.student', string='OpenEducat Student',
+                                   readonly=True, copy=False)
+    
+    # Make wk_student_id the primary student field
+    wk_student_id = fields.Many2one('student.student', string='Student',
+                                     related='library_card_id.wk_student_id',
+                                     store=True, readonly=True, index=True)
     faculty_id = fields.Many2one('op.faculty', 'Faculty')
     library_card_id = fields.Many2one(
         'op.library.card', 'Library Card', required=True,
@@ -80,6 +87,19 @@ class OpMediaMovement(models.Model):
                 str(media_mov_id.return_date), '%Y-%m-%d')
             diff = today_date - return_date
             return abs(diff.days)
+        
+    # New method
+    @api.depends('type', 'library_card_id', 'library_card_id.wk_student_id', 
+                 'library_card_id.faculty_id')
+    def _compute_partner_id(self):
+        """Override to use wk_student_id"""
+        for movement in self:
+            if movement.type == 'student' and movement.library_card_id.wk_student_id:
+                movement.partner_id = movement.library_card_id.wk_student_id.partner_id
+            elif movement.type == 'faculty' and movement.library_card_id.faculty_id:
+                movement.partner_id = movement.library_card_id.faculty_id.partner_id
+            else:
+                movement.partner_id = False
 
     @api.constrains('issued_date', 'return_date')
     def _check_date(self):

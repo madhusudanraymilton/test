@@ -15,12 +15,8 @@ class StudentStudent(models.Model):
     _inherit = 'student.student'
 
     # Library card relationship
-    library_card_id = fields.Many2one(
-        'op.library.card',
-        string='Library Card',
-        readonly=True,
-        help="Library card issued to this student"
-    )
+    library_card_id = fields.Many2one('op.library.card', string='Library Card',
+                                       domain=[('type', '=', 'student')], ondelete='restrict')
     
     # Book movements
     media_movement_ids = fields.One2many(
@@ -98,25 +94,16 @@ class StudentStudent(models.Model):
 
     # Actions
     def action_create_library_card(self):
-        """Open wizard to create library card"""
+        """Create library card using wk_student_id"""
         self.ensure_one()
-        
-        if self.library_card_id:
-            raise ValidationError(_('This student already has a library card: %s') % self.library_card_id.number)
-        
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Create Library Card',
-            'res_model': 'op.library.card',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_type': 'student',
-                'default_wk_student_id': self.id,
-                'default_partner_id': self.partner_id.id if self.partner_id else False,
-            }
-        }
-
+        card = self.env['op.library.card'].create({
+            'type': 'student',
+            'wk_student_id': self.id,  # Use wk_student_id instead of student_id
+            'library_card_type_id': self.env.ref('openeducat_library.op_library_card_type_1').id,
+        })
+        self.library_card_id = card.id
+        return self.action_view_library_card()
+    
     def action_view_library_card(self):
         """View existing library card"""
         self.ensure_one()

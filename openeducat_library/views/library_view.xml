@@ -89,8 +89,12 @@
                 <list string="Library Card">
                     <field name="number"/>
                     <field name="issue_date"/>
-                    <field name="partner_id"/>
+                    <!--<field name="partner_id"/>-->
                     <field name="library_card_type_id"/>
+                    <!--New Field-->
+                    <field name="type" column_invisible="True"/>
+                    <field name="wk_student_id" optional="show"/>
+                    <!-- End New Field-->
                 </list>
             </field>
         </record>
@@ -104,21 +108,34 @@
                     <header/>
                     <sheet>
                         <field name="active" invisible="1"/>
-                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                                invisible="active == True"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                                invisible="active"/>
                         <group>
                             <group>
                                 <field name="number"/>
                                 <field name="library_card_type_id"/>
-                               <field name="type"/>
-                                <field name="student_id" options="{'no_create': True , 'no_open': True}"
-                                invisible="type != 'student'" required= "type == 'student'"/>
-                                <field name="faculty_id" options="{'no_create': True , 'no_open': True}"
-                                invisible="type != 'faculty'" required= "type == 'faculty'"/>
+                                <!--<field name="type"/>-->
+                                
+                                <!-- WK School Student (Primary) -->
+                                <field name="wk_student_id" 
+                                    options="{'no_create': True, 'no_open': True}"
+                                    invisible="type != 'student'" 
+                                    required="type == 'student' and not student_id"/>
+                                
+                                <!-- OpenEducat Student (Legacy - Optional) -->
+                                <!--<field name="student_id" 
+                                    options="{'no_create': True, 'no_open': True}"
+                                    invisible="type != 'student' or wk_student_id" 
+                                    required="type == 'student' and not wk_student_id"/>-->
+                                
+                                <field name="faculty_id" 
+                                    options="{'no_create': True, 'no_open': True}"
+                                    invisible="type != 'faculty'" 
+                                    required="type == 'faculty'"/>
                             </group>
                             <group>
                                 <field name="issue_date"/>
-                                <field name="partner_id" readonly="1" force_save="1"/>
+                                <!--<field name="partner_id" readonly="1" force_save="1"/>-->
                             </group>
                         </group>
                     </sheet>
