@@ -18,7 +18,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="reserve_media_act">
-            <field name="name">Books Reservation</field>
+            <field name="name">Media Reservation</field>
             <field name="res_model">reserve.media</field>
             <field name="binding_view_types">form</field>
             <field name="view_mode">form</field>

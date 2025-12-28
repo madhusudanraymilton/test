@@ -51,7 +51,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="act_open_op_media_type_view">
-            <field name="name">Book Type</field>
+            <field name="name">Media Type</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">op.media.type</field>
             <field name="binding_view_types">form</field>

@@ -25,11 +25,11 @@ from odoo.exceptions import UserError
 class ReturnMedia(models.TransientModel):
     """ Retrun Media Wizard """
     _name = "return.media"
-    _description = "Book Author"
+    _description = "Media Author"
 
-    media_id = fields.Many2one('op.media', 'Book', readonly=True)
+    media_id = fields.Many2one('op.media', 'Media', readonly=True)
     media_unit_id = fields.Many2one(
-        'op.media.unit', 'Book Unit', readonly=True, required=True)
+        'op.media.unit', 'Media Unit', readonly=True, required=True)
     actual_return_date = fields.Date(
         'Actual Return Date', default=lambda self: fields.Date.today(),
         required=True)
@@ -45,6 +45,6 @@ class ReturnMedia(models.TransientModel):
                     raise UserError(_("Can't return media."))
                 media_move_search.return_media(media.actual_return_date)
             else:
-                raise UserError(_("Book Unit can not be returned because it's already: %s") % (dict( # noqa
+                raise UserError(_("Media Unit can not be returned because it's already: %s") % (dict( # noqa
                     media.media_unit_id._fields['state'].selection).get(
                     media.media_unit_id.state)))

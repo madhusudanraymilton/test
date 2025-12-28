@@ -24,7 +24,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="return_media_act">
-            <field name="name">Return Books</field>
+            <field name="name">Return Media</field>
             <field name="res_model">return.media</field>
             <field name="binding_view_types">form</field>
             <field name="view_mode">form</field>

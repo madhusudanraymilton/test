@@ -22,12 +22,12 @@
             <field name="arch" type="xml">
                 <form string="Media Units">
                     <header groups="base.group_user">
-                        <button name="%(issue_media_act)d" string="Issue Book"
+                        <button name="%(issue_media_act)d" string="Issue Media"
                                 type="action"
                                 context="{'default_media_id': media_id, 'default_media_unit_id': id}"
                                 invisible= "state != 'available'"
                                 class="oe_highlight" groups="openeducat_library.group_op_library"/>
-                        <button name="%(return_media_act)d" string="Return Book"
+                        <button name="%(return_media_act)d" string="Return Media"
                                 type="action"
                                 context="{'default_media_id': media_id, 'default_media_unit_id': id}"
                                 invisible= "state != 'issue'"
@@ -117,7 +117,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="act_open_media_unit_view">
-            <field name="name">Books Units</field>
+            <field name="name">Media Units</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">op.media.unit</field>
             <field name="binding_view_types">form</field>

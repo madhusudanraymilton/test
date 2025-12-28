@@ -23,7 +23,7 @@ from odoo import fields, models
 
 class OpMedia(models.Model):
     _name = "op.media"
-    _description = "Book Details"
+    _description = "Media Details"
     _inherit = "mail.thread"
     _order = "name"
 
@@ -42,9 +42,9 @@ class OpMedia(models.Model):
     subject_ids = fields.Many2many(
         'op.subject', string='Subjects')
     internal_code = fields.Char('Internal Code', size=64)
-    queue_ids = fields.One2many('op.media.queue', 'media_id', 'Book Queue')
+    queue_ids = fields.One2many('op.media.queue', 'media_id', 'Media Queue')
     unit_ids = fields.One2many('op.media.unit', 'media_id', 'Units')
-    media_type_id = fields.Many2one('op.media.type', 'Book Type')
+    media_type_id = fields.Many2one('op.media.type', 'Media Type')
     active = fields.Boolean(default=True)
 
     _sql_constraints = [

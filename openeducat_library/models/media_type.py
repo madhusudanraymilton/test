@@ -23,7 +23,7 @@ from odoo import fields, models
 
 class OpMediaType(models.Model):
     _name = "op.media.type"
-    _description = "Book Type"
+    _description = "Media Type"
 
     name = fields.Char('Name', size=64, required=True)
     code = fields.Char('Code', size=64, required=True)

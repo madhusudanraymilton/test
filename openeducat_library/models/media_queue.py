@@ -26,12 +26,12 @@ class OpMediaQueue(models.Model):
     _name = "op.media.queue"
     _inherit = "mail.thread"
     _rec_name = "user_id"
-    _description = "Book Queue Request"
+    _description = "Media Queue Request"
 
     name = fields.Char("Sequence No", readonly=True, copy=False, default='/')
     partner_id = fields.Many2one('res.partner', 'Student/Faculty')
     media_id = fields.Many2one(
-        'op.media', 'Book', required=True, tracking=True)
+        'op.media', 'Media', required=True, tracking=True)
     date_from = fields.Date(
         'From Date', required=True, default=fields.Date.today())
     date_to = fields.Date('To Date', required=True)

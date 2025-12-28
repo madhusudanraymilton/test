@@ -34,7 +34,7 @@
                         <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
                                 invisible="active == True"/>
                         <h1>
-                            <field name="name" placeholder="Book Name" style="width: 50%%"/>
+                            <field name="name" placeholder="Media Name" style="width: 50%%"/>
                         </h1>
                         <newline/>
                         <group class="pt-2">
@@ -150,7 +150,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="act_open_op_media_view">
-            <field name="name">All Books</field>
+            <field name="name">All Media</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">op.media</field>
             <field name="binding_view_types">form</field>

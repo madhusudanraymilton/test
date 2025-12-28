@@ -20,14 +20,15 @@
 
 from odoo import api, fields, models
 
+
 class OpMediaUnit(models.Model):
     _name = "op.media.unit"
     _inherit = "mail.thread"
-    _description = "Book Unit"
+    _description = "Media Unit"
     _order = "name"
 
     name = fields.Char('Name', required=True)
-    media_id = fields.Many2one('op.media', 'Book',
+    media_id = fields.Many2one('op.media', 'Media',
                                required=True, tracking=True)
     barcode = fields.Char('Barcode', size=20)
     movement_lines = fields.One2many(
@@ -36,7 +37,7 @@ class OpMediaUnit(models.Model):
         [('available', 'Available'), ('issue', 'Issued')],
         'State', default='available', tracking=True)
     media_type_id = fields.Many2one(related='media_id.media_type_id',
-                                    store=True, string='Book Type')
+                                    store=True, string='Media Type')
     active = fields.Boolean(default=True)
 
     _sql_constraints = [

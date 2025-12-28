@@ -32,7 +32,7 @@
                                        options='{"always_reload": True}'/>
                             </group>
                         </group>
-                        <group col="4" string="Books">
+                        <group col="4" string="Media(s)">
                             <field name="media_ids" colspan="4" nolabel="1"/>
                         </group>
                     </sheet>

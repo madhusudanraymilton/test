@@ -29,10 +29,10 @@ class IssueMedia(models.TransientModel):
     """ Issue Media """
     _name = "issue.media"
     _inherit = "mail.thread"
-    _description = "Issue Book Wizard"
+    _description = "Issue Media Wizard"
 
-    media_id = fields.Many2one('op.media', 'Book', required=True)
-    media_unit_id = fields.Many2one('op.media.unit', 'Book Unit',
+    media_id = fields.Many2one('op.media', 'Media', required=True)
+    media_unit_id = fields.Many2one('op.media.unit', 'Media Unit',
                                     required=True)
     type = fields.Selection(
         [('student', 'Student'), ('faculty', 'Faculty')],
@@ -103,12 +103,12 @@ class IssueMedia(models.TransientModel):
                     media.media_unit_id.state = 'issue'
                     value = {'type': 'ir.actions.act_window_close'}
                 else:
-                    raise UserError(_("Book unit can not be issued because it's already: %s") % (dict(  # noqa
+                    raise UserError(_("Media unit can not be issued because it's already: %s") % (dict(  # noqa
                         media.media_unit_id._fields[
                             'state'].selection).get(media.media_unit_id.state)))
             else:
                 raise UserError(
-                    _('Maximum Number of book allowed for %s is : %s') %
+                    _('Maximum Number of media allowed for %s is : %s') %
                     (media.student_id.name,
                      media.library_card_id.library_card_type_id.allow_media))
             return value

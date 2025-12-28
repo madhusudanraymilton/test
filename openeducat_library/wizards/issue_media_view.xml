@@ -33,7 +33,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="issue_media_act">
-            <field name="name">Issue Book</field>
+            <field name="name">Issue media</field>
             <field name="res_model">issue.media</field>
             <field name="binding_view_types">form</field>
             <field name="view_mode">form</field>
