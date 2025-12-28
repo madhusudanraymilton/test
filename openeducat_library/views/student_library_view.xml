@@ -5,81 +5,89 @@
     <record id="view_student_student_form_library" model="ir.ui.view">
         <field name="name">student.student.form.library</field>
         <field name="model">student.student</field>
-        <field name="inherit_id" ref="wk_school_management.wk_school_student_view_form"/>
+        <field name="inherit_id" ref="wk_school_management.student_student_form"/>
         <field name="arch" type="xml">
             
-            <!-- Add Smart Buttons in Button Box -->
-            <xpath expr="//div[@name='button_box']" position="inside">
-                
-                <!-- Library Card Button -->
-                <button name="action_view_library_card"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-id-card"
-                        invisible="library_card_id == False">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_text">Library</span>
-                        <span class="o_stat_text">Card</span>
-                    </div>
-                </button>
-                
-                <!-- Create Library Card Button -->
-                <button name="action_create_library_card"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-plus-square"
-                        invisible="library_card_id != False"
-                        help="Create library card for this student">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_text">Create</span>
-                        <span class="o_stat_text">Library Card</span>
-                    </div>
-                </button>
+            <!-- Add Smart Buttons after header, before sheet -->
+            <xpath expr="//sheet" position="before">
+                <div class="oe_button_box" name="button_box_library">
+                    
+                    <!-- Library Card Button -->
+                    <button name="action_view_library_card"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-id-card"
+                            invisible="library_card_id == False">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_text">Library</span>
+                            <span class="o_stat_text">Card</span>
+                        </div>
+                    </button>
+                    
+                    <!-- Create Library Card Button -->
+                    <button name="action_create_library_card"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-plus-square"
+                            invisible="library_card_id != False"
+                            help="Create library card for this student">
+                        <div class="o_field_widget o_stat_info">
+                            <span class="o_stat_text">Create</span>
+                            <span class="o_stat_text">Library Card</span>
+                        </div>
+                    </button>
 
-                <!-- Books Count Button -->
-                <button name="action_view_book_movements"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-book">
-                    <field name="media_movement_count" widget="statinfo" string="Books"/>
-                </button>
+                    <!-- Books Count Button -->
+                    <button name="action_view_book_movements"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-book">
+                        <field name="media_movement_count" widget="statinfo" string="Books"/>
+                    </button>
 
-                <!-- Outstanding Books Button -->
-                <button name="action_view_book_movements"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-bookmark"
-                        invisible="outstanding_books_count == 0"
-                        context="{'search_default_state_issue': 1}">
-                    <field name="outstanding_books_count" widget="statinfo" string="Issued"/>
-                </button>
+                    <!-- Outstanding Books Button -->
+                    <button name="action_view_book_movements"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-bookmark"
+                            invisible="outstanding_books_count == 0"
+                            context="{'search_default_group_by_lbr_media_mvmn_state': 1}">
+                        <field name="outstanding_books_count" widget="statinfo" string="Issued"/>
+                    </button>
 
-                <!-- Overdue Books Button (Red Alert) -->
-                <button name="action_view_book_movements"
-                        type="object"
-                        class="oe_stat_button bg-danger text-white"
-                        icon="fa-exclamation-triangle"
-                        invisible="overdue_books_count == 0"
-                        context="{'search_default_overdue': 1}">
-                    <field name="overdue_books_count" widget="statinfo" string="Overdue"/>
-                </button>
+                    <!-- Overdue Books Button (Red Alert) -->
+                    <button name="action_view_book_movements"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-exclamation-triangle"
+                            invisible="overdue_books_count == 0"
+                            style="background-color: #dc3545; color: white;">
+                        <field name="overdue_books_count" widget="statinfo" string="Overdue"/>
+                    </button>
 
-                <!-- Issue Book Quick Action -->
-                <button name="action_issue_book"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-hand-o-right"
-                        invisible="library_card_id == False"
-                        string="Issue Book"
-                        help="Quickly issue a book to this student"/>
+                    <!-- Issue Book Quick Action -->
+                    <button name="action_issue_book"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-hand-o-right"
+                            invisible="library_card_id == False"
+                            string="Issue Book"
+                            help="Quickly issue a book to this student"/>
 
+                </div>
             </xpath>
 
             <!-- Add Library Tab in Notebook -->
             <xpath expr="//notebook" position="inside">
-                <page string="Library" name="library_info" invisible="library_card_id == False">
+                <page string="Library" name="library_info">
                     
-                    <group>
+                    <!-- Alert when no library card -->
+                    <div class="alert alert-info" role="alert" invisible="library_card_id != False">
+                        <strong>No Library Card!</strong> Click the "Create Library Card" button above to enable library features for this student.
+                    </div>
+
+                    <!-- Library Information Section -->
+                    <group invisible="library_card_id == False">
                         <group string="Library Card Information">
                             <field name="library_card_id" readonly="1"/>
                             <field name="library_status"
@@ -95,30 +103,9 @@
                         </group>
                     </group>
 
-                    <group string="Current & Recent Book Movements">
-                        <field name="media_movement_ids" nolabel="1">
-                            <tree decoration-danger="is_overdue == True" decoration-success="state == 'return_done'">
-                                <field name="name"/>
-                                <field name="media_id"/>
-                                <field name="issued_date"/>
-                                <field name="return_date"/>
-                                <field name="actual_return_date" optional="hide"/>
-                                <field name="days_overdue"/>
-                                <field name="state"
-                                       widget="badge"
-                                       decoration-info="state == 'issue'"
-                                       decoration-warning="state == 'reissue'"
-                                       decoration-success="state in ('return', 'return_done')"
-                                       decoration-danger="state == 'lost'"/>
-                                <field name="penalty" widget="monetary" optional="hide"/>
-                                <field name="is_overdue" column_invisible="1"/>
-                                <button name="action_return_book"
-                                        type="object"
-                                        string="Return"
-                                        icon="fa-check"
-                                        invisible="state != 'issue'"/>
-                            </tree>
-                        </field>
+                    <!-- Book Movements List -->
+                    <group string="Current &amp; Recent Book Movements" invisible="library_card_id == False">
+                        <field name="media_movement_ids" nolabel="1"/>
                     </group>
 
                 </page>
@@ -128,14 +115,25 @@
     </record>
 
     <!-- Add Library Fields to Student Tree View -->
+    <!--
     <record id="view_student_student_tree_library" model="ir.ui.view">
         <field name="name">student.student.tree.library</field>
         <field name="model">student.student</field>
-        <field name="inherit_id" ref="wk_school_management.wk_school_student_view_tree"/>
+        <field name="inherit_id" ref="wk_school_management.student_student_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='email']" position="after">
+        -->
+            <!-- Add color decorations for overdue books -->
+            <!-- 
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-warning">overdue_books_count &gt; 0 and overdue_books_count &lt;= 5</attribute>
+                <attribute name="decoration-danger">overdue_books_count &gt; 5</attribute>
+            </xpath>
+            -->
+            <!-- Add library fields after email -->
+          <!-- <xpath expr="//field[@name='email']" position="after">
                 <field name="library_card_id" optional="hide"/>
                 <field name="outstanding_books_count" optional="hide" string="Books Out"/>
+                <field name="overdue_books_count" optional="hide" string="Overdue"/>
                 <field name="library_status"
                        widget="badge"
                        decoration-success="library_status == 'good'"
@@ -145,12 +143,13 @@
             </xpath>
         </field>
     </record>
+    -->
 
     <!-- Add Library Search Filters -->
     <record id="view_student_student_search_library" model="ir.ui.view">
         <field name="name">student.student.search.library</field>
         <field name="model">student.student</field>
-        <field name="inherit_id" ref="wk_school_management.student_student_search_view"/>
+        <field name="inherit_id" ref="wk_school_management.student_student_search"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
                 <separator/>
@@ -182,4 +181,52 @@
         </field>
     </record>
 
+    <!-- Extend Library Card Form View to support WK Students -->
+    <record id="view_op_library_card_form_wk_student" model="ir.ui.view">
+        <field name="name">op.library.card.form.wk.student</field>
+        <field name="model">op.library.card</field>
+        <field name="inherit_id" ref="openeducat_library.view_op_library_card_form"/>
+        <field name="arch" type="xml">
+            <field name="student_id" position="after">
+                <field name="wk_student_id" 
+                       options="{'no_create': True, 'no_open': True}"
+                       invisible="type != 'student'" 
+                       required="type == 'student' and student_id == False"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Extend Media Movement Form View -->
+    <record id="view_op_media_movement_form_wk_student" model="ir.ui.view">
+        <field name="name">op.media.movement.form.wk.student</field>
+        <field name="model">op.media.movement</field>
+        <field name="inherit_id" ref="openeducat_library.view_op_media_movement_form"/>
+        <field name="arch" type="xml">
+            <field name="student_id" position="after">
+                <field name="wk_student_id" 
+                       readonly="1" 
+                       force_save="1"
+                       invisible="type != 'student'"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Extend Media Movement Tree View -->
+      <!--<record id="view_op_media_movement_tree_wk_student" model="ir.ui.view">
+        <field name="name">op.media.movement.tree.wk.student</field>
+        <field name="model">op.media.movement</field>
+        <field name="inherit_id" ref="openeducat_library.view_op_media_movement_tree"/>
+        <field name="arch" type="xml">
+            <field name="student_id" position="after">
+                <field name="wk_student_id" optional="hide"/>
+                <field name="is_overdue" optional="hide"/>
+                <field name="days_overdue" optional="hide"/>
+            </field>
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-danger">is_overdue == True</attribute>
+                <attribute name="decoration-success">state == 'return_done'</attribute>
+            </xpath>
+        </field>
+    </record>
+    -->
 </odoo>

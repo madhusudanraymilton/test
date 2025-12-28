@@ -31,3 +31,4 @@ from . import media_unit
 from . import publisher
 from . import student
 from . import tag
+from . import student_integration  # ADD THIS LINE

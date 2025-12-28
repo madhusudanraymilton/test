@@ -33,6 +33,7 @@
         'base_automation',
         #'openeducat_activity',
         'openeducat_parent',
+        'wk_school_management',  # ADD THIS DEPENDENCY
     ],
     'data': [
         'security/op_security.xml',
@@ -60,6 +61,7 @@
         'views/media_type_view.xml',
         'views/student_view.xml',
         'views/faculty_view.xml',
+        'views/student_library_view.xml',  # ADD THIS VIEW
         'menus/op_menu.xml',
     ],
     'demo': [

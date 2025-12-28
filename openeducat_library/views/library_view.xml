@@ -110,7 +110,7 @@
                             <group>
                                 <field name="number"/>
                                 <field name="library_card_type_id"/>
-                                <field name="type"/>
+                               <field name="type"/>
                                 <field name="student_id" options="{'no_create': True , 'no_open': True}"
                                 invisible="type != 'student'" required= "type == 'student'"/>
                                 <field name="faculty_id" options="{'no_create': True , 'no_open': True}"
