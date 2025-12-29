@@ -18,13 +18,14 @@
         <field name="arch" type="xml">
             <form string="Category">
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
+                  <!--  <div class="oe_button_box" name="button_box">
                         <button name="action_view_books" type="object"
                                 class="oe_stat_button" icon="fa-book"
                                 invisible="book_count == 0">
                             <field name="book_count" widget="statinfo" string="Books"/>
                         </button>
                     </div>
+                    -->
                     <div class="oe_title">
                         <label for="name" class="oe_edit_only"/>
                         <h1>
@@ -48,10 +49,10 @@
                     <notebook>
                         <page string="Child Categories">
                             <field name="child_ids">
-                                <tree>
+                                <list>
                                     <field name="name"/>
                                     <field name="book_count"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                         <page string="Books">
@@ -66,12 +67,6 @@
                         </page>
                     </notebook>
                 </sheet>
-                <!--
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="message_ids"/>
-                </div>
-                -->
             </form>
         </field>
     </record>

@@ -1,56 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_library_member_kanban" model="ir.ui.view">
-        <field name="name">library.member.kanban</field>
-        <field name="model">library.member</field>
-        <field name="arch" type="xml">
-            <kanban string="Members">
-                <field name="id"/>
-                <field name="name"/>
-                <field name="photo"/>
-                <field name="membership_type"/>
-                <field name="can_borrow"/>
-                <field name="active_borrowings"/>
-                <field name="unpaid_fine_amount"/>
-                <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_global_click">
-                            <div class="o_kanban_image">
-                                <img t-att-src="kanban_image('library.member', 'photo', record.id.raw_value)" alt="Member Photo"/>
-                            </div>
-                            <div class="oe_kanban_details">
-                                <strong class="o_kanban_record_title">
-                                    <field name="name"/>
-                                </strong>
-                                <div class="o_kanban_record_subtitle">
-                                    <field name="email"/>
-                                </div>
-                                <div class="o_kanban_record_bottom">
-                                    <div class="oe_kanban_bottom_left">
-                                        <span class="badge badge-pill" t-att-class="record.membership_type.raw_value == 'student' ? 'badge-info' : record.membership_type.raw_value == 'teacher' ? 'badge-success' : 'badge-secondary'">
-                                            <field name="membership_type"/>
-                                        </span>
-                                    </div>
-                                    <div class="oe_kanban_bottom_right">
-                                        <span t-if="record.can_borrow.raw_value" class="badge badge-success">Can Borrow</span>
-                                        <span t-else="" class="badge badge-danger">Cannot Borrow</span>
-                                    </div>
-                                </div>
-                                <div class="o_kanban_record_bottom">
-                                    <div class="oe_kanban_bottom_left">
-                                        Active: <field name="active_borrowings"/>
-                                    </div>
-                                    <div class="oe_kanban_bottom_right" t-if="record.unpaid_fine_amount.raw_value > 0">
-                                        <span class="text-danger">Fine: <field name="unpaid_fine_amount" widget="monetary"/></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
 
     <record id="view_library_member_tree" model="ir.ui.view">
         <field name="name">library.member.tree</field>
@@ -165,6 +114,132 @@
             </form>
         </field>
     </record>
+
+        <!-- Modern Member Kanban View -->
+    <record id="view_library_member_kanban" model="ir.ui.view">
+        <field name="name">library.member.kanban</field>
+        <field name="model">library.member</field>
+        <field name="arch" type="xml">
+            <kanban string="Members" class="o_kanban_dashboard o_library_member_kanban">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="photo"/>
+                <field name="membership_type"/>
+                <field name="membership_date"/>
+                <field name="can_borrow"/>
+                <field name="active_borrowings"/>
+                <field name="total_books_borrowed"/>
+                <field name="unpaid_fine_amount"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="o_kanban_image_wrapper">
+                                <div class="o_kanban_image">
+                                    <img t-if="record.photo.raw_value"
+                                         t-att-src="'/web/image/library.borrowing/' + record.id.raw_value + '/photo'"
+                                         class="o_kanban_image"/>
+                                </div>
+                                <!-- Membership Badge Overlay -->
+                                <div class="o_member_type_badge">
+                                    <span class="badge" t-attf-class="badge-{{record.membership_type.raw_value === 'student' ? 'info' : record.membership_type.raw_value === 'teacher' ? 'success' : 'secondary'}}">
+                                        <i class="fa" t-attf-class="fa-{{record.membership_type.raw_value === 'student' ? 'graduation-cap' : record.membership_type.raw_value === 'teacher' ? 'user-circle' : 'user'}}"/>
+                                        <t t-esc="record.membership_type.value"/>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="oe_kanban_details">
+                                <!-- Member Name & Status -->
+                                <div class="o_kanban_record_top mb-2">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="o_member_status_indicator float-end">
+                                        <span t-if="record.can_borrow.raw_value" class="badge badge-success" title="Can Borrow Books">
+                                            <i class="fa fa-check-circle"/> Active
+                                        </span>
+                                        <span t-else="" class="badge badge-danger" title="Cannot Borrow (Has Unpaid Fines)">
+                                            <i class="fa fa-ban"/> Blocked
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Contact Info -->
+                                <div class="o_kanban_record_body mb-2">
+                                    <div class="o_member_info">
+                                        <div class="mb-1" t-if="record.email.raw_value">
+                                            <i class="fa fa-envelope text-muted me-1"/>
+                                            <span class="text-muted small" t-esc="record.email.value"/>
+                                        </div>
+                                        <div class="mb-1" t-if="record.phone.raw_value">
+                                            <i class="fa fa-phone text-muted me-1"/>
+                                            <span class="text-muted small" t-esc="record.phone.value"/>
+                                        </div>
+                                        <div class="mb-1">
+                                            <i class="fa fa-calendar text-muted me-1"/>
+                                            <span class="text-muted small">Member since: <field name="membership_date"/></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Statistics Cards -->
+                                <div class="o_member_stats mb-2">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="stat-box stat-active">
+                                                <div class="stat-icon">
+                                                    <i class="fa fa-book"/>
+                                                </div>
+                                                <div class="stat-info">
+                                                    <div class="stat-value" t-esc="record.active_borrowings.value"/>
+                                                    <div class="stat-label">Active</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="stat-box stat-total">
+                                                <div class="stat-icon">
+                                                    <i class="fa fa-history"/>
+                                                </div>
+                                                <div class="stat-info">
+                                                    <div class="stat-value" t-esc="record.total_books_borrowed.value"/>
+                                                    <div class="stat-label">Total</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fine Alert (if any) -->
+                                <div t-if="record.unpaid_fine_amount.raw_value &gt; 0" class="o_member_fine_alert alert alert-danger mb-0">
+                                    <i class="fa fa-exclamation-triangle me-1"/>
+                                    <strong>Unpaid Fine: </strong>
+                                    <field name="unpaid_fine_amount" widget="monetary"/>
+                                </div>
+
+                                <!-- Footer Actions -->
+                                <div class="o_kanban_record_bottom mt-2">
+                                    <div class="oe_kanban_bottom_left">
+                                        <button class="btn btn-sm btn-primary" type="object" name="action_view_borrowings">
+                                            <i class="fa fa-eye"/> Borrowings
+                                        </button>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <button t-if="record.unpaid_fine_amount.raw_value &gt; 0" class="btn btn-sm btn-warning" type="object" name="action_view_fines">
+                                            <i class="fa fa-money"/> Fines
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <!--
     <record id="view_library_member_search" model="ir.ui.view">
         <field name="name">library.member.search</field>

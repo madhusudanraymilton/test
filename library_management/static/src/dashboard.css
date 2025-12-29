@@ -1,0 +1,1227 @@
+/* =================================
+   Library Dashboard - Modern Styles
+   ================================= */
+
+.o_library_dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 0;
+}
+
+.o_library_dashboard .container-fluid {
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+/* Dashboard Title */
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-title i {
+    color: #667eea;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--card-color-light), var(--card-color));
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--card-color-light), var(--card-color));
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    color: #718096;
+    margin: 0.5rem 0 0;
+    font-weight: 500;
+}
+
+.stat-sub {
+    font-size: 0.85rem;
+    color: #a0aec0;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* Color Variants */
+.stat-card-primary {
+    --card-color: #667eea;
+    --card-color-light: #8b9bf5;
+}
+
+.stat-card-success {
+    --card-color: #48bb78;
+    --card-color-light: #68d391;
+}
+
+.stat-card-info {
+    --card-color: #4299e1;
+    --card-color-light: #63b3ed;
+}
+
+.stat-card-purple {
+    --card-color: #9f7aea;
+    --card-color-light: #b794f4;
+}
+
+.stat-card-danger {
+    --card-color: #f56565;
+    --card-color-light: #fc8181;
+}
+
+.stat-card-warning {
+    --card-color: #ed8936;
+    --card-color-light: #f6ad55;
+}
+
+.stat-card-teal {
+    --card-color: #38b2ac;
+    --card-color-light: #4fd1c5;
+}
+
+.stat-card-orange {
+    --card-color: #dd6b20;
+    --card-color-light: #ed8936;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    height: 100%;
+}
+
+.dashboard-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.25rem 1.5rem;
+    border-bottom: none;
+}
+
+.dashboard-card .card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-card .card-body {
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Scrollbar Styling */
+.dashboard-card .card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dashboard-card .card-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.dashboard-card .card-body::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.dashboard-card .card-body::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Top Books List */
+.top-books-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.top-book-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.top-book-item:hover {
+    background: #edf2f7;
+    transform: translateX(8px);
+}
+
+.book-rank {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.book-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.book-info strong {
+    display: block;
+    color: #2d3748;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-info small {
+    color: #718096;
+}
+
+.book-badge .badge {
+    background: #667eea;
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* Recent Borrowings List */
+.recent-borrowings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.borrowing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 1rem;
+}
+
+.borrowing-item:hover {
+    background: #edf2f7;
+    transform: translateX(8px);
+}
+
+.borrowing-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.borrowing-info strong {
+    display: block;
+    color: #2d3748;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.borrowing-info small {
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.borrowing-status {
+    flex-shrink: 0;
+}
+
+.borrowing-status .badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.badge-primary {
+    background: #4299e1;
+    color: white;
+}
+
+.badge-success {
+    background: #48bb78;
+    color: white;
+}
+
+.badge-danger {
+    background: #f56565;
+    color: white;
+}
+
+.badge-secondary {
+    background: #a0aec0;
+    color: white;
+}
+
+/* Category Chart */
+.category-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.category-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.category-count {
+    background: #edf2f7;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.category-progress {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 6px;
+    transition: width 0.6s ease;
+}
+
+/* Membership Chart */
+.membership-chart {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.membership-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.membership-item:hover {
+    background: #edf2f7;
+    transform: scale(1.05);
+}
+
+.membership-icon {
+    margin-bottom: 1rem;
+}
+
+.membership-details h4 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+}
+
+.membership-details p {
+    font-size: 0.9rem;
+    color: #718096;
+    margin: 0.5rem 0 0;
+    font-weight: 500;
+}
+
+/* Trends Chart */
+.trends-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 250px;
+    padding: 1rem 0;
+}
+
+.trend-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.trend-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2d3748;
+    min-height: 20px;
+}
+
+.trend-column {
+    width: 100%;
+    max-width: 80px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 8px 8px 0 0;
+    min-height: 20px;
+    transition: height 0.6s ease;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.trend-label {
+    font-size: 0.85rem;
+    color: #718096;
+    text-align: center;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .dashboard-title {
+        font-size: 2rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 768px) {
+    .o_library_dashboard .container-fluid {
+        padding: 1rem !important;
+    }
+
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .stat-icon i {
+        font-size: 1.5rem !important;
+    }
+
+    .membership-chart {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .trends-chart {
+        height: 200px;
+        gap: 0.5rem;
+    }
+
+    .trend-label {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .book-rank {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+
+    .top-book-item,
+    .borrowing-item {
+        padding: 0.75rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card,
+.dashboard-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Loading Spinner */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   Library Member Kanban - Modern Styles
+   ============================================ */
+
+.o_library_member_kanban .o_kanban_record {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e2e8f0;
+}
+
+.o_library_member_kanban .o_kanban_record:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    border-color: #667eea;
+}
+
+/* Image Wrapper */
+.o_library_member_kanban .o_kanban_image_wrapper {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.o_library_member_kanban .o_kanban_image {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    background: #fff;
+}
+
+.o_library_member_kanban .o_kanban_image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Membership Badge Overlay */
+.o_library_member_kanban .o_member_type_badge {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.o_library_member_kanban .o_member_type_badge .badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.o_library_member_kanban .o_member_type_badge .badge i {
+    margin-right: 0.3rem;
+}
+
+.o_library_member_kanban .o_member_type_badge .badge-info {
+    background: #4299e1;
+    color: white;
+}
+
+.o_library_member_kanban .o_member_type_badge .badge-success {
+    background: #48bb78;
+    color: white;
+}
+
+.o_library_member_kanban .o_member_type_badge .badge-secondary {
+    background: #718096;
+    color: white;
+}
+
+/* Details Section */
+.o_library_member_kanban .oe_kanban_details {
+    padding: 1.25rem;
+}
+
+.o_library_member_kanban .o_kanban_record_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.o_library_member_kanban .o_kanban_record_title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.o_library_member_kanban .o_member_status_indicator .badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.o_library_member_kanban .o_member_status_indicator .badge i {
+    margin-right: 0.25rem;
+}
+
+.o_library_member_kanban .o_member_status_indicator .badge-success {
+    background: #c6f6d5;
+    color: #22543d;
+    border: 1px solid #9ae6b4;
+}
+
+.o_library_member_kanban .o_member_status_indicator .badge-danger {
+    background: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #fc8181;
+}
+
+/* Contact Info */
+.o_library_member_kanban .o_member_info {
+    font-size: 0.875rem;
+}
+
+.o_library_member_kanban .o_member_info > div {
+    display: flex;
+    align-items: center;
+}
+
+.o_library_member_kanban .o_member_info > div i {
+    width: 18px;
+    font-size: 0.9rem;
+}
+
+.o_library_member_kanban .o_member_info > div .small {
+    font-size: 0.85rem;
+}
+
+/* Statistics Cards */
+.o_library_member_kanban .o_member_stats .stat-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f7fafc;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.o_library_member_kanban .o_member_stats .stat-box:hover {
+    background: #edf2f7;
+    transform: scale(1.05);
+}
+
+.o_library_member_kanban .o_member_stats .stat-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.o_library_member_kanban .o_member_stats .stat-active .stat-icon {
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+}
+
+.o_library_member_kanban .o_member_stats .stat-total .stat-icon {
+    background: linear-gradient(135deg, #9f7aea, #805ad5);
+}
+
+.o_library_member_kanban .o_member_stats .stat-info {
+    flex: 1;
+}
+
+.o_library_member_kanban .o_member_stats .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1;
+}
+
+.o_library_member_kanban .o_member_stats .stat-label {
+    font-size: 0.75rem;
+    color: #718096;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 0.2rem;
+}
+
+/* Fine Alert */
+.o_library_member_kanban .o_member_fine_alert {
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    color: #742a2a;
+    font-size: 0.875rem;
+}
+
+.o_library_member_kanban .o_member_fine_alert i {
+    color: #f56565;
+}
+
+.o_library_member_kanban .o_member_fine_alert strong {
+    font-weight: 600;
+}
+
+/* Footer Actions */
+.o_library_member_kanban .o_kanban_record_bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    gap: 0.5rem;
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn i {
+    margin-right: 0.3rem;
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn-primary:hover {
+    background: linear-gradient(135deg, #5568d3, #6a3f8f);
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn-warning {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+    border: none;
+    color: white;
+}
+
+.o_library_member_kanban .o_kanban_record_bottom .btn-warning:hover {
+    background: linear-gradient(135deg, #dd6b20, #c05621);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .o_library_member_kanban .o_kanban_image {
+        width: 80px;
+        height: 80px;
+    }
+
+    .o_library_member_kanban .o_kanban_record_title {
+        font-size: 1rem;
+    }
+
+    .o_library_member_kanban .o_member_stats .stat-value {
+        font-size: 1.2rem;
+    }
+
+    .o_library_member_kanban .o_member_stats .stat-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .o_library_member_kanban .o_kanban_image_wrapper {
+        padding: 1rem;
+    }
+
+    .o_library_member_kanban .o_kanban_image {
+        width: 70px;
+        height: 70px;
+    }
+
+    .o_library_member_kanban .oe_kanban_details {
+        padding: 1rem;
+    }
+
+    .o_library_member_kanban .o_member_stats .row {
+        margin: 0 -0.25rem;
+    }
+
+    .o_library_member_kanban .o_member_stats .row > div {
+        padding: 0 0.25rem;
+    }
+
+    .o_library_member_kanban .o_kanban_record_bottom {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .o_library_member_kanban .o_kanban_record_bottom .oe_kanban_bottom_left,
+    .o_library_member_kanban .o_kanban_record_bottom .oe_kanban_bottom_right {
+        width: 100%;
+    }
+
+    .o_library_member_kanban .o_kanban_record_bottom .btn {
+        width: 100%;
+    }
+}
+
+/* Animation */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.o_library_member_kanban .o_kanban_record {
+    animation: slideInUp 0.4s ease-out;
+}
+
+/* ============================================
+   Library Borrowing Kanban - Modern Simple
+   ============================================ */
+
+.o_library_borrowing_kanban .o_kanban_record {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e2e8f0;
+    position: relative;
+}
+
+.o_library_borrowing_kanban .o_kanban_record:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Status Indicator Strip */
+.o_library_borrowing_kanban .o_status_strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    z-index: 1;
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="draft"] {
+    background: linear-gradient(90deg, #a0aec0, #718096);
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="borrowed"] {
+    background: linear-gradient(90deg, #48bb78, #38a169);
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="returned"] {
+    background: linear-gradient(90deg, #4299e1, #3182ce);
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="overdue"] {
+    background: linear-gradient(90deg, #f56565, #e53e3e);
+    animation: pulse-strip 2s infinite;
+}
+
+@keyframes pulse-strip {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Card Content */
+.o_library_borrowing_kanban .oe_kanban_content {
+    padding: 1rem;
+    padding-top: 1.25rem;
+}
+
+/* Header Section */
+.o_library_borrowing_kanban .o_kanban_record_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+
+.o_library_borrowing_kanban .o_kanban_record_title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.4;
+}
+
+/* Overdue Badge */
+.o_library_borrowing_kanban .o_overdue_badge {
+    padding: 0.35rem 0.65rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    background: #fed7d7;
+    color: #c53030;
+    border: 1px solid #fc8181;
+    white-space: nowrap;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+.o_library_borrowing_kanban .o_overdue_badge i {
+    margin-right: 0.25rem;
+}
+
+/* Body Section */
+.o_library_borrowing_kanban .o_kanban_record_body {
+    margin-bottom: 1rem;
+}
+
+.o_library_borrowing_kanban .o_book_info,
+.o_library_borrowing_kanban .o_member_info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.o_library_borrowing_kanban .o_book_info i {
+    color: #667eea;
+    margin-top: 0.15rem;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+.o_library_borrowing_kanban .o_member_info i {
+    color: #48bb78;
+    margin-top: 0.15rem;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+.o_library_borrowing_kanban .o_book_info .o_field_widget,
+.o_library_borrowing_kanban .o_member_info .o_field_widget {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* Footer Section */
+.o_library_borrowing_kanban .o_kanban_record_bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    gap: 0.5rem;
+}
+
+.o_library_borrowing_kanban .oe_kanban_bottom_left {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.o_library_borrowing_kanban .oe_kanban_bottom_left i {
+    color: #a0aec0;
+}
+
+/* Status Badge Styling */
+.o_library_borrowing_kanban .o_field_widget.o_field_badge .badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+    border: 1px solid transparent;
+}
+
+.o_library_borrowing_kanban .badge-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+    border-color: #cbd5e0;
+}
+
+.o_library_borrowing_kanban .badge-success {
+    background: #c6f6d5;
+    color: #22543d;
+    border-color: #9ae6b4;
+}
+
+.o_library_borrowing_kanban .badge-info {
+    background: #bee3f8;
+    color: #2c5282;
+    border-color: #90cdf4;
+}
+
+.o_library_borrowing_kanban .badge-danger {
+    background: #fed7d7;
+    color: #742a2a;
+    border-color: #fc8181;
+}
+
+/* Kanban Column Styling */
+.o_library_borrowing_kanban .o_kanban_group_title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #2d3748;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.o_library_borrowing_kanban .o_kanban_counter {
+    background: #f7fafc;
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+/* Progress Bar Colors */
+.o_library_borrowing_kanban .o_progressbar .o_progressbar_success {
+    background: #48bb78;
+}
+
+.o_library_borrowing_kanban .o_progressbar .o_progressbar_info {
+    background: #4299e1;
+}
+
+.o_library_borrowing_kanban .o_progressbar .o_progressbar_danger {
+    background: #f56565;
+}
+
+.o_library_borrowing_kanban .o_progressbar .o_progressbar_muted {
+    background: #a0aec0;
+}
+
+/* Color Classes for Kanban Colors */
+.o_library_borrowing_kanban .oe_kanban_color_0 {
+    background: #ffffff;
+}
+
+.o_library_borrowing_kanban .oe_kanban_color_1 {
+    border-left: 3px solid #f56565;
+}
+
+.o_library_borrowing_kanban .oe_kanban_color_2 {
+    border-left: 3px solid #ed8936;
+}
+
+.o_library_borrowing_kanban .oe_kanban_color_3 {
+    border-left: 3px solid #ecc94b;
+}
+
+.o_library_borrowing_kanban .oe_kanban_color_4 {
+    border-left: 3px solid #4299e1;
+}
+
+.o_library_borrowing_kanban .oe_kanban_color_10 {
+    border-left: 3px solid #48bb78;
+}
+
+/* Hover Effects for Different Status */
+.o_library_borrowing_kanban .o_borrowing_card:hover {
+    cursor: pointer;
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="draft"] ~ .oe_kanban_content {
+    border-top: none;
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="borrowed"] ~ .oe_kanban_content {
+    border-top: none;
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="returned"] ~ .oe_kanban_content {
+    border-top: none;
+}
+
+.o_library_borrowing_kanban .o_status_strip[data-status="overdue"] ~ .oe_kanban_content {
+    border-top: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .o_library_borrowing_kanban .oe_kanban_content {
+        padding: 0.75rem;
+        padding-top: 1rem;
+    }
+
+    .o_library_borrowing_kanban .o_kanban_record_title {
+        font-size: 0.9rem;
+    }
+
+    .o_library_borrowing_kanban .o_book_info,
+    .o_library_borrowing_kanban .o_member_info {
+        font-size: 0.85rem;
+    }
+
+    .o_library_borrowing_kanban .o_kanban_record_bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .o_library_borrowing_kanban .oe_kanban_bottom_left,
+    .o_library_borrowing_kanban .oe_kanban_bottom_right {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .o_library_borrowing_kanban .o_kanban_record_top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .o_library_borrowing_kanban .o_overdue_badge {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Animation for Card Entry */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.o_library_borrowing_kanban .o_kanban_record {
+    animation: slideInUp 0.3s ease-out;
+}
+
+/* Smooth Transitions */
+.o_library_borrowing_kanban .o_kanban_record * {
+    transition: color 0.2s ease, background-color 0.2s ease;
+}

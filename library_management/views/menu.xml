@@ -5,20 +5,11 @@
               name="Library"
               web_icon="library_management,static/description/icon.png"
               sequence="10"/>
-
-    <!-- Dashboard -->
-    <menuitem id="menu_library_dashboard"
-              name="Dashboard"
-              parent="menu_library_root"
-              action="action_library_dashboard"
-              sequence="11"/>
-
-
     <!-- Operations Menu -->
     <menuitem id="menu_library_operations"
               name="Operations"
               parent="menu_library_root"
-              sequence="20"/>
+              sequence="70"/>
 
     <menuitem id="menu_library_borrowing"
               name="Borrowings"

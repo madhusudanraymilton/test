@@ -1,0 +1,328 @@
+<templates owl="1">
+    <t t-name="library_management.CustomDashboard">
+        <div class="o_library_dashboard">
+            <!-- Loading State -->
+            <t t-if="state.loading">
+                <div class="text-center py-5">
+                    <i class="fa fa-spinner fa-spin fa-3x text-primary"/>
+                    <p class="mt-3 text-muted">Loading dashboard...</p>
+                </div>
+            </t>
+
+            <!-- Dashboard Content -->
+            <t t-else="">
+                <div class="container-fluid p-4">
+                    <!-- Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h1 class="dashboard-title mb-2">
+                                <i class="fa fa-dashboard me-2"/>Library Dashboard
+                            </h1>
+                            <p class="text-muted">Real-time overview of your library system</p>
+                        </div>
+                    </div>
+
+                    <!-- Primary Stats Row -->
+                    <div class="row g-3 mb-4">
+                        <!-- Total Books -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-primary" t-on-click="() => this.openBooks()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-book fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.totalBooks"/>
+                                    <p class="stat-label">Total Books</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Available Books -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-success" t-on-click="() => this.openAvailableBooks()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-check-circle fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.availableBooks"/>
+                                    <p class="stat-label">Available Books</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Borrowed Books -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-info" t-on-click="() => this.openBorrowedBooks()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-exchange fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.borrowedBooks"/>
+                                    <p class="stat-label">Borrowed Books</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Members -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-purple" t-on-click="() => this.openMembers()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-users fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.totalMembers"/>
+                                    <p class="stat-label">Total Members</p>
+                                    <small class="stat-sub" t-esc="state.stats.activeMembers + ' active'"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alert Stats Row -->
+                    <div class="row g-3 mb-4">
+                        <!-- Overdue Books -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-danger" t-on-click="() => this.openOverdueBooks()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-exclamation-triangle fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.overdueBooks"/>
+                                    <p class="stat-label">Overdue Books</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unpaid Fines -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-warning" t-on-click="() => this.openUnpaidFines()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-money fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.unpaidFines"/>
+                                    <p class="stat-label">Unpaid Fines</p>
+                                    <small class="stat-sub" t-esc="formatCurrency(state.stats.totalFineAmount)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Borrowings -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-teal" t-on-click="() => this.openTodayBorrowings()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-calendar-check-o fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.todayBorrowings"/>
+                                    <p class="stat-label">Today's Borrowings</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Due Today -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card stat-card-orange" t-on-click="() => this.openDueTodayBooks()">
+                                <div class="stat-icon">
+                                    <i class="fa fa-clock-o fa-2x"/>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-value" t-esc="state.stats.dueTodayBooks"/>
+                                    <p class="stat-label">Due Today</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts and Details Row -->
+                    <div class="row g-3 mb-4">
+                        <!-- Top Borrowed Books -->
+                        <div class="col-12 col-lg-6">
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fa fa-star me-2"/>Top Borrowed Books
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="state.topBooks.length">
+                                        <div class="top-books-list">
+                                            <t t-foreach="state.topBooks" t-as="book" t-key="book.id">
+                                                <div class="top-book-item" t-on-click="() => this.openBook(book.id)">
+                                                    <div class="book-rank">
+                                                        <span t-esc="book_index + 1"/>
+                                                    </div>
+                                                    <div class="book-info">
+                                                        <strong t-esc="book.title"/>
+                                                        <small class="text-muted d-block">Borrowed <t t-esc="book.count"/> times</small>
+                                                    </div>
+                                                    <div class="book-badge">
+                                                        <span class="badge badge-primary" t-esc="book.count"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-inbox fa-3x mb-3"/>
+                                            <p>No borrowing data available</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Borrowings -->
+                        <div class="col-12 col-lg-6">
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fa fa-history me-2"/>Recent Borrowings
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="state.recentBorrowings.length">
+                                        <div class="recent-borrowings-list">
+                                            <t t-foreach="state.recentBorrowings" t-as="borrowing" t-key="borrowing.id">
+                                                <div class="borrowing-item" t-on-click="() => this.openBorrowing(borrowing.id)">
+                                                    <div class="borrowing-info">
+                                                        <strong t-esc="borrowing.book_id[1]"/>
+                                                        <small class="text-muted d-block">
+                                                            <i class="fa fa-user me-1"/>
+                                                            <t t-esc="borrowing.member_id[1]"/>
+                                                        </small>
+                                                        <small class="text-muted d-block">
+                                                            <i class="fa fa-calendar me-1"/>
+                                                            <t t-esc="formatDate(borrowing.borrow_date)"/>
+                                                        </small>
+                                                    </div>
+                                                    <div class="borrowing-status">
+                                                        <span class="badge" t-att-class="getStatusBadgeClass(borrowing.status)" t-esc="borrowing.status"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-inbox fa-3x mb-3"/>
+                                            <p>No recent borrowings</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Distribution Charts Row -->
+                    <div class="row g-3 mb-4">
+                        <!-- Category Distribution -->
+                        <div class="col-12 col-lg-6">
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fa fa-pie-chart me-2"/>Books by Category
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="state.categoryDistribution.length">
+                                        <div class="category-chart">
+                                            <t t-foreach="state.categoryDistribution" t-as="category" t-key="category.name">
+                                                <div class="category-bar">
+                                                    <div class="category-label">
+                                                        <span t-esc="category.name"/>
+                                                        <span class="category-count" t-esc="category.count"/>
+                                                    </div>
+                                                    <div class="category-progress">
+                                                        <t t-set="maxCount" t-value="state.categoryDistribution[0].count"/>
+                                                        <t t-set="percentage" t-value="(category.count / maxCount * 100)"/>
+                                                        <div class="progress-bar" t-att-style="'width: ' + percentage + '%'"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-inbox fa-3x mb-3"/>
+                                            <p>No category data available</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Membership Distribution -->
+                        <div class="col-12 col-lg-6">
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fa fa-users me-2"/>Members by Type
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="state.membershipDistribution.length">
+                                        <div class="membership-chart">
+                                            <t t-foreach="state.membershipDistribution" t-as="membership" t-key="membership.type">
+                                                <div class="membership-item">
+                                                    <div class="membership-icon">
+                                                        <i class="fa fa-user-circle fa-3x" t-att-class="'text-' + (membership.type === 'student' ? 'info' : membership.type === 'teacher' ? 'success' : 'secondary')"/>
+                                                    </div>
+                                                    <div class="membership-details">
+                                                        <h4 t-esc="membership.count"/>
+                                                        <p class="text-capitalize" t-esc="membership.type"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-inbox fa-3x mb-3"/>
+                                            <p>No membership data available</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Trends -->
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fa fa-line-chart me-2"/>Borrowing Trends (Last 6 Months)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="state.monthlyTrends.length">
+                                        <div class="trends-chart">
+                                            <t t-foreach="state.monthlyTrends" t-as="trend" t-key="trend.month">
+                                                <div class="trend-bar">
+                                                    <div class="trend-value" t-esc="trend.count"/>
+                                                    <t t-set="maxCount" t-value="Math.max(...state.monthlyTrends.map(t => t.count))"/>
+                                                    <t t-set="barHeight" t-value="(trend.count / maxCount * 100)"/>
+                                                    <div class="trend-column" t-att-style="'height: ' + barHeight + '%'"/>
+                                                    <div class="trend-label" t-esc="trend.month"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-inbox fa-3x mb-3"/>
+                                            <p>No trend data available</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

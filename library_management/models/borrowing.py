@@ -110,12 +110,14 @@ class LibraryBorrowing(models.Model):
         compute='_compute_color'
     )
 
-    @api.model
-    def create(self, vals):
-        """Override create to generate sequence"""
-        if vals.get('name', _('New')) == _('New'):
-            vals['name'] = self.env['ir.sequence'].next_by_code('library.borrowing') or _('New')
-        return super().create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', _('New')) == _('New'):
+                vals['name'] = self.env['ir.sequence'].next_by_code(
+                    'library.borrowing'
+                ) or _('New')
+        return super().create(vals_list)
 
     @api.depends('due_date', 'return_date', 'status')
     def _compute_days_overdue(self):

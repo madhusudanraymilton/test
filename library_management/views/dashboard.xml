@@ -3,9 +3,17 @@
     <!-- Dashboard Action -->
     <record id="action_library_dashboard" model="ir.actions.client">
         <field name="name">Library Dashboard</field>
-        <field name="tag">library_dashboard</field>
-        <field name="target">current</field>
+        <field name="tag">library_management</field>
+       <!-- <field name="target">current</field> -->
     </record>
+
+     <!-- Dashboard -->
+    <menuitem id="menu_library_dashboard"
+              name="Dashboard"
+              parent="menu_library_root"
+              action="action_library_dashboard"
+              sequence="20"/>
+
 
     <!-- Statistics Actions for Kanban Boxes -->
     <record id="action_library_books_stat" model="ir.actions.act_window">
