@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--Form View-->
+    <record id="view_job_tracking_form" model="ir.ui.view">
+        <field name="name">job.tracking.form</field>
+        <field name="model">job.tracking</field>
+        <field name="arch" type="xml">
+            <form string="Job Tracking">
+                <header>
+                    <field name="stages"
+                            widget="statusbar"
+                            clickable="True"/>
+                </header>
+                <sheet>
+                    <group>
+                        <!-- <field name="stages" widget="statusbar" status_visible="" clickable="True"/> -->
+                        <field name="name" string="Applicant Name"/>
+                        <field name="job_id" string="Job Position"/>
+                    </group>
+                </sheet>
+                <!-- <notebook>
+                    <page string="chatter">
+                        <chatter/>
+                    </page>
+                </notebook> -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_job_tracking_list" model="ir.ui.view">
+        <field name="name">job.tracking.list</field>
+        <field name="model">job.tracking</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="job_id"/>
+                <field name="stages"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_job_tracking" model="ir.actions.act_window">
+        <field name="name">Job Tracking</field>
+        <field name="res_model">job.tracking</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="root" name="Job Tracking" sequence="10"/>
+    <menuitem id="child" name="Home" parent="root" action="action_job_tracking" sequence="1"/>
+</odoo>

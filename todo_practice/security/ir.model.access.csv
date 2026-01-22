@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_job_tracking_admin,access.job.tracking.admin,model_job_tracking,base.group_system,1,1,1,1

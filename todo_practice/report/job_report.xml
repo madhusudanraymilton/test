@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_job">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="job">
+                <t t-call="web.external_layout">
+                    <div class="page">
+
+                        <h2>Job Card</h2>
+
+                        <p>
+                            <strong>Applicant:</strong>
+                            <span t-field="job.name"/>
+                        </p>
+
+                        <p>
+                            <strong>Job Position:</strong>
+                            <span t-field="job.job_id"/>
+                        </p>
+
+                        <p>
+                            <strong>Stage:</strong>
+                            <span t-field="job.stages"/>
+                        </p>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
