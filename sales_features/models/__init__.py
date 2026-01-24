@@ -1,0 +1,1 @@
+from . import profile_name,platform_source,sale_order_extended,account_move_extended,account_payment_register_extended

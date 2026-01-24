@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="view_profile_name_tree" model="ir.ui.view">
+            <field name="name">bd.profile.name.list</field>
+            <field name="model">bd.profile.name</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="platform_source_id"/>
+                    <field name="company_id"/>
+                    <field name="income_account"/>
+                    <field name="receivable_account"/>
+                    <field name="journal_id"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_profile_name_form" model="ir.ui.view">
+            <field name="name">bd.profile.name.form</field>
+            <field name="model">bd.profile.name</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="platform_source_id"/>
+                                <field name="company_id"/>
+                            </group>
+                            <group>
+                                <field name="income_account"/>
+                                <field name="receivable_account"/>
+                                <field name="journal_id"/>
+                                <field name="allowed_account" widget="many2many_tags"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_profile_name" model="ir.actions.act_window">
+            <field name="name">Profile Names</field>
+            <field name="res_model">bd.profile.name</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+    </data>
+</odoo>

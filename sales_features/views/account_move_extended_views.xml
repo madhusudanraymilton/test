@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="inherited_model_view_move_form" model="ir.ui.view">
+            <field name="name">inherited.model.view.move.form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <!-- find field description and add the field
+                    new_field after it -->
+                <xpath expr="//group[@id='header_left_group']/div" position="after">
+                    <field name="profile_id"/>
+                </xpath>
+
+                <!-- Domain applied to account field inside lines -->
+                <xpath expr="//field[@name='line_ids']//field[@name='account_id']" position="attributes">
+                    <attribute name="domain">[('id', 'in', parent.profile_id.allowed_account)]</attribute>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo>

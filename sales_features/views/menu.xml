@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <menuitem
+        id="bd_others_menu_id"
+        name="Others"
+        parent="sale.menu_sale_config"
+        sequence="500"
+    />
+
+    <menuitem
+        id="menu_bd_platform_source"
+        name="Platform Source"
+        parent="bd_others_menu_id"
+        action="action_platform_source"
+        sequence="10"
+    />
+
+    <menuitem
+        id="menu_profile_name_root"
+        name="Profile Name"
+        parent="bd_others_menu_id"
+        action="action_profile_name"
+        sequence="20"
+    />
+
+</odoo>
