@@ -96,7 +96,7 @@ class AccountMoveExtended(models.Model):
             return self._auto_register_payment()
         
         # Otherwise, use the default wizard behavior
-        return super(AccountMoveExtended, self).action_register_payment()
+        return super().action_register_payment()
 
     def _auto_register_payment(self):
         """
@@ -138,6 +138,7 @@ class AccountMoveExtended(models.Model):
             ).create({
                 'journal_id': journal.id,
                 'payment_method_line_id': payment_method_line,
+                'payment_date': fields.Date.context_today(self)
             })
 
             # Create and post the payment
@@ -146,13 +147,7 @@ class AccountMoveExtended(models.Model):
         # Return action to refresh the view or show notification
         return {
             'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Payment Registered'),
-                'message': _('Payment has been registered successfully.'),
-                'type': 'success',
-                'sticky': False,
-            }
+            'tag': 'reload',
         }
 
     def _get_payment_method_line(self, journal, payment_type):
