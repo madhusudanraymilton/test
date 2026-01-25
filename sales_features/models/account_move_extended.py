@@ -29,8 +29,7 @@ class AccountMoveExtended(models.Model):
             else:
                 # No profile OR no allowed accounts: return ALL accounts
                 all_accounts = AccountAccount.search([
-                    ('company_id', 'in', [record.company_id.id, False]),
-                    ('deprecated', '=', False)
+                    ('id', 'not in', self.profile_id.allowed_account.ids)
                 ])
                 record.allowed_account_ids = all_accounts
 
@@ -102,6 +101,7 @@ class AccountMoveExtended(models.Model):
     def _auto_register_payment(self):
         """
         Automatically register payment without showing wizard
+        Uses the correct Odoo 19 payment registration flow
         """
         for move in self:
             # Validate invoice state
@@ -128,33 +128,20 @@ class AccountMoveExtended(models.Model):
             else:
                 raise UserError(_("Cannot register payment for this document type."))
 
-            # Create payment directly without wizard (NO 'ref' field)
-            payment = self.env['account.payment.register'].create({
-                'payment_type': payment_type,
-                #'partner_type': 'customer' if move.move_type in ('out_invoice', 'out_refund') else 'supplier',
-                #'partner_id': move.commercial_partner_id.id,
-                'amount': move.amount_residual,
-                #'currency_id': move.currency_id.id,
-                'date': fields.Date.context_today(self),
+            # Get payment method line
+            payment_method_line = self._get_payment_method_line(journal, payment_type)
+
+            # Create payment wizard with proper context
+            payment_register = self.env['account.payment.register'].with_context(
+                active_model='account.move',
+                active_ids=move.ids
+            ).create({
                 'journal_id': journal.id,
-                #'company_id': move.company_id.id,
-                #'payment_method_line_id': self._get_payment_method_line(journal, payment_type),
+                'payment_method_line_id': payment_method_line,
             })
 
-            # Post the payment
-            payment.action_post()
-
-            # Reconcile with invoice
-            move_lines = move.line_ids.filtered(
-                lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable') 
-                and not line.reconciled
-            )
-            
-            payment_lines = payment.line_ids.filtered(
-                lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable')
-            )
-
-            (move_lines + payment_lines).reconcile()
+            # Create and post the payment
+            payment_register.action_create_payments()
 
         # Return action to refresh the view or show notification
         return {
@@ -183,7 +170,7 @@ class AccountMoveExtended(models.Model):
                 "Please configure payment methods in the journal settings."
             ) % journal.name)
 
-        # Return the first available payment method
+        # Return the first available payment method line ID
         return available_payment_method_lines[0].id
 
 
