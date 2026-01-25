@@ -212,17 +212,17 @@ class SaleOrderExtended(models.Model):
 
                 journal = order.profile_id.journal_id
 
-                # 5. Register payment
-                payment_wizard = self.env['account.payment.register'].with_context(
-                    active_model='account.move',
-                    active_ids=invoice.ids,
-                ).create({
-                    'journal_id': journal.id,
-                    'amount': invoice.amount_residual,
-                    'payment_date': fields.Date.context_today(self),
-                })
+                # # 5. Register payment
+                # payment_wizard = self.env['account.payment.register'].with_context(
+                #     active_model='account.move',
+                #     active_ids=invoice.ids,
+                # ).create({
+                #     'journal_id': journal.id,
+                #     'amount': invoice.amount_residual,
+                #     'payment_date': fields.Date.context_today(self),
+                # })
 
-                # 6. Pay invoice → PAID
-                payment_wizard.action_create_payments()
+                # # 6. Pay invoice → PAID
+                # payment_wizard.action_create_payments()
 
         return res

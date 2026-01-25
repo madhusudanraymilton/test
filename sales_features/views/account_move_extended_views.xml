@@ -10,11 +10,31 @@
                     new_field after it -->
                 <xpath expr="//group[@id='header_left_group']/div" position="after">
                     <field name="profile_id"/>
+                    <field name="allowed_account_ids" invisible="1"/>
                 </xpath>
 
-                <!-- Domain applied to account field inside lines -->
+                <!-- Apply domain to account_id in invoice_line_ids (Invoice Lines tab) -->
+                <xpath expr="//field[@name='invoice_line_ids']//field[@name='account_id']" position="attributes">
+                    <attribute name="domain">
+                        [
+                            '|',
+                            ('id', 'in', parent.allowed_account_ids),
+                            ('id', '=', False)
+                        ]
+                    </attribute>
+                    <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
+                </xpath>
+
+                <!-- Apply domain to account_id in line_ids (Journal Items tab) -->
                 <xpath expr="//field[@name='line_ids']//field[@name='account_id']" position="attributes">
-                    <attribute name="domain">[('id', 'in', parent.profile_id.allowed_account)]</attribute>
+                    <attribute name="domain">
+                        [
+                            '|',
+                            ('id', 'in', parent.allowed_account_ids),
+                            ('id', '=', False)
+                        ]
+                    </attribute>
+                    <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
                 </xpath>
 
             </field>
