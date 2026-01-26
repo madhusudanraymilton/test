@@ -113,6 +113,7 @@ class AccountMoveExtended(models.Model):
                 'journal_id': journal.id,
                 'payment_method_line_id': payment_method_line,
                 'payment_date': fields.Date.context_today(self)
+                # 'profile_id': self.profile_id.id
             })
 
             # Create and post the payment

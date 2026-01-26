@@ -1,9 +1,10 @@
-from odoo import models, api
+from odoo import models, api, fields
 
 class AccountPaymentRegisterExtended(models.TransientModel):
     _inherit = 'account.payment.register'
 
-    
+    # profile_id = fields.Many2one('bd.profile.name', string="Profile")
+
     @api.model
     def default_get(self, fields_list):
         res = super().default_get(fields_list)

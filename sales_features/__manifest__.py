@@ -15,6 +15,7 @@
         'views/sales_order_extended_views.xml',
         'views/account_move_extended_views.xml',
         'views/account_payment_register_extended_views.xml',
+        #'views/account_payment_extended_views.xml',
         'views/menu.xml',
     ],
     'demo': [
