@@ -43,4 +43,7 @@ class ProfileName(models.Model):
         tracking=True
     )
 
-    allowed_account = fields.Many2many('account.account', string="Allowed Account")
+    allowed_account = fields.Many2many(
+        'account.account', 
+        string="Allowed Account"
+    )

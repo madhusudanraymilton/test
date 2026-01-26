@@ -11,9 +11,13 @@
 #             'profile_id':self.profile_id.id
 #         })
 
-from odoo import models, fields, api, _ 
+
 from odoo.exceptions import UserError
 from itertools import groupby
+from odoo import models, fields, _ , api
+from odoo.exceptions import UserError
+
+
 from odoo import Command  # used in _create_invoices for invoice line creation
 
 # ============================================================
@@ -182,6 +186,12 @@ class SaleOrderExtended(models.Model):
 # END OF FILE
 # ============================================================
 
+
+
+
+#   Overall work is that --- One click ei all done/paid
+ 
+ 
     def action_confirm(self):
         res = super().action_confirm()
 

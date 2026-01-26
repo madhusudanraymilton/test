@@ -4,51 +4,34 @@ from odoo.exceptions import UserError, ValidationError
 class AccountMoveExtended(models.Model):
     _inherit = 'account.move'
 
-    profile_id = fields.Many2one('bd.profile.name', string="Profile", tracking=True)
-    
+    profile_id = fields.Many2one('bd.profile.name', string="Profile")
     allowed_account_ids = fields.Many2many(
-        'account.account',
-        compute='_compute_allowed_account_ids',
-        string="Allowed Accounts",
-        store=False
+        'account.account', 
+        string="Allowed Account",
+        compute='_compute_allowed_account_ids'
     )
 
-    @api.depends('profile_id', 'profile_id.allowed_account', 'company_id')
+    @api.depends('profile_id','allowed_account_ids')
     def _compute_allowed_account_ids(self):
-        """
-        Returns allowed account IDs based on profile.
-        If no profile: returns ALL account IDs (so domain shows everything)
-        If profile selected: returns only allowed account IDs
-        """
-        AccountAccount = self.env['account.account']
-        
+        account_account = self.env['account.account']
         for record in self:
-            if record.profile_id and record.profile_id.allowed_account:
-                # Profile with allowed accounts: restrict to those only
-                record.allowed_account_ids = record.profile_id.allowed_account
-            else:
-                # No profile OR no allowed accounts: return ALL accounts
-                all_accounts = AccountAccount.search([
-                    ('id', 'not in', self.profile_id.allowed_account.ids)
-                ])
-                record.allowed_account_ids = all_accounts
+            if not self.allowed_account_ids:
+                self.allowed_account_ids = account_account.search([])
+                
 
+    # @api.onchange("partner_id")
+    # def get_profile(self):
+            
     @api.onchange('profile_id')
     def _onchange_profile_id(self):
-        """
-        Trigger recompute and validate when profile changes
-        """
-        # Force recompute of allowed accounts
-        self._compute_allowed_account_ids()
-        
         if not self.profile_id:
-            return 
-        
+            return
+
         income_account = self.profile_id.income_account
         receivable_account = self.profile_id.receivable_account
+        self.allowed_account_ids = self.profile_id.allowed_account.ids
 
-        # Validate income account
-        if income_account and income_account.internal_group in ('receivable', 'payable'):
+        if income_account.internal_group in ('receivable', 'payable'):
             raise ValidationError(
                 "Profile income account must be an Income or Expense account, "
                 "not a Receivable/Payable account."
@@ -59,33 +42,23 @@ class AccountMoveExtended(models.Model):
             raise ValidationError(
                 "Profile receivable account must be a Receivable account type."
             )
+        
 
-        # Update invoice lines with income account
-        if income_account:
-            for line in self.invoice_line_ids:
-                if not line.display_type:
-                    line.account_id = income_account
+        for line in self.invoice_line_ids:
+            line.account_id = income_account
 
-        # Update payment term lines with receivable account
+        
         if receivable_account:
             for line in self.line_ids.filtered(lambda l: l.display_type == 'payment_term'):
                 line.account_id = receivable_account
+        
+        # return {
+        #     'domain': {
+        #         'allowed_account_ids': [('id', 'in', self.profile_id.allowed_account.ids)]
+        #     }
+        # }
 
-    @api.constrains('line_ids', 'profile_id')
-    def _check_account_allowed(self):
-        """
-        Validate that all line accounts are in the allowed accounts list
-        """
-        for move in self:
-            if move.profile_id and move.profile_id.allowed_account:
-                allowed_ids = move.profile_id.allowed_account.ids
-                for line in move.line_ids.filtered(lambda l: not l.display_type):
-                    if line.account_id and line.account_id.id not in allowed_ids:
-                        raise ValidationError(
-                            f"Account '{line.account_id.display_name}' is not allowed for profile '{move.profile_id.name}'. "
-                            f"Please select from the allowed accounts."
-                        )
-    
+
     def action_register_payment(self):
         """
         Override the register payment action to auto-pay without wizard
@@ -97,7 +70,8 @@ class AccountMoveExtended(models.Model):
         
         # Otherwise, use the default wizard behavior
         return super().action_register_payment()
-
+    
+    #new Add 
     def _auto_register_payment(self):
         """
         Automatically register payment without showing wizard
@@ -169,5 +143,3 @@ class AccountMoveExtended(models.Model):
         return available_payment_method_lines[0].id
 
 
-class AccountMoveLineExtended(models.Model):
-    _inherit = 'account.move.line'
