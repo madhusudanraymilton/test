@@ -1,10 +1,11 @@
-# from odoo import models, fields, api, _ 
+from odoo import models, fields, api, _ 
 
-# class AccountPaymentExtended(models.Model):
-#     _inherit = 'account.payment'
+class AccountPaymentExtended(models.Model):
+    _inherit = 'account.payment'
 
-#     profile_id = fields.Many2one(
-#         'bd.profile.name',
-#         string="Profile"
-#     )
+    profile_id = fields.Many2one(
+        'bd.profile.name',
+        string="Profile",
+        tracking=True
+    )
 

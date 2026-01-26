@@ -1,4 +1,4 @@
-
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
         <record id="view_account_payment_register_form_inherit_profile" model="ir.ui.view">
@@ -7,14 +7,15 @@
             <field name="inherit_id" ref="account.view_account_payment_register_form"/>
             <field name="arch" type="xml">
 
+                <!-- Add profile_id field -->
+                <xpath expr="//field[@name='journal_id']" position="before">
+                    <field name="profile_id" readonly="1" invisible="1"/>
+                </xpath>
+
                 <!-- Make journal readonly -->
                 <xpath expr="//field[@name='journal_id']" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </xpath>
-
-                <!-- <xpath expr="//field[@name='partner_bank_id']" position="after">
-                <field name="profile_id"/>
-                </xpath> -->
 
             </field>
         </record>

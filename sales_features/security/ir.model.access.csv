@@ -4,5 +4,4 @@ access_bd_platform_source,bd.platform.source,model_bd_platform_source,,1,1,1,1
 access_sale_order_extended,access.sale.order.extended,model_sale_order,,1,1,1,1
 access_account_move_extended,access.account.move.extended,model_account_move,,1,1,1,1
 access_account_payment_register_extended,access.account.payment.register.extended,model_account_payment_register,,1,1,1,1
-
-
+access_account_payment__extended,access.account.payment.extended,model_account_payment,,1,1,1,1

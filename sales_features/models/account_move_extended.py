@@ -4,7 +4,12 @@ from odoo.exceptions import UserError, ValidationError
 class AccountMoveExtended(models.Model):
     _inherit = 'account.move'
 
-    profile_id = fields.Many2one('bd.profile.name', string="Profile")
+    profile_id = fields.Many2one(
+        'bd.profile.name', 
+        string="Profile",
+        tracking=True
+    )
+    
     allowed_account_ids = fields.Many2many(
         'account.account', 
         string="Allowed Account",
