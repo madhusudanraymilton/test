@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_whatsapp_message_salesman,whatsapp.message.salesman,whatsapp.model_whatsapp_message,sales_team.group_sale_salesman,1,0,0,0
+access_whatsapp_message_sales_manager,whatsapp.message.manager,whatsapp.model_whatsapp_message,sales_team.group_sale_manager,1,1,1,1

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add WhatsApp button to lead form -->
+    <record id="crm_lead_view_form_whatsapp" model="ir.ui.view">
+        <field name="name">crm.lead.form.whatsapp</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Add WhatsApp button in header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_send_whatsapp" 
+                        string="Send WhatsApp" 
+                        type="object"
+                        class="btn-primary"
+                        invisible="not has_whatsapp"
+                        groups="sales_team.group_sale_salesman"/>
+            </xpath>
+            
+            <!-- Add WhatsApp messages stat button -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_whatsapp_messages" 
+                        type="object"
+                        class="oe_stat_button" 
+                        icon="fa-whatsapp"
+                        invisible="whatsapp_message_count == 0">
+                    <field name="whatsapp_message_count" widget="statinfo" string="WhatsApp"/>
+                </button>
+            </xpath>
+            
+            <!-- Add WhatsApp messages page -->
+            <xpath expr="//notebook" position="inside">
+                <page string="WhatsApp Messages" 
+                      invisible="whatsapp_message_count == 0"
+                      groups="sales_team.group_sale_salesman">
+                    <field name="whatsapp_message_ids" 
+                           readonly="1">
+                        <tree>
+                            <field name="create_date"/>
+                            <field name="mobile_number"/>
+                            <field name="state"/>
+                            <field name="body" widget="html"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Add WhatsApp filter to lead search view -->
+    <record id="crm_lead_view_search_whatsapp" model="ir.ui.view">
+        <field name="name">crm.lead.search.whatsapp</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_form_view_salesteams_lead"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='activities_overdue']" position="after">
+                <separator/>
+                <filter string="Has WhatsApp Messages" 
+                        name="has_whatsapp_messages" 
+                        domain="[('whatsapp_message_count', '>', 0)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

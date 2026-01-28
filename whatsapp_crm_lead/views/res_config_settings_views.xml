@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_whatsapp_crm" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.whatsapp.crm</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="crm.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='crm_lead']" position="after">
+                <h2>WhatsApp Integration</h2>
+                <div class="row mt16 o_settings_container">
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="whatsapp_auto_create_lead"/>
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="whatsapp_auto_create_lead"/>
+                            <div class="text-muted">
+                                Automatically create leads when receiving WhatsApp messages from new contacts
+                            </div>
+                            <div class="content-group" invisible="not whatsapp_auto_create_lead">
+                                <div class="mt16">
+                                    <label for="whatsapp_lead_source_id" class="o_light_label"/>
+                                    <field name="whatsapp_lead_source_id" class="oe_inline"/>
+                                </div>
+                                <div class="mt8">
+                                    <field name="whatsapp_update_existing_lead"/>
+                                    <label for="whatsapp_update_existing_lead"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
