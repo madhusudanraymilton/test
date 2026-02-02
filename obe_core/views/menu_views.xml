@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Main Menu -->
+        <menuitem 
+            id="menu_obe_main" 
+            name="OBE Management" 
+            sequence="10"
+        />
+        
+        <!-- Setup Menu -->
+        <menuitem 
+            id="menu_obe_setup" 
+            name="Setup" 
+            parent="menu_obe_main" 
+            sequence="10"
+        />
+        
+        <menuitem 
+            id="menu_obe_institution" 
+            name="Institution" 
+            parent="menu_obe_setup" 
+            sequence="1"
+            action="action_obe_institution"
+        />
+        
+        <!-- <menuitem 
+            id="menu_obe_programs" 
+            name="Academic Programs" 
+            parent="menu_obe_setup" 
+            sequence="20"
+            action="action_obe_academic_program"
+        /> -->
+        
+        <!-- Outcomes Menu -->
+        <!-- <menuitem 
+            id="menu_obe_outcomes" 
+            name="Outcomes" 
+            parent="menu_obe_main" 
+            sequence="20"
+        />
+        
+        <menuitem 
+            id="menu_obe_peo" 
+            name="PEOs" 
+            parent="menu_obe_outcomes" 
+            sequence="10"
+            action="action_obe_peo"
+        />
+        
+        <menuitem 
+            id="menu_obe_plo" 
+            name="PLOs" 
+            parent="menu_obe_outcomes" 
+            sequence="20"
+            action="action_obe_plo"
+        />
+         -->
+        <!-- Courses Menu -->
+        <!-- <menuitem 
+            id="menu_obe_courses" 
+            name="Courses" 
+            parent="menu_obe_main" 
+            sequence="30"
+        />
+        
+        <menuitem 
+            id="menu_obe_course_master" 
+            name="Course Catalog" 
+            parent="menu_obe_courses" 
+            sequence="10"
+            action="action_obe_course"
+        />
+        
+        <menuitem 
+            id="menu_obe_course_offerings" 
+            name="Course Offerings" 
+            parent="menu_obe_courses" 
+            sequence="20"
+            action="action_obe_course_offering"
+        /> -->
+        
+        <!-- Assessment Menu -->
+        <!-- <menuitem 
+            id="menu_obe_assessment" 
+            name="Assessment" 
+            parent="menu_obe_main" 
+            sequence="40"
+        /> -->
+        
+        <!-- Mapping Menu -->
+        <!-- <menuitem 
+            id="menu_obe_mapping" 
+            name="Mapping" 
+            parent="menu_obe_main" 
+            sequence="50"
+        />
+        
+        <menuitem 
+            id="menu_obe_clo_plo_mapping" 
+            name="CLO-PLO Mapping" 
+            parent="menu_obe_mapping" 
+            sequence="10"
+            action="action_clo_plo_mapping"
+        /> -->
+        
+        <!-- <menuitem 
+            id="menu_obe_plo_peo_mapping" 
+            name="PLO-PEO Mapping" 
+            parent="menu_obe_mapping" 
+            sequence="20"
+            action="action_plo_peo_mapping"
+        /> -->
+        
+        <!-- Reports Menu -->
+        <!-- <menuitem 
+            id="menu_obe_reports" 
+            name="Reports" 
+            parent="menu_obe_main" 
+            sequence="60"
+        /> -->
+        
+        <!-- <menuitem 
+            id="menu_obe_dashboard" 
+            name="Dashboard" 
+            parent="menu_obe_reports" 
+            sequence="10"
+            action="action_obe_dashboard"
+        /> -->
+        
+        <!-- <menuitem 
+            id="menu_obe_accreditation_reports" 
+            name="Accreditation Reports" 
+            parent="menu_obe_reports" 
+            sequence="20"
+        /> -->
+    </data>
+</odoo>

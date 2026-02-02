@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Institution Tree View -->
+        <record id="view_obe_institution_tree" model="ir.ui.view">
+            <field name="name">obe.core.institution.tree</field>
+            <field name="model">obe.core.institution</field>
+            <field name="arch" type="xml">
+                <list string="Institutions">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="vision"/>
+                    <field name="mission"/>
+                    <field name="vision_effective_date"/>
+                    <field name="mission_effective_date"/>
+                    <field name="status"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Institution Form View -->
+        <record id="view_obe_institution_form" model="ir.ui.view">
+            <field name="name">obe.core.institution.form</field>
+            <field name="model">obe.core.institution</field>
+            <field name="arch" type="xml">
+                <form string="Institution">
+                    <header>
+                        <!-- <button name="action_approve_vision" type="object" string="Approve Vision" states="draft" class="btn-primary"/>
+                        <button name="action_publish_vision" type="object" string="Publish Vision" states="approved" class="btn-primary"/>
+                        <button name="action_approve_mission" type="object" string="Approve Mission" states="draft" class="btn-secondary"/>
+                        <button name="action_publish_mission" type="object" string="Publish Mission" states="approved" class="btn-secondary"/> -->
+                        <field name="status" widget="statusbar" statusbar_visible="draft,approved,published"/>
+                        <!-- <field name="mission_status" widget="statusbar" statusbar_visible="draft,approved,published"/> -->
+                    </header>
+                    <sheet>
+                        <!-- <div class="oe_button_box" name="button_box">
+                            <button name="action_view_departments" type="object" class="oe_stat_button">
+                                <div class="o_stat_info">
+                                    <field name="department_count" widget="statinfo" string="Departments"/>
+                                </div>
+                            </button>
+                            <button name="action_view_programs" type="object" class="oe_stat_button">
+                                <div class="o_stat_info">
+                                    <field name="program_count" widget="statinfo" string="Programs"/>
+                                </div>
+                            </button>
+                        </div> -->
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="code"/>
+                                <field name="address" widget="textarea"/>
+                            </group>
+                            <group>
+                                <field name="vision_effective_date"/>
+                                <field name="mission_effective_date"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Vision &amp; Mission">
+                                <group>
+                                    <group>
+                                        <h2>Vision Statement</h2>
+                                        <field name="vision" widget="html" class="oe_inline"/>
+                                    </group>
+                                    <group>
+                                        <h2>Mission Statement</h2>
+                                        <field name="mission" widget="html" class="oe_inline"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <!-- <page string="Accreditation">
+                                <field name="accreditation_body_ids" widget="many2many_tags"/>
+                            </page> -->
+                            <!-- <page string="Departments">
+                                <field name="department_ids">
+                                    <tree>
+                                        <field name="code"/>
+                                        <field name="name"/>
+                                        <field name="head_id"/>
+                                    </tree>
+                                    <form>
+                                        <group>
+                                            <field name="code"/>
+                                            <field name="name"/>
+                                            <field name="head_id"/>
+                                        </group>
+                                    </form>
+                                </field>
+                            </page> -->
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Institution Action -->
+        <record id="action_obe_institution" model="ir.actions.act_window">
+            <field name="name">Institutions</field>
+            <field name="res_model">obe.core.institution</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_obe_institution_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first institution
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>
