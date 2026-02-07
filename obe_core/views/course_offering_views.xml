@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_course_offering_tree" model="ir.ui.view">
+        <field name="name">obe.course.offering.tree</field>
+        <field name="model">obe.course.offering</field>
+        <field name="arch" type="xml">
+            <list string="Course Offerings">
+                <field name="name"/>
+                <field name="course_id"/>
+                <field name="academic_year"/>
+                <field name="semester"/>
+                <field name="section"/>
+                <field name="instructor_id"/>
+                <field name="enrolled_students"/>
+                <field name="max_students"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_course_offering_form" model="ir.ui.view">
+        <field name="name">obe.course.offering.form</field>
+        <field name="model">obe.course.offering</field>
+        <field name="arch" type="xml">
+            <form string="Course Offering">
+                <header>
+
+                    <button name="action_confirm"
+                            string="Confirm"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button name="action_start"
+                            string="Start"
+                            type="object"
+                
+                            class="btn-success"/>
+
+                    <button name="action_complete"
+                            string="Complete"
+                            type="object"
+                           />
+
+                    <button name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            />
+
+                    <!-- <field name="state" widget="statubar"/> -->
+                </header>
+
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+
+                    <group>
+                        <group string="Course Details">
+                            <field name="course_id"/>
+                            <field name="academic_year"/>
+                            <field name="semester" placeholder="Select Semester"/>
+                            <field name="section"/>
+                            <field name="instructor_id" widget="many2many_tags"/>
+                            <field name="assessment_ids" widget="many2many_tags" invisible="True"/>
+                        </group>
+
+                        <group string="Enrollment">
+                            <field name="max_students"/>
+                            <field name="enrolled_students" readonly="1"/>
+                        </group>
+                    </group>
+
+
+                    <notebook>
+
+                        <page string="Student Enrollments">
+                            <field name="enrollment_ids">
+                                <list editable="bottom">
+                                    <field name="student_id"/>
+                                    <field name="registration_date"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+
+                <chatter/>
+
+            </form>
+
+        </field>
+    </record>
+
+    <record id="action_obe_course_offering" model="ir.actions.act_window">
+        <field name="name">Course Offerings</field>
+        <field name="res_model">obe.course.offering</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_obe_course_offering"
+              name="Course Offerings"
+              parent="menu_obe_root"
+              action="action_obe_course_offering"
+              sequence="60"/>
+
+</odoo>

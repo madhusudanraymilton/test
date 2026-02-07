@@ -1,0 +1,854 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_obe_assessment_list" model="ir.ui.view">
+        <field name="name">obe.assessment.list</field>
+        <field name="model">obe.assessment</field>
+        <field name="arch" type="xml">
+            <list string="Assessments" decoration-info="state=='draft'" 
+                  decoration-warning="state=='scheduled'" 
+                  decoration-success="state=='finalized'">
+                <field name="name"/>
+                <field name="assessment_type"/>
+                <field name="course_id"/>
+                <field name="assessment_date"/>
+                <field name="total_marks"/>
+                <field name="weightage" widget="percentage"/>
+                <field name="clo_count"/>
+                <field name="question_count"/>
+                <field name="result_count"/>
+                <field name="average_marks" optional="hide"/>
+                <field name="pass_percentage" widget="percentage" optional="hide"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state=='draft'"
+                       decoration-warning="state=='scheduled'"
+                       decoration-success="state=='finalized'"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_obe_assessment_form" model="ir.ui.view">
+        <field name="name">obe.assessment.form</field>
+        <field name="model">obe.assessment</field>
+        <field name="arch" type="xml">
+            <form string="Assessment">
+                <header>
+                    <button name="action_schedule" string="Schedule" type="object" 
+                             class="oe_highlight"/>
+                    <button name="action_start" string="Start" type="object" 
+                             class="oe_highlight"/>
+                    <button name="action_complete" string="Complete" type="object" 
+                            class="oe_highlight"/>
+                    <button name="action_grade" string="Grade" type="object" 
+                            class="oe_highlight"/>
+                    <button name="action_finalize" string="Finalize" type="object" 
+                            class="oe_highlight"
+                            confirm="Are you sure? This will calculate CLO attainments and cannot be undone."/>
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,scheduled,in_progress,completed,graded,finalized"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_questions" type="object" 
+                                class="oe_stat_button" icon="fa-question-circle">
+                            <field name="question_count" widget="statbutton" string="Questions"/>
+                        </button>
+                        <button name="action_view_results" type="object" 
+                                class="oe_stat_button" icon="fa-trophy">
+                            <field name="result_count" widget="statbutton" string="Results"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g., Midterm Exam, Quiz 1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group name="basic_info">
+                            <field name="assessment_type" widget="radio"/>
+                            <field name="course_offering_id" 
+                                   options="{'no_create': True, 'no_open': True}"/>
+                            <field name="course_id"/>
+                           
+                            <field name="assessment_date"/>
+                            <field name="faculty_id"/>
+                        </group>
+                        <group name="marks_weightage">
+                            <field name="total_marks"/>
+                            <field name="weightage" widget="percentage"/>
+                            <field name="passing_threshold" widget="percentage"/>
+                            <field name="duration_minutes"/>
+                            <field name="total_question_marks"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="CLO Mapping" name="clo_mapping">
+                            <group>
+                                <field name="clo_ids" widget="many2many_tags" 
+                                       domain="[('course_id', '=', course_id)]"/>
+                            </group>
+                            <group string="Assessment Blueprint">
+                                <p class="text-muted">
+                                    This assessment covers <field name="clo_count" class="oe_inline"/> CLO(s).
+                                    Total marks: <field name="total_marks" class="oe_inline"/>, 
+                                    Weightage: <field name="weightage" class="oe_inline"/>%
+                                </p>
+                            </group>
+                        </page>
+                        
+                        <page string="Questions" name="questions">
+                            <field name="question_ids" context="{'default_assessment_id': id}">
+                                <list editable="bottom" decoration-muted="not active">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="question_number"/>
+                                    <field name="question_text"/>
+                                    <field name="marks"/>
+                                    <field name="clo_id" options="{'no_create': True}"/>
+                                    <field name="bloom_level"/>
+                                    <field name="question_type"/>
+                                    <field name="average_marks_obtained" optional="hide"/>
+                                    <field name="attainment_percentage" widget="percentage" optional="hide"/>
+                                    <field name="active" invisible="1"/>
+                                </list>
+                                <form>
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="question_number"/>
+                                                <field name="marks"/>
+                                                <field name="clo_id" options="{'no_create': True}"/>
+                                                <field name="bloom_level"/>
+                                            </group>
+                                            <group>
+                                                <field name="question_type"/>
+                                                <field name="difficulty_level"/>
+                                                <field name="sequence"/>
+                                            </group>
+                                        </group>
+                                        <group string="Question">
+                                            <field name="question_text" nolabel="1"/>
+                                        </group>
+                                        <notebook>
+                                            <page string="Solution">
+                                                <field name="solution" nolabel="1"/>
+                                            </page>
+                                            <page string="Rubric">
+                                                <field name="rubric" nolabel="1"/>
+                                            </page>
+                                            <page string="Hints">
+                                                <field name="hints" nolabel="1"/>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_question_marks" class="oe_subtotal_footer_separator" 
+                                       widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Results" name="results">
+                            <group>
+                                <group string="Statistics">
+                                    <field name="result_count"/>
+                                    <field name="average_marks"/>
+                                    <field name="pass_percentage" widget="percentage"/>
+                                </group>
+                            </group>
+                            <field name="result_ids" mode="list">
+                                <list decoration-success="is_passed" decoration-danger="not is_passed">
+                                    <field name="student_id"/>
+                                    <field name="total_obtained"/>
+                                    <field name="total_marks"/>
+                                    <field name="percentage" widget="percentage"/>
+                                    <field name="is_passed" invisible="1"/>
+                                    <field name="status" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        
+                        <page string="Instructions" name="instructions">
+                            <field name="instructions" nolabel="1"/>
+                        </page>
+                        
+                        <page string="Description" name="description">
+                            <field name="description" nolabel="1" placeholder="Additional notes about this assessment..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+            </form>
+        </field>
+    </record>
+
+    <record id="view_obe_assessment_kanban" model="ir.ui.view">
+        <field name="name">obe.assessment.kanban</field>
+        <field name="model">obe.assessment</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" default_group_by="state">
+                <field name="name"/>
+                <field name="assessment_type"/>
+                <field name="course_id"/>
+                <field name="assessment_date"/>
+                <field name="total_marks"/>
+                <field name="weightage"/>
+                <field name="state"/>
+                <field name="clo_count"/>
+                <field name="question_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <br/>
+                                    <span class="o_kanban_record_subtitle">
+                                        <field name="course_id"/>
+                                    </span>
+                                </div>
+                                <span class="float-right badge badge-pill">
+                                    <field name="assessment_type"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <field name="assessment_date" widget="date"/>
+                                <br/>
+                                Marks: <field name="total_marks"/> | 
+                                Weight: <field name="weightage"/>%
+                                <br/>
+                                <span class="badge badge-info">
+                                    <i class="fa fa-check-circle"/> <field name="clo_count"/> CLOs
+                                </span>
+                                <span class="badge badge-secondary">
+                                    <i class="fa fa-question"/> <field name="question_count"/> Questions
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_obe_assessment_calendar" model="ir.ui.view">
+        <field name="name">obe.assessment.calendar</field>
+        <field name="model">obe.assessment</field>
+        <field name="arch" type="xml">
+            <calendar string="Assessment Schedule" date_start="assessment_date" 
+                      color="assessment_type" mode="month">
+                <field name="name"/>
+                <field name="course_id"/>
+                <field name="total_marks"/>
+                <field name="weightage"/>
+            </calendar>
+        </field>
+    </record>
+
+
+    <record id="view_obe_assessment_search" model="ir.ui.view">
+        <field name="name">obe.assessment.search</field>
+        <field name="model">obe.assessment</field>
+        <field name="arch" type="xml">
+            <search string="Search Assessments">
+                <field name="name" string="Assessment"/>
+                <field name="course_id"/>
+                
+                <field name="faculty_id"/>
+                <field name="clo_ids"/>
+                
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
+                <filter string="Finalized" name="finalized" domain="[('state', '=', 'finalized')]"/>
+                
+                <separator/>
+                <filter string="Exams" name="exam" domain="[('assessment_type', '=', 'exam')]"/>
+                <filter string="Assignments" name="assignment" domain="[('assessment_type', '=', 'assignment')]"/>
+                <filter string="Quizzes" name="quiz" domain="[('assessment_type', '=', 'quiz')]"/>
+                <filter string="Projects" name="project" domain="[('assessment_type', '=', 'project')]"/>
+                
+                <separator/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('assessment_date', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')),
+                                 ('assessment_date', '&lt;', (context_today() + relativedelta(day=1, months=1)).strftime('%Y-%m-%d'))]"/>
+               
+                
+                <group expand="0" string="Group By">
+                    <filter string="Course" name="group_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Type" name="group_type" context="{'group_by': 'assessment_type'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'state'}"/>
+                    <filter string="Faculty" name="group_faculty" context="{'group_by': 'faculty_id'}"/>
+                    <filter string="Assessment Date" name="group_date" context="{'group_by': 'assessment_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_obe_assessment" model="ir.actions.act_window">
+        <field name="name">Assessments</field>
+        <field name="res_model">obe.assessment</field>
+        <field name="view_mode">list,form,kanban,calendar</field>
+        <field name="search_view_id" ref="view_obe_assessment_search"/>
+        <field name="context">{'search_default_this_semester': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Assessment
+            </p>
+            <p>
+                Define various types of assessments (exams, assignments, quizzes, projects, labs)
+                with weightage, CLO mapping, and detailed question breakdown.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_obe_assessment_question_list" model="ir.ui.view">
+        <field name="name">obe.assessment.question.list</field>
+        <field name="model">obe.assessment.question</field>
+        <field name="arch" type="xml">
+            <list string="Questions" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="question_number"/>
+                <field name="question_text"/>
+                <field name="marks"/>
+                <field name="clo_id" options="{'no_create': True}"/>
+                <field name="bloom_level"/>
+                <field name="question_type" optional="hide"/>
+                <field name="difficulty_level" optional="hide"/>
+                <field name="average_marks_obtained" optional="hide"/>
+                <field name="attainment_percentage" widget="percentage" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record id="view_obe_assessment_question_form" model="ir.ui.view">
+        <field name="name">obe.assessment.question.form</field>
+        <field name="model">obe.assessment.question</field>
+        <field name="arch" type="xml">
+            <form string="Question">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="question_number" placeholder="Question Number (e.g., Q1, 1a)"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group name="question_info">
+                            <field name="assessment_id" options="{'no_create': True}"/>
+                            <field name="marks"/>
+                            <field name="clo_id" options="{'no_create': True}"/>
+                            <field name="bloom_level"/>
+                        </group>
+                        <group name="classification">
+                            <field name="question_type"/>
+                            <field name="difficulty_level"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Question Text">
+                        <field name="question_text" nolabel="1" placeholder="Enter the question..."/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Solution" name="solution">
+                            <field name="solution" nolabel="1"/>
+                        </page>
+                        <page string="Grading Rubric" name="rubric">
+                            <field name="rubric" nolabel="1"/>
+                        </page>
+                        <page string="Hints" name="hints">
+                            <field name="hints" nolabel="1" placeholder="Optional hints for students..."/>
+                        </page>
+                        <page string="Statistics" name="statistics">
+                            <group>
+                                <group string="Performance Metrics">
+                                    <field name="average_marks_obtained"/>
+                                    <field name="attainment_percentage" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="view_obe_assessment_question_search" model="ir.ui.view">
+        <field name="name">obe.assessment.question.search</field>
+        <field name="model">obe.assessment.question</field>
+        <field name="arch" type="xml">
+            <search string="Search Questions">
+                <field name="question_number"/>
+                <field name="question_text"/>
+                <field name="assessment_id"/>
+                <field name="clo_id"/>
+                
+                <filter string="Remember" name="remember" domain="[('bloom_level', '=', 'remember')]"/>
+                <filter string="Understand" name="understand" domain="[('bloom_level', '=', 'understand')]"/>
+                <filter string="Apply" name="apply" domain="[('bloom_level', '=', 'apply')]"/>
+                <filter string="Analyze" name="analyze" domain="[('bloom_level', '=', 'analyze')]"/>
+                <filter string="Evaluate" name="evaluate" domain="[('bloom_level', '=', 'evaluate')]"/>
+                <filter string="Create" name="create" domain="[('bloom_level', '=', 'create')]"/>
+                
+                <separator/>
+                <filter string="Easy" name="easy" domain="[('difficulty_level', '=', 'easy')]"/>
+                <filter string="Medium" name="medium" domain="[('difficulty_level', '=', 'medium')]"/>
+                <filter string="Hard" name="hard" domain="[('difficulty_level', '=', 'hard')]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Assessment" name="group_assessment" context="{'group_by': 'assessment_id'}"/>
+                    <filter string="CLO" name="group_clo" context="{'group_by': 'clo_id'}"/>
+                    <filter string="Bloom Level" name="group_bloom" context="{'group_by': 'bloom_level'}"/>
+                    <filter string="Question Type" name="group_type" context="{'group_by': 'question_type'}"/>
+                    <filter string="Difficulty" name="group_difficulty" context="{'group_by': 'difficulty_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_obe_assessment_question" model="ir.actions.act_window">
+        <field name="name">Assessment Questions</field>
+        <field name="res_model">obe.assessment.question</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_obe_assessment_question_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Question
+            </p>
+            <p>
+                Define questions with granular CLO mapping and Bloom's taxonomy level
+                for comprehensive attainment tracking.
+            </p>
+        </field>
+    </record>
+    <record id="view_obe_assessment_result_list" model="ir.ui.view">
+        <field name="name">obe.assessment.result.list</field>
+        <field name="model">obe.assessment.result</field>
+        <field name="arch" type="xml">
+            <list string="Results" decoration-success="is_passed" decoration-danger="not is_passed">
+                <field name="student_id"/>
+                <field name="assessment_id"/>
+                <field name="total_obtained"/>
+                <field name="total_marks"/>
+                <field name="percentage" widget="percentage"/>
+                <field name="is_passed" invisible="1"/>
+                <field name="status" widget="badge" 
+                       decoration-info="status=='pending'"
+                       decoration-warning="status=='submitted'"
+                       decoration-success="status=='graded'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_obe_assessment_result_form" model="ir.ui.view">
+        <field name="name">obe.assessment.result.form</field>
+        <field name="model">obe.assessment.result</field>
+        <field name="arch" type="xml">
+            <form string="Assessment Result">
+                <header>
+                    <field name="status" widget="statusbar" 
+                           statusbar_visible="pending,submitted,graded"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="student_id" readonly="1"/>
+                        </h1>
+                        <h2>
+                            <field name="assessment_id" readonly="1"/>
+                        </h2>
+                    </div>
+                    
+                    <group>
+                        <group name="marks">
+                            <field name="total_obtained"/>
+                            <field name="total_marks"/>
+                            <field name="percentage" widget="percentage"/>
+                            <field name="is_passed"/>
+                        </group>
+                        <group name="dates">
+                            <field name="submission_date"/>
+                            <field name="graded_date"/>
+                            <field name="graded_by"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Answers" name="answers">
+                            <field name="answer_ids">
+                                <list editable="bottom">
+                                    <field name="question_id" readonly="1"/>
+                                    <field name="answer_text"/>
+                                    <field name="marks_obtained"/>
+                                    <field name="max_marks"/>
+                                    <field name="is_correct"/>
+                                    <field name="feedback"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Remarks" name="remarks">
+                            <field name="remarks" nolabel="1" placeholder="Additional remarks or feedback..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_obe_assessment_result_search" model="ir.ui.view">
+        <field name="name">obe.assessment.result.search</field>
+        <field name="model">obe.assessment.result</field>
+        <field name="arch" type="xml">
+            <search string="Search Results">
+                <field name="student_id"/>
+                <field name="assessment_id"/>
+                
+                <filter string="Passed" name="passed" domain="[('is_passed', '=', True)]"/>
+                <filter string="Failed" name="failed" domain="[('is_passed', '=', False)]"/>
+                
+                <separator/>
+                <filter string="Pending" name="pending" domain="[('status', '=', 'pending')]"/>
+                <filter string="Submitted" name="submitted" domain="[('status', '=', 'submitted')]"/>
+                <filter string="Graded" name="graded" domain="[('status', '=', 'graded')]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Assessment" name="group_assessment" context="{'group_by': 'assessment_id'}"/>
+                    <filter string="Student" name="group_student" context="{'group_by': 'student_id'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_obe_clo_attainment_list" model="ir.ui.view">
+        <field name="name">obe.clo.attainment.list</field>
+        <field name="model">obe.clo.attainment</field>
+        <field name="arch" type="xml">
+            <list string="CLO Attainment" decoration-success="attainment_level=='highly_attained'" 
+                  decoration-info="attainment_level=='attained'"
+                  decoration-warning="attainment_level=='partially_attained'"
+                  decoration-danger="attainment_level=='not_attained'">
+                <field name="clo_id"/>
+                <field name="course_offering_id"/>
+                <field name="assessment_id"/>
+                <field name="total_students"/>
+                <field name="students_passed"/>
+                <field name="attainment_percentage" widget="percentage"/>
+                <field name="attainment_level" widget="badge"/>
+                <field name="calculation_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_obe_clo_attainment_form" model="ir.ui.view">
+        <field name="name">obe.clo.attainment.form</field>
+        <field name="model">obe.clo.attainment</field>
+        <field name="arch" type="xml">
+            <form string="CLO Attainment">
+                <header>
+                    <field name="attainment_level" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="clo_id" readonly="1"/>
+                        </h1>
+                        <h2>
+                            <field name="course_offering_id" readonly="1"/>
+                        </h2>
+                    </div>
+                    
+                    <group>
+                        <group name="metrics">
+                            <field name="total_students"/>
+                            <field name="students_passed"/>
+                            <field name="passing_threshold" widget="percentage"/>
+                            <field name="attainment_percentage" widget="percentage"/>
+                        </group>
+                        <group name="statistics">
+                            <field name="average_marks"/>
+                            <field name="highest_marks"/>
+                            <field name="lowest_marks"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group name="calculation_info">
+                            <field name="assessment_id"/>
+                            <field name="calculation_date"/>
+                            <field name="calculated_by"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Student Details" name="student_details">
+                            <field name="student_detail_ids">
+                                <list decoration-success="is_passed" decoration-danger="not is_passed">
+                                    <field name="student_id"/>
+                                    <field name="marks_obtained"/>
+                                    <field name="total_marks"/>
+                                    <field name="percentage" widget="percentage"/>
+                                    <field name="is_passed"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Remarks" name="remarks">
+                            <field name="remarks" nolabel="1" placeholder="Analysis and improvement suggestions..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_obe_clo_attainment_graph" model="ir.ui.view">
+        <field name="name">obe.clo.attainment.graph</field>
+        <field name="model">obe.clo.attainment</field>
+        <field name="arch" type="xml">
+            <graph string="CLO Attainment Analysis" type="bar">
+                <field name="clo_id" type="row"/>
+                <field name="attainment_percentage" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_obe_clo_attainment_pivot" model="ir.ui.view">
+        <field name="name">obe.clo.attainment.pivot</field>
+        <field name="model">obe.clo.attainment</field>
+        <field name="arch" type="xml">
+            <pivot string="CLO Attainment Pivot">
+                <field name="course_offering_id" type="row"/>
+                <field name="clo_id" type="row"/>
+                <field name="attainment_percentage" type="measure"/>
+                <field name="average_marks" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_obe_clo_attainment_search" model="ir.ui.view">
+        <field name="name">obe.clo.attainment.search</field>
+        <field name="model">obe.clo.attainment</field>
+        <field name="arch" type="xml">
+            <search string="Search CLO Attainment">
+                <field name="clo_id"/>
+                <field name="course_offering_id"/>
+                <field name="assessment_id"/>
+                
+                <filter string="Highly Attained (&gt;90%)" name="highly_attained" 
+                        domain="[('attainment_level', '=', 'highly_attained')]"/>
+                <filter string="Attained (75-90%)" name="attained" 
+                        domain="[('attainment_level', '=', 'attained')]"/>
+                <filter string="Partially Attained (60-75%)" name="partially_attained" 
+                        domain="[('attainment_level', '=', 'partially_attained')]"/>
+                <filter string="Not Attained (&lt;60%)" name="not_attained" 
+                        domain="[('attainment_level', '=', 'not_attained')]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="CLO" name="group_clo" context="{'group_by': 'clo_id'}"/>
+                    <filter string="Course Offering" name="group_offering" context="{'group_by': 'course_offering_id'}"/>
+                    <filter string="Assessment" name="group_assessment" context="{'group_by': 'assessment_id'}"/>
+                    <filter string="Attainment Level" name="group_level" context="{'group_by': 'attainment_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_obe_clo_attainment" model="ir.actions.act_window">
+        <field name="name">CLO Attainment</field>
+        <field name="res_model">obe.clo.attainment</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_obe_clo_attainment_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No CLO Attainment Data Yet
+            </p>
+            <p>
+                CLO attainments are automatically calculated when assessments are finalized.
+                Finalize your assessments to see attainment data here.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_obe_plo_attainment_list" model="ir.ui.view">
+        <field name="name">obe.plo.attainment.list</field>
+        <field name="model">obe.plo.attainment</field>
+        <field name="arch" type="xml">
+            <list string="PLO Attainment" decoration-success="attainment_level=='highly_attained'" 
+                  decoration-info="attainment_level=='attained'"
+                  decoration-warning="attainment_level=='partially_attained'"
+                  decoration-danger="attainment_level=='not_attained'">
+                <field name="plo_id"/>
+                <field name="program_id"/>
+                <field name="academic_year"/>
+                <field name="total_contributing_courses"/>
+                <field name="attainment_percentage" widget="percentage"/>
+                <field name="attainment_level" widget="badge"/>
+                <field name="calculation_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_obe_plo_attainment_form" model="ir.ui.view">
+        <field name="name">obe.plo.attainment.form</field>
+        <field name="model">obe.plo.attainment</field>
+        <field name="arch" type="xml">
+            <form string="PLO Attainment">
+                <header>
+                    <field name="attainment_level" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="plo_id" readonly="1"/>
+                        </h1>
+                        <h2>
+                            <field name="program_id" readonly="1"/> - 
+                            <field name="academic_year" readonly="1"/>
+                        </h2>
+                    </div>
+                    
+                    <group>
+                        <group name="attainment_metrics">
+                            <field name="attainment_percentage" widget="percentage"/>
+                            <field name="total_contributing_courses"/>
+                        </group>
+                        <group name="calculation_info">
+                            <field name="calculation_date"/>
+                            <field name="calculated_by"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Contributing Courses" name="contributing_courses">
+                            <field name="contributing_course_ids">
+                                <list>
+                                    <field name="course_id"/>
+                                    <field name="credits"/>
+                                    <field name="clo_count"/>
+                                    <field name="contribution_percentage" widget="percentage"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Analysis" name="analysis">
+                            <field name="remarks" nolabel="1" 
+                                   placeholder="Gap analysis and improvement recommendations..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="view_obe_plo_attainment_graph" model="ir.ui.view">
+        <field name="name">obe.plo.attainment.graph</field>
+        <field name="model">obe.plo.attainment</field>
+        <field name="arch" type="xml">
+            <graph string="PLO Attainment Trends" type="line">
+                <field name="academic_year" type="row"/>
+                <field name="plo_id" type="row"/>
+                <field name="attainment_percentage" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_obe_plo_attainment_pivot" model="ir.ui.view">
+        <field name="name">obe.plo.attainment.pivot</field>
+        <field name="model">obe.plo.attainment</field>
+        <field name="arch" type="xml">
+            <pivot string="PLO Attainment Analysis">
+                <field name="program_id" type="row"/>
+                <field name="plo_id" type="row"/>
+                <field name="academic_year" type="col"/>
+                <field name="attainment_percentage" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_obe_plo_attainment_search" model="ir.ui.view">
+        <field name="name">obe.plo.attainment.search</field>
+        <field name="model">obe.plo.attainment</field>
+        <field name="arch" type="xml">
+            <search string="Search PLO Attainment">
+                <field name="plo_id"/>
+                <field name="program_id"/>
+                <field name="academic_year"/>
+                
+                <filter string="Highly Attained (&gt;90%)" name="highly_attained" 
+                        domain="[('attainment_level', '=', 'highly_attained')]"/>
+                <filter string="Attained (75-90%)" name="attained" 
+                        domain="[('attainment_level', '=', 'attained')]"/>
+                <filter string="Partially Attained (60-75%)" name="partially_attained" 
+                        domain="[('attainment_level', '=', 'partially_attained')]"/>
+                <filter string="Not Attained (&lt;60%)" name="not_attained" 
+                        domain="[('attainment_level', '=', 'not_attained')]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="PLO" name="group_plo" context="{'group_by': 'plo_id'}"/>
+                    <filter string="Program" name="group_program" context="{'group_by': 'program_id'}"/>
+                    <filter string="Academic Year" name="group_year" context="{'group_by': 'academic_year'}"/>
+                    <filter string="Attainment Level" name="group_level" context="{'group_by': 'attainment_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_obe_plo_attainment" model="ir.actions.act_window">
+        <field name="name">PLO Attainment</field>
+        <field name="res_model">obe.plo.attainment</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_obe_plo_attainment_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No PLO Attainment Data Yet
+            </p>
+            <p>
+                PLO attainments are calculated by aggregating CLO attainments from contributing courses.
+                Calculate CLO attainments first to see PLO attainment data.
+            </p>
+        </field>
+    </record>
+    
+    
+    
+    <menuitem id="menu_obe_assessment_root" 
+              name="Assessment Management" 
+              parent="menu_obe_root" 
+              sequence="30"/>
+    
+    <menuitem id="menu_obe_assessment" 
+              name="Assessments" 
+              parent="menu_obe_assessment_root" 
+              action="action_obe_assessment" 
+              sequence="10"/>
+    
+    <menuitem id="menu_obe_assessment_question" 
+              name="Questions" 
+              parent="menu_obe_assessment_root" 
+              action="action_obe_assessment_question" 
+              sequence="20"/>
+    
+    <!-- <menuitem id="menu_obe_attainment_root" 
+              name="Attainment" 
+              parent="menu_obe_root" 
+              sequence="40"/>
+    
+    <menuitem id="menu_obe_clo_attainment" 
+              name="CLO Attainment" 
+              parent="menu_obe_attainment_root" 
+              action="action_obe_clo_attainment" 
+              sequence="10"/>
+    
+    <menuitem id="menu_obe_plo_attainment" 
+              name="PLO Attainment" 
+              parent="menu_obe_attainment_root" 
+              action="action_obe_plo_attainment" 
+              sequence="20"/> -->
+    
+</odoo>

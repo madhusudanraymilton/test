@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- OBE Module Categories -->
+        <record id="module_category_obe" model="ir.module.category">
+            <field name="name">Outcome-Based Education (OBE)</field>
+            <field name="description">Manage access rights for OBE module</field>
+            <field name="sequence">25</field>
+        </record>
+
+        <!-- Group: OBE Student (Read-only) -->
+        <record id="group_obe_student" model="res.groups">
+            <field name="name">OBE / Student</field>
+            <field name="category_id" ref="module_category_obe"/>
+            <field name="comment">Students can view published outcomes and course information</field>
+        </record>
+
+        <!-- Group: OBE Faculty -->
+        <record id="group_obe_faculty" model="res.groups">
+            <field name="name">OBE / Faculty</field>
+            <field name="category_id" ref="module_category_obe"/>
+            <field name="implied_ids" eval="[(4, ref('group_obe_student'))]"/>
+            <field name="comment">Faculty can manage CLOs for their courses and view program outcomes</field>
+        </record>
+
+        <!-- Group: OBE Program Coordinator -->
+        <record id="group_obe_coordinator" model="res.groups">
+            <field name="name">OBE / Program Coordinator</field>
+            <field name="category_id" ref="module_category_obe"/>
+            <field name="implied_ids" eval="[(4, ref('group_obe_faculty'))]"/>
+            <field name="comment">Coordinators can manage programs, PEOs, PLOs, and mappings</field>
+        </record>
+
+        <!-- Group: OBE Department Head -->
+        <record id="group_obe_department_head" model="res.groups">
+            <field name="name">OBE / Department Head</field>
+            <field name="category_id" ref="module_category_obe"/>
+            <field name="implied_ids" eval="[(4, ref('group_obe_coordinator'))]"/>
+            <field name="comment">Department heads can approve outcomes and oversee department programs</field>
+        </record>
+
+        <!-- Group: OBE Accreditation Coordinator -->
+        <record id="group_obe_accreditation" model="res.groups">
+            <field name="name">OBE / Accreditation Coordinator</field>
+            <field name="category_id" ref="module_category_obe"/>
+            <field name="implied_ids" eval="[(4, ref('group_obe_coordinator'))]"/>
+            <field name="comment">Accreditation coordinators can generate reports and oversee OBE compliance</field>
+        </record>
+
+        <!-- Group: OBE Administrator -->
+        <record id="group_obe_admin" model="res.groups">
+            <field name="name">OBE / Administrator</field>
+            <field name="category_id" ref="module_category_obe"/>
+            <field name="implied_ids" eval="[(4, ref('group_obe_accreditation')), (4, ref('group_obe_department_head'))]"/>
+            <field name="comment">Full administrative access to OBE module including configuration and data management</field>
+        </record>
+
+
+        <record id="group_faculty" model="res.groups">
+            <field name="name">Faculty</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+        <record id="group_coordinator" model="res.groups">
+            <field name="name">Coordinator</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+        <record id="group_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
+
+    </data>
+</odoo>

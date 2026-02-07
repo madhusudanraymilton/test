@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_obe_peo_tree" model="ir.ui.view">
+        <field name="name">obe.peo.list</field>
+        <field name="model">obe.peo</field>
+        <field name="arch" type="xml">
+            <list string="Program Educational Objectives" default_order="program_id, sequence" sample="1" multi_edit="1">
+                <field name ="date" width="100" />
+                <field name="ref_name" width="100"/>
+                <field name="sequence" widget="handle" width="100"/>
+                <field name="name" string="PEO Name" width="100"/>
+                <field name="program_id" string="Program" width="100"/>
+                <field name="timeline_years" string="Timeline (Years)" optional="show" width="100"/>
+                <field name="state" string="Status" widget="badge" decoration-success="state == 'confirm'" decoration-info="state == 'draft'" optional="show" width="100"/>
+                <field name="active" string="Active" widget="boolean_toggle" optional="show" width="100"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_obe_peo_form" model="ir.ui.view">
+        <field name="name">obe.peo.form</field>
+        <field name="model">obe.peo</field>
+        <field name="arch" type="xml">
+            <form string="Program Educational Objective">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm" readonly="1"/>
+                    <button name="action_confirm" string="Confirm" type="object" 
+                            class="oe_highlight" icon="fa-check" 
+                            invisible="state != 'draft'" 
+                            confirm="Are you sure you want to confirm this PEO?"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" 
+                            class="btn-secondary" icon="fa-undo" 
+                            invisible="state != 'confirm'"
+                            confirm="Are you sure you want to reset this PEO to draft?"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                    </div>
+                    
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" 
+                            invisible="active"/>
+                    
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="e.g., PEO-001" 
+                                    class="text-break"/>
+                        </h1>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="active" string="Active" class="me-1"/>
+                            <field name="active" widget="boolean_toggle" nolabel="1"/>
+                        </div>
+                    </div>
+                    
+                    <group>
+                        <group string="Basic Information">
+                            <field name="program_id" />
+                            <field name="timeline_years"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group string="institution Informations">
+                              <field name="institution_id"/>
+                              <field name="code"/>
+                              <field name="website"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Description" name="description">
+                            <group>
+                                <!-- <group string="Stakeholder Input" colspan="2"> -->
+                                    <field name="stakeholder_input"
+                                           widget="text"
+                                           placeholder="Industry, alumni, employer, faculty feedback summary"
+                                           nolabel="1"/>
+                                <!-- </group> -->
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+   
+
+    <record id="view_obe_peo_search" model="ir.ui.view">
+        <field name="name">obe.peo.search</field>
+        <field name="model">obe.peo</field>
+        <field name="arch" type="xml">
+            <search string="Search PEOs">
+                <field name="name" string="PEO" 
+                       filter_domain="[('name', 'ilike', self)]"/>
+                <field name="program_id"/>
+                <field name="institution_id"/>
+                
+                <separator/>
+
+                <filter string="Active" name="active" 
+                        domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="inactive" 
+                        domain="[('active', '=', False)]"/>
+                
+                <separator/>
+                
+                <filter string="Draft" name="draft" 
+                        domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" 
+                        domain="[('state', '=', 'confirm')]"/>
+                
+                <separator/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Program" name="group_program" 
+                            context="{'group_by': 'program_id'}"/>
+                    <filter string="Institution" name="group_institution" 
+                            context="{'group_by': 'institution_id'}"/>
+                    <filter string="Status" name="group_state" 
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Active Status" name="group_active" 
+                            context="{'group_by': 'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_obe_peo_kanban" model="ir.ui.view">
+        <field name="name">obe.peo.kanban</field>
+        <field name="model">obe.peo</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="program_id"/>
+                <field name="timeline_years"/>
+                <field name="state"/>
+                <field name="active"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-10">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="text-muted">
+                                        <field name="program_id"/>
+                                    </div>
+                                </div>
+                                <div class="col-2 text-end">
+                                    <field name="state" widget="label_selection" 
+                                           options="{'classes': {'draft': 'info', 'confirm': 'success'}}"/>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <i class="fa fa-calendar"/> 
+                                <field name="timeline_years" class="text-muted"/> Years
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_obe_peo" model="ir.actions.act_window">
+        <field name="name">Program Educational Objectives</field>
+        <field name="res_model">obe.peo</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_obe_peo_search"/>
+        <field name="context">{
+            'search_default_active': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Program Educational Objective
+            </p>
+            <p>
+                PEOs describe what graduates are expected to attain within a few years after graduation.
+                Click the create button to add a new PEO.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_obe_peo"
+              name="Program Educational Objectives"
+              parent="menu_obe_configuration"
+              action="action_obe_peo"
+              sequence="50"/>
+
+</odoo>
