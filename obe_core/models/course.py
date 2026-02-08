@@ -93,6 +93,13 @@ class ObeCourse(models.Model):
         help='Courses that require this course as prerequisite'
     )
 
+    #new field for clo_ids
+    clo_ids = fields.One2many(
+        'obe.clo',
+        'course_id',
+        string='CLOs'
+    )
+
     # Course Content
     syllabus = fields.Html(
         string='Syllabus',

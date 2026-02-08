@@ -131,7 +131,20 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Course Learning Outcomes">
+                            <field name="clo_ids"
+                                context="{'default_course_id': active_id}">
+                                <list string="CLOs">
+                                    <!-- <field name="sequence"/> -->
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="bloom_level"/>
+                                    <!-- <field name="state"/> -->
+                                </list>
+                            </field>
+                        </page>
                     </notebook>
+                    
                 </sheet>
 
                 <chatter/>
@@ -270,7 +283,7 @@
     <record id="action_obe_course" model="ir.actions.act_window">
         <field name="name">Courses</field>
         <field name="res_model">obe.course</field>
-        <field name="view_mode">list,kanban,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="view_obe_course_search"/>
         <field name="context">{
             'search_default_active': 1,
@@ -292,7 +305,7 @@
               sequence="10"/>
 
     <menuitem id="menu_obe_courses"
-              name="Courses Setup"
+              name="Courses"
               parent="menu_obe_configuration"
               action="action_obe_course"
               sequence="80"/>

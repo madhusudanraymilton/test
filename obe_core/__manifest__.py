@@ -46,7 +46,8 @@ Target Users:
         'base',
         'mail',
         'web',
-        'hr'
+        'hr',
+        'website'
     ],
     'data': [
         'security/obe_security.xml',
@@ -62,6 +63,9 @@ Target Users:
         'views/clo_plo_mapping_views.xml',
         'views/peo_plo_mapping_views.xml',
         'views/obe_assessment views.xml',
+        #'views/clo_plo_matrix_qweb.xml',
+        #'views/clo_plo_matrix_web_views.xml',
+        #'views/clo_plo_matrix_wizard_enhanced.xml',
     ],
     'demo': [
         

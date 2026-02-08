@@ -93,3 +93,5 @@ access_obe_plo_attainment_course_user,obe.plo.attainment.course.user,model_obe_p
 access_obe_plo_attainment_course_faculty,obe.plo.attainment.course.faculty,model_obe_plo_attainment_course,obe_core.group_faculty,1,0,1,0
 access_obe_plo_attainment_course_coordinator,obe.plo.attainment.course.coordinator,model_obe_plo_attainment_course,obe_core.group_coordinator,1,1,1,1
 access_obe_plo_attainment_course_manager,obe.plo.attainment.course.manager,model_obe_plo_attainment_course,obe_core.group_manager,1,1,1,1
+
+

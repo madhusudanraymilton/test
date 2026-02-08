@@ -44,17 +44,17 @@
                         <group string="Basic Information">
                             <field name="course_id" required="1"/>
                             <field name="offering_id"/>
-                            <field name="institution_id"/>
+                            <!-- <field name="institution_id"/> -->
                             <field name="bloom_level" required="1"/>
-                            <field name="cognitive_level"/>
-                            <field name="target_attainment"/>
+                            <!-- <field name="cognitive_level"/> -->
+                            <!-- <field name="target_attainment"/> -->
                         </group>
                         
                         <group string="Additional Details">
                             <field name="institution_id"/>
                             <field name="website" widget="url" placeholder="https://www.example.com"/>
-                            <field name="action_verb" placeholder="e.g., Analyze, Design, Evaluate"/>
-                            <field name="plo_count" readonly="1"/>
+                            <!-- <field name="action_verb" placeholder="e.g., Analyze, Design, Evaluate"/> -->
+                            <!-- <field name="plo_count" readonly="1"/> -->
                         </group>
                     </group>
                     
@@ -209,10 +209,15 @@
         </field>
     </record>
 
-    <menuitem id="menu_obe_clo"
-              name="Course Learning Outcomes"
+    <menuitem id="menu_obe_outcome"
+              name="Outcomes"
               parent="menu_obe_root"
-              action="action_obe_clo"
               sequence="30"/>
+
+    <menuitem id="menu_obe_clo"
+              name="CLOs"
+              parent="menu_obe_outcome"
+              action="action_obe_clo"
+              sequence="1"/>
 
 </odoo>

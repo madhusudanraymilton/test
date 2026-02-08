@@ -232,9 +232,9 @@
     </record>
 
     <menuitem id="menu_obe_plo"
-              name="Program Learning Outcomes"
-              parent="menu_obe_root"
+              name="PLOs"
+              parent="menu_obe_outcome"
               action="action_obe_plo"
-              sequence="40"/>
+              sequence="2"/>
 
 </odoo>

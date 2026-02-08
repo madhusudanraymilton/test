@@ -187,7 +187,7 @@
     </record>
 
     <menuitem id="menu_obe_peo"
-              name="Program Educational Objectives"
+              name="PEOs"
               parent="menu_obe_configuration"
               action="action_obe_peo"
               sequence="50"/>

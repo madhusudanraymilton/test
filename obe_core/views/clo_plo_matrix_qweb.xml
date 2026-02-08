@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================ -->
+    <!-- CLO-PLO MAPPING MATRIX QWEB TEMPLATE -->
+    <!-- ============================================ -->
+
+    <template id="clo_plo_matrix_view" name="CLO-PLO Mapping Matrix">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <style>
+                        .matrix-container {
+                            font-family: 'Helvetica', 'Arial', sans-serif;
+                            margin: 20px 0;
+                        }
+                        
+                        .matrix-header {
+                            background: linear-gradient(135deg, #714B67 0%, #9b7e92 100%);
+                            color: white;
+                            padding: 20px;
+                            border-radius: 8px 8px 0 0;
+                            margin-bottom: 0;
+                        }
+                        
+                        .matrix-header h2 {
+                            margin: 0 0 8px 0;
+                            font-size: 24px;
+                        }
+                        
+                        .matrix-header p {
+                            margin: 0;
+                            opacity: 0.9;
+                            font-size: 14px;
+                        }
+                        
+                        .matrix-info {
+                            display: flex;
+                            gap: 20px;
+                            padding: 15px 20px;
+                            background: #f8f9fa;
+                            border-left: 3px solid #714B67;
+                            border-right: 3px solid #714B67;
+                        }
+                        
+                        .info-item {
+                            flex: 1;
+                        }
+                        
+                        .info-label {
+                            font-size: 11px;
+                            color: #6c757d;
+                            text-transform: uppercase;
+                            font-weight: 600;
+                            margin-bottom: 4px;
+                        }
+                        
+                        .info-value {
+                            font-size: 16px;
+                            font-weight: 700;
+                            color: #212529;
+                        }
+                        
+                        .legend-section {
+                            padding: 15px 20px;
+                            background: white;
+                            border-left: 3px solid #714B67;
+                            border-right: 3px solid #714B67;
+                            border-top: 1px solid #dee2e6;
+                        }
+                        
+                        .legend-title {
+                            font-size: 13px;
+                            font-weight: 600;
+                            margin-bottom: 10px;
+                            color: #212529;
+                        }
+                        
+                        .legend-items {
+                            display: flex;
+                            gap: 20px;
+                            flex-wrap: wrap;
+                        }
+                        
+                        .legend-item {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        
+                        .legend-box {
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 4px;
+                            border: 1px solid rgba(0,0,0,0.1);
+                        }
+                        
+                        .legend-box.high { background: #28a745; }
+                        .legend-box.medium { background: #ffc107; }
+                        .legend-box.low { background: #17a2b8; }
+                        .legend-box.none { background: #e9ecef; }
+                        
+                        .legend-text {
+                            font-size: 13px;
+                            color: #495057;
+                        }
+                        
+                        .matrix-table-wrapper {
+                            overflow-x: auto;
+                            padding: 20px;
+                            background: white;
+                            border: 3px solid #714B67;
+                            border-radius: 0 0 8px 8px;
+                        }
+                        
+                        .matrix-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            min-width: 800px;
+                        }
+                        
+                        .matrix-table thead th {
+                            background: #f8f9fa;
+                            padding: 12px 8px;
+                            text-align: center;
+                            font-weight: 600;
+                            font-size: 12px;
+                            color: #495057;
+                            border: 1px solid #dee2e6;
+                            vertical-align: top;
+                        }
+                        
+                        .matrix-table thead th:first-child {
+                            text-align: left;
+                            background: white;
+                            min-width: 200px;
+                        }
+                        
+                        .matrix-table tbody th {
+                            background: white;
+                            padding: 12px;
+                            text-align: left;
+                            font-weight: 600;
+                            font-size: 12px;
+                            color: #212529;
+                            border: 1px solid #dee2e6;
+                            vertical-align: middle;
+                        }
+                        
+                        .clo-code {
+                            display: block;
+                            color: #714B67;
+                            font-weight: 700;
+                            margin-bottom: 4px;
+                            font-size: 13px;
+                        }
+                        
+                        .clo-desc {
+                            display: block;
+                            font-size: 11px;
+                            font-weight: 400;
+                            color: #6c757d;
+                            line-height: 1.3;
+                        }
+                        
+                        .plo-header {
+                            font-weight: 700;
+                            margin-bottom: 4px;
+                        }
+                        
+                        .plo-desc {
+                            font-size: 10px;
+                            font-weight: 400;
+                            color: #6c757d;
+                        }
+                        
+                        .matrix-table td {
+                            text-align: center;
+                            padding: 8px;
+                            border: 1px solid #dee2e6;
+                            vertical-align: middle;
+                        }
+                        
+                        .strength-cell {
+                            display: inline-block;
+                            width: 40px;
+                            height: 40px;
+                            line-height: 40px;
+                            border-radius: 6px;
+                            font-weight: 700;
+                            font-size: 16px;
+                            text-align: center;
+                        }
+                        
+                        .strength-3 {
+                            background: #28a745;
+                            color: white;
+                        }
+                        
+                        .strength-2 {
+                            background: #ffc107;
+                            color: #212529;
+                        }
+                        
+                        .strength-1 {
+                            background: #17a2b8;
+                            color: white;
+                        }
+                        
+                        .strength-0 {
+                            background: #e9ecef;
+                            color: #adb5bd;
+                        }
+                        
+                        .summary-section {
+                            margin-top: 30px;
+                            page-break-inside: avoid;
+                        }
+                        
+                        .summary-grid {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 15px;
+                        }
+                        
+                        .summary-card {
+                            border: 2px solid #714B67;
+                            border-radius: 8px;
+                            padding: 15px;
+                            background: white;
+                        }
+                        
+                        .summary-card h4 {
+                            font-size: 13px;
+                            color: #714B67;
+                            margin-bottom: 10px;
+                            text-transform: uppercase;
+                            font-weight: 700;
+                        }
+                        
+                        .summary-stat {
+                            display: flex;
+                            justify-content: space-between;
+                            padding: 6px 0;
+                            border-bottom: 1px solid #e9ecef;
+                        }
+                        
+                        .summary-stat:last-child {
+                            border-bottom: none;
+                        }
+                        
+                        .stat-label {
+                            font-size: 12px;
+                            color: #495057;
+                        }
+                        
+                        .stat-value {
+                            font-size: 15px;
+                            font-weight: 700;
+                        }
+                        
+                        .stat-value.high { color: #28a745; }
+                        .stat-value.medium { color: #ffc107; }
+                        .stat-value.low { color: #17a2b8; }
+                        
+                        @media print {
+                            .matrix-table-wrapper {
+                                border: 2px solid #714B67;
+                            }
+                            
+                            .strength-cell {
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
+                        }
+                    </style>
+
+                    <div class="matrix-container">
+                        <!-- Header -->
+                        <div class="matrix-header">
+                            <h2>📊 CLO-PLO Mapping Matrix</h2>
+                            <p>Comprehensive view of Course Learning Outcomes mapped to Program Learning Outcomes</p>
+                        </div>
+
+                        <!-- Info Section -->
+                        <div class="matrix-info">
+                            <div class="info-item">
+                                <div class="info-label">📚 Course</div>
+                                <div class="info-value"><t t-esc="course.code"/> - <t t-esc="course.name"/></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">🎓 Program</div>
+                                <div class="info-value"><t t-esc="program.code"/> - <t t-esc="program.name"/></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">📈 Coverage</div>
+                                <div class="info-value stat-value high"><t t-esc="coverage_percentage"/>%</div>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="legend-section">
+                            <div class="legend-title">Mapping Strength Legend</div>
+                            <div class="legend-items">
+                                <div class="legend-item">
+                                    <div class="legend-box high"></div>
+                                    <span class="legend-text"><strong>3</strong> - High Contribution</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-box medium"></div>
+                                    <span class="legend-text"><strong>2</strong> - Medium Contribution</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-box low"></div>
+                                    <span class="legend-text"><strong>1</strong> - Low Contribution</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-box none"></div>
+                                    <span class="legend-text"><strong>-</strong> - No Mapping</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matrix Table -->
+                        <div class="matrix-table-wrapper">
+                            <table class="matrix-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 250px;">CLO / PLO</th>
+                                        <t t-foreach="plos" t-as="plo">
+                                            <th>
+                                                <div class="plo-header"><t t-esc="plo.name"/></div>
+                                                <div class="plo-desc"><t t-esc="plo.description[:50]"/>...</div>
+                                            </th>
+                                        </t>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="clos" t-as="clo">
+                                        <tr>
+                                            <th>
+                                                <span class="clo-code"><t t-esc="clo.name"/></span>
+                                                <span class="clo-desc"><t t-esc="clo.statement[:80]"/><t t-if="len(clo.statement) > 80">...</t></span>
+                                            </th>
+                                            <t t-foreach="plos" t-as="plo">
+                                                <t t-set="strength" t-value="matrix_data.get(str(clo.id) + '_' + str(plo.id), '0')"/>
+                                                <td>
+                                                    <span t-att-class="'strength-cell strength-' + strength">
+                                                        <t t-if="strength == '0'">-</t>
+                                                        <t t-else=""><t t-esc="strength"/></t>
+                                                    </span>
+                                                </td>
+                                            </t>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Summary Section -->
+                        <div class="summary-section">
+                            <div class="summary-grid">
+                                <div class="summary-card">
+                                    <h4>Mapping Statistics</h4>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Total CLOs</span>
+                                        <span class="stat-value"><t t-esc="total_clos"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Total PLOs</span>
+                                        <span class="stat-value"><t t-esc="total_plos"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Total Mappings</span>
+                                        <span class="stat-value"><t t-esc="total_mappings"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Coverage</span>
+                                        <span class="stat-value high"><t t-esc="coverage_percentage"/>%</span>
+                                    </div>
+                                </div>
+
+                                <div class="summary-card">
+                                    <h4>Strength Distribution</h4>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">High (3)</span>
+                                        <span class="stat-value high"><t t-esc="strength_high"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Medium (2)</span>
+                                        <span class="stat-value medium"><t t-esc="strength_medium"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Low (1)</span>
+                                        <span class="stat-value low"><t t-esc="strength_low"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">No Mapping</span>
+                                        <span class="stat-value"><t t-esc="strength_none"/></span>
+                                    </div>
+                                </div>
+
+                                <div class="summary-card">
+                                    <h4>PLO Coverage Analysis</h4>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Fully Covered PLOs</span>
+                                        <span class="stat-value high"><t t-esc="plos_fully_covered"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Partially Covered</span>
+                                        <span class="stat-value medium"><t t-esc="plos_partially_covered"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Not Covered</span>
+                                        <span class="stat-value"><t t-esc="plos_not_covered"/></span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span class="stat-label">Average Strength</span>
+                                        <span class="stat-value medium"><t t-esc="average_strength"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================ -->
+    <!-- MATRIX REPORT ACTION -->
+    <!-- ============================================ -->
+
+    <record id="action_report_clo_plo_matrix" model="ir.actions.report">
+        <field name="name">CLO-PLO Mapping Matrix</field>
+        <field name="model">obe.clo.plo.matrix</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">obe_core.clo_plo_matrix_view</field>
+        <field name="report_file">obe_core.clo_plo_matrix_view</field>
+        <field name="binding_model_id" ref="model_obe_clo_plo_matrix"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_us"/>
+    </record>
+
+</odoo>

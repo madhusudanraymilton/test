@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================ -->
+    <!-- UPDATED MATRIX WIZARD WITH MULTIPLE ACTIONS -->
+    <!-- ============================================ -->
+
+    <record id="view_obe_clo_plo_matrix_form_enhanced" model="ir.ui.view">
+        <field name="name">obe.clo.plo.matrix.form.enhanced</field>
+        <field name="model">obe.clo.plo.matrix</field>
+        <field name="arch" type="xml">
+            <form string="CLO-PLO Mapping Matrix">
+                <sheet>
+                    <div class="alert alert-success" role="alert">
+                        <h4 class="alert-heading">
+                            <i class="fa fa-table"/> CLO-PLO Mapping Matrix
+                        </h4>
+                        <p>Visualize the relationship between Course Learning Outcomes and Program Learning Outcomes.</p>
+                        <p class="mb-0">This matrix helps you identify gaps and ensure comprehensive coverage.</p>
+                    </div>
+                    
+                    <group>
+                        <group string="Selection Criteria">
+                            <field name="course_id" required="1" 
+                                   placeholder="Select Course"
+                                   options="{'no_create': True}"/>
+                            <field name="program_id" required="1" 
+                                   placeholder="Select Program"
+                                   options="{'no_create': True}"/>
+                            <field name="offering_id" 
+                                   placeholder="Optional: Filter by specific offering"
+                                   options="{'no_create': True}"/>
+                        </group>
+                        
+                        <group string="Matrix Information">
+                            <div class="alert alert-info mb-0" role="alert">
+                                <p class="mb-2">
+                                    <strong>Available Actions:</strong>
+                                </p>
+                                <ul class="mb-0 pl-3">
+                                    <li><strong>View in Odoo:</strong> See matrix in pivot/graph view</li>
+                                    <li><strong>View Web Matrix:</strong> Interactive web-based visualization</li>
+                                    <li><strong>Print PDF:</strong> Generate printable report</li>
+                                    <li><strong>Export CSV:</strong> Download as spreadsheet</li>
+                                </ul>
+                            </div>
+                        </group>
+                    </group>
+                </sheet>
+                
+                <footer>
+                    <button string="View in Odoo"
+                            type="object"
+                            name="action_open_matrix"
+                            class="btn-primary"
+                            icon="fa-table"/>
+                    
+                    <button string="View Web Matrix"
+                            type="object"
+                            name="action_view_matrix"
+                            class="btn-success"
+                            icon="fa-external-link"/>
+                    
+                    <button string="Print PDF"
+                            type="object"
+                            name="action_print_matrix"
+                            class="btn-info"
+                            icon="fa-print"/>
+                    
+                    <button string="Export CSV"
+                            type="object"
+                            name="action_export_csv"
+                            class="btn-warning"
+                            icon="fa-download"/>
+                    
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Update the action to use the enhanced form -->
+    <record id="action_obe_clo_plo_matrix_enhanced" model="ir.actions.act_window">
+        <field name="name">CLO-PLO Mapping Matrix</field>
+        <field name="res_model">obe.clo.plo.matrix</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_obe_clo_plo_matrix_form_enhanced"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

@@ -274,7 +274,7 @@
               sequence="100"/>
     
     <menuitem id="menu_obe_institution" 
-              name="Institutions Setup" 
+              name="Institutions" 
               parent="menu_obe_configuration" 
               action="action_obe_institution"
               sequence="10"/>
