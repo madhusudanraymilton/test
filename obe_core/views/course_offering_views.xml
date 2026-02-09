@@ -24,29 +24,16 @@
         <field name="arch" type="xml">
             <form string="Course Offering">
                 <header>
-
-                    <button name="action_confirm"
-                            string="Confirm"
-                            type="object"
-                            class="btn-primary"/>
-
-                    <button name="action_start"
-                            string="Start"
-                            type="object"
-                
-                            class="btn-success"/>
-
-                    <button name="action_complete"
-                            string="Complete"
-                            type="object"
-                           />
-
-                    <button name="action_cancel"
-                            string="Cancel"
-                            type="object"
-                            />
-
-                    <!-- <field name="state" widget="statubar"/> -->
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed" readonly="1"/>
+                  
+                    <button name="action_archive" string="Archive" type="object" 
+                            class="btn-secondary" icon="fa-archive" 
+                            invisible="state != 'active'"
+                            confirm="Are you sure you want to archive this program?"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" 
+                            class="btn-secondary" icon="fa-undo" 
+                            invisible="state == 'draft'"
+                            confirm="Are you sure you want to reset this program to draft?"/>
                 </header>
 
 

@@ -62,15 +62,15 @@
                         <page string="Mission Statement" name="mission">
                             <field name="mission_ids">
                                 <list string="Missions">
-                                    <field name="sequence"/>
+                                 
                                     <field name="name"/>
-                                    <field name="description" widget="text" options="{'tooltip_field': 'description'}"/>
+                                    <field name="description" widget="html" options="{'tooltip_field': 'description'}"/>
                                     <field name="active" widget="boolean_toggle" />
                                 </list>
                                 <form string="Mission">
                                     <sheet>
                                         <group>
-                                            <field name="sequence"/>
+                                        
                                             <field name="name"/>
                                             <field name="description"/>
                                             <field name="active" widget="boolean_toggle" />
@@ -84,9 +84,9 @@
                             <field name="vision_ids">
                                 <list string="Visions">
                                     <field name="name" width="100"/>
-                                    <field name="description" widget="text" options="{'tooltip_field': 'description'}" width="100"/>
+                                    <field name="description" widget="html" options="{'tooltip_field': 'description'}" width="100"/>
                                     <field name="active" width="100"/>
-                                    <field name="sequence" width="100"/>
+                                   
                                 </list>
                                 <form string="Vision">
                                     <sheet>
@@ -94,7 +94,7 @@
                                             <field name="name" width="100"/>
                                             <field name="description" width="100"/>
                                             <field name="active" width="100"/>
-                                            <field name="sequence" width="100"/>
+                                        
                                         </group>
                                     </sheet>
                                 </form>

@@ -99,6 +99,19 @@ class ObeCourse(models.Model):
         'course_id',
         string='CLOs'
     )
+    # Add this to obe_core/models/course.py in the field definitions
+
+    clo_count = fields.Integer(
+        string='CLO Count',
+        compute='_compute_clo_count',
+        store=True
+    )
+
+    # Add this method after @api.depends('program_ids')
+    @api.depends('clo_ids')
+    def _compute_clo_count(self):
+        for record in self:
+            record.clo_count = len(record.clo_ids)
 
     # Course Content
     syllabus = fields.Html(
@@ -199,6 +212,42 @@ class ObeCourse(models.Model):
                 raise ValidationError(
                     _('Course coordinator must be an internal user.')
                 )
+            
+    # Add this NEW method to obe_core/models/course.py
+
+    def action_view_clos(self):
+        """Open CLOs for this course in a new window"""
+        self.ensure_one()
+        
+        # Count CLOs
+        clo_count = len(self.clo_ids)
+        
+        action = {
+            'name': f'CLOs - {self.code}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'obe.clo',
+            'view_mode': 'list,kanban,form',
+            'domain': [('course_id', '=', self.id)],
+            'context': {
+                'default_course_id': self.id,
+                'default_institution_id': self.env.user.company_id.id,  # or your institution logic
+                'search_default_active': 1,
+            },
+            'help': '''<p class="o_view_nocontent_smiling_face">
+                    Create the first CLO for this course
+                </p>
+                <p>
+                    CLOs define what students should achieve in this course.
+                    Click Create to add a new CLO.
+                </p>''',
+        }
+        
+        # If only one CLO exists, open it directly in form view
+        if clo_count == 1:
+            action['view_mode'] = 'form'
+            action['res_id'] = self.clo_ids[0].id
+        
+        return action
 
     def name_get(self):
         """Custom name display"""

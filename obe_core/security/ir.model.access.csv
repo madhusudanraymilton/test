@@ -51,7 +51,6 @@ access_obe_vision_coordinator,obe.vision.coordinator,model_obe_vision,group_obe_
 access_obe_vision_faculty,obe.vision.faculty,model_obe_vision,group_obe_faculty,1,1,1,0
 access_obe_vision_student,obe.vision.student,model_obe_vision,group_obe_student,1,0,0,0
 
-
 access_obe_assessment_user,obe.assessment.user,model_obe_assessment,base.group_user,1,0,1,0
 access_obe_assessment_faculty,obe.assessment.faculty,model_obe_assessment,group_obe_faculty,1,1,1,0
 access_obe_assessment_coordinator,obe.assessment.coordinator,model_obe_assessment,group_obe_coordinator,1,1,1,1
@@ -63,7 +62,6 @@ access_obe_assessment_question_faculty,obe.assessment.question.faculty,model_obe
 access_obe_assessment_question_coordinator,obe.assessment.question.coordinator,model_obe_assessment_question,obe_core.group_coordinator,1,1,1,1
 access_obe_assessment_question_manager,obe.assessment.question.manager,model_obe_assessment_question,obe_core.group_manager,1,1,1,1
 
-
 access_obe_assessment_result_user,obe.assessment.result.user,model_obe_assessment_result,base.group_user,1,0,1,0
 access_obe_assessment_result_faculty,obe.assessment.result.faculty,model_obe_assessment_result,obe_core.group_faculty,1,1,1,0
 access_obe_assessment_result_coordinator,obe.assessment.result.coordinator,model_obe_assessment_result,obe_core.group_coordinator,1,1,1,1
@@ -74,24 +72,9 @@ access_obe_assessment_answer_faculty,obe.assessment.answer.faculty,model_obe_ass
 access_obe_assessment_answer_coordinator,obe.assessment.answer.coordinator,model_obe_assessment_answer,obe_core.group_coordinator,1,1,1,1
 access_obe_assessment_answer_manager,obe.assessment.answer.manager,model_obe_assessment_answer,obe_core.group_manager,1,1,1,1
 
-access_obe_clo_attainment_user,obe.clo.attainment.user,model_obe_clo_attainment,base.group_user,1,0,1,0
-access_obe_clo_attainment_faculty,obe.clo.attainment.faculty,model_obe_clo_attainment,obe_core.group_faculty,1,1,1,0
-access_obe_clo_attainment_coordinator,obe.clo.attainment.coordinator,model_obe_clo_attainment,obe_core.group_coordinator,1,1,1,1
-access_obe_clo_attainment_manager,obe.clo.attainment.manager,model_obe_clo_attainment,obe_core.group_manager,1,1,1,1
 
-access_obe_clo_attainment_detail_user,obe.clo.attainment.detail.user,model_obe_clo_attainment_detail,base.group_user,1,0,1,0
-access_obe_clo_attainment_detail_faculty,obe.clo.attainment.detail.faculty,model_obe_clo_attainment_detail,obe_core.group_faculty,1,1,1,0
-access_obe_clo_attainment_detail_coordinator,obe.clo.attainment.detail.coordinator,model_obe_clo_attainment_detail,obe_core.group_coordinator,1,1,1,1
-access_obe_clo_attainment_detail_manager,obe.clo.attainment.detail.manager,model_obe_clo_attainment_detail,obe_core.group_manager,1,1,1,1
-
-access_obe_plo_attainment_user,obe.plo.attainment.user,model_obe_plo_attainment,base.group_user,1,0,1,0
-access_obe_plo_attainment_faculty,obe.plo.attainment.faculty,model_obe_plo_attainment,obe_core.group_faculty,1,0,1,0
-access_obe_plo_attainment_coordinator,obe.plo.attainment.coordinator,model_obe_plo_attainment,obe_core.group_coordinator,1,1,1,1
-access_obe_plo_attainment_manager,obe.plo.attainment.manager,model_obe_plo_attainment,obe_core.group_manager,1,1,1,1
-
-access_obe_plo_attainment_course_user,obe.plo.attainment.course.user,model_obe_plo_attainment_course,base.group_user,1,0,1,0
-access_obe_plo_attainment_course_faculty,obe.plo.attainment.course.faculty,model_obe_plo_attainment_course,obe_core.group_faculty,1,0,1,0
-access_obe_plo_attainment_course_coordinator,obe.plo.attainment.course.coordinator,model_obe_plo_attainment_course,obe_core.group_coordinator,1,1,1,1
-access_obe_plo_attainment_course_manager,obe.plo.attainment.course.manager,model_obe_plo_attainment_course,obe_core.group_manager,1,1,1,1
-
+access_assessment_question_line_user,assessment.question.line.user,model_assessment_question_line,base.group_user,1,0,1,0
+access_assessment_question_line_faculty,assessment.question.line.faculty,model_assessment_question_line,obe_core.group_faculty,1,1,1,0
+access_assessment_question_line_coordinator,assessment.question.line.coordinator,model_assessment_question_line,obe_core.group_coordinator,1,1,1,1
+access_assessment_question_line_manager,assessment.question.line.manager,model_assessment_question_line,obe_core.group_manager,1,1,1,1
 

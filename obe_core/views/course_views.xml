@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <record id="view_obe_course_form" model="ir.ui.view">
+    <!-- <record id="view_obe_course_form" model="ir.ui.view">
         <field name="name">obe.course.form</field>
         <field name="model">obe.course</field>
         <field name="arch" type="xml">
@@ -131,15 +131,218 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Course Learning Outcomes">
+                         <page string="Course Learning Outcomes">
                             <field name="clo_ids"
                                 context="{'default_course_id': active_id}">
                                 <list string="CLOs">
-                                    <!-- <field name="sequence"/> -->
+                                    <field name="sequence"/>
                                     <field name="name"/>
                                     <field name="code"/>
                                     <field name="bloom_level"/>
-                                    <!-- <field name="state"/> -->
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record> -->
+    <!-- REPLACE the entire view_obe_course_form record in obe_core/views/course_views.xml -->
+
+    <record id="view_obe_course_form" model="ir.ui.view">
+        <field name="name">obe.course.form</field>
+        <field name="model">obe.course</field>
+        <field name="arch" type="xml">
+            <form string="Course">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active" readonly="1"/>
+                    <button name="action_active" string="Activate" type="object" 
+                            class="oe_highlight" icon="fa-check" 
+                            invisible="state != 'draft'" 
+                            confirm="Are you sure you want to activate this course?"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" 
+                            class="btn-secondary" icon="fa-undo" 
+                            invisible="state != 'active'"
+                            confirm="Are you sure you want to reset this course to draft?"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- ⭐ NEW: CLO Smart Button -->
+                        <button name="action_view_clos"
+                                string="CLOs"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-graduation-cap"
+                                help="Course Learning Outcomes">
+                            <field name="clo_count" widget="statinfo" string="CLOs"/>
+                        </button>
+                        
+                        <button name="action_view_offerings"
+                                string="Offerings"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-book">
+                            <field name="offering_count" widget="statinfo" string="Offerings"/>
+                        </button>
+                        
+                        <button name="action_view_prerequisites"
+                                string="Prerequisites"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-sitemap">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Prerequisites</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" 
+                            invisible="active"/>
+                    
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="e.g., Introduction to Programming" 
+                                required="1" class="text-break"/>
+                        </h1>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="code" class="oe_edit_only"/>
+                            <field name="code" placeholder="e.g., CS101" 
+                                class="oe_inline" required="1"/>
+                            <span class="mx-2">|</span>
+                            <label for="active" string="Active" class="me-1"/>
+                            <field name="active" widget="boolean_toggle" nolabel="1"/>
+                        </div>
+                    </div>
+                    
+                    <group>
+                        <group string="Course Information">
+                            <field name="program_ids" widget="many2many_tags" placeholder="Select Program"/>
+                            <field name="course_type"/>
+                            <field name="semester" placeholder="Select Semester"/>
+                            <field name="coordinator_id"/>
+                        </group>
+
+                        <group string="Credit Distribution">
+                            <field name="credit_hours"/>
+                            <field name="theory_hours"/>
+                            <field name="lab_hours"/>
+                            <field name="program_count" string="Programs" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Prerequisites" name="prerequisites">
+                            <group>
+                                <group string="Course Prerequisites">
+                                    <field name="prerequisite_ids"
+                                        widget="many2many_tags"
+                                        nolabel="1"/>
+                                </group>
+
+                                <group string="Dependent Courses">
+                                    <field name="dependent_course_ids"
+                                        readonly="1"
+                                        widget="many2many_tags"
+                                        nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Course Content" name="content">
+                            <group>
+                                <group string="General Description" colspan="2">
+                                    <field name="description" 
+                                        widget="text"
+                                        placeholder="Enter course description..."
+                                        nolabel="1"/>
+                                </group>
+                            </group>
+                            
+                            <group>
+                                <group string="Learning Objectives" colspan="2">
+                                    <field name="learning_objectives" 
+                                        widget="text"
+                                        placeholder="Enter learning objectives..."
+                                        nolabel="1"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Syllabus Details" colspan="2">
+                                    <field name="syllabus"
+                                        widget="html"
+                                        placeholder="Write detailed syllabus here..."
+                                        options="{'style-inline': true, 'codeview': true, 'collaborative': true}"
+                                        nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Course Offerings" name="offerings">
+                            <field name="offering_ids">
+                                <list string="Offerings">
+                                    <field name="name"/>
+                                    <field name="academic_year"/>
+                                    <field name="semester" placeholder="Select Semester"/>
+                                    <field name="instructor_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        
+                        <!-- ⭐ ENHANCED: Course Learning Outcomes Tab
+                        <page string="Course Learning Outcomes" name="clos">
+                            <field name="clo_ids"
+                                context="{
+                                    'default_course_id': active_id,
+                                    'default_institution_id': institution_id,
+                                }">
+                                <list string="CLOs" 
+                                    editable="bottom"
+                                    default_order="sequence">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name" required="1"/>
+                                    <field name="code"/>
+                                    <field name="statement" widget="text"/>
+                                    <field name="bloom_level"/>
+                                    <field name="state" widget="badge" 
+                                        decoration-success="state == 'active'"
+                                        decoration-info="state == 'draft'"/>
+                                    <button name="action_active" 
+                                            string="Activate" 
+                                            type="object"
+                                            icon="fa-check"
+                                            invisible="state != 'draft'"/>
+                                </list>
+                            </field>
+                        </page> -->
+                        <!-- ⭐ CORRECTED: Course Learning Outcomes Tab -->
+                        <page string="Course Learning Outcomes" name="clos">
+                            <field name="clo_ids"
+                                context="{
+                                    'default_course_id': id,
+                                }">
+                                <list string="CLOs" 
+                                    editable="bottom"
+                                    default_order="sequence">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name" required="1"/>
+                                    <field name="code"/>
+                                    <field name="statement" widget="text"/>
+                                    <field name="bloom_level"/>
+                                    <field name="state" widget="badge" 
+                                        decoration-success="state == 'active'"
+                                        decoration-info="state == 'draft'"/>
+                                    <button name="action_active" 
+                                            string="Activate" 
+                                            type="object"
+                                            icon="fa-check"
+                                            invisible="state != 'draft'"/>
                                 </list>
                             </field>
                         </page>
@@ -228,7 +431,7 @@
         </field>
     </record>
 
-    <record id="view_obe_course_kanban" model="ir.ui.view">
+    <!-- <record id="view_obe_course_kanban" model="ir.ui.view">
         <field name="name">obe.course.kanban</field>
         <field name="model">obe.course</field>
         <field name="arch" type="xml">
@@ -272,6 +475,77 @@
                             <div class="mt-1">
                                 <i class="fa fa-user"/> 
                                 <field name="coordinator_id" class="text-muted"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record> -->
+    <!-- REPLACE the entire view_obe_course_kanban record in obe_core/views/course_views.xml -->
+
+    <record id="view_obe_course_kanban" model="ir.ui.view">
+        <field name="name">obe.course.kanban</field>
+        <field name="model">obe.course</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="course_type"/>
+                <field name="credit_hours"/>
+                <field name="coordinator_id"/>
+                <field name="clo_count"/>
+                <field name="state"/>
+                <field name="active"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="card-body">
+                            <!-- Header -->
+                            <div class="row mb-2">
+                                <div class="col-10">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="text-muted small">
+                                        <field name="code"/>
+                                    </div>
+                                </div>
+                                <div class="col-2 text-end">
+                                    <field name="state" widget="label_selection" 
+                                        options="{'classes': {'draft': 'info', 'active': 'success'}}"/>
+                                </div>
+                            </div>
+                            
+                            <!-- Course Details -->
+                            <div class="row g-0 mt-2">
+                                <div class="col-12">
+                                    <span class="badge text-bg-secondary">
+                                        <i class="fa fa-tag"/> 
+                                        <field name="course_type"/>
+                                    </span>
+                                    <span class="badge text-bg-info ms-1">
+                                        <i class="fa fa-clock-o"/> 
+                                        <field name="credit_hours"/> Credits
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- ⭐ NEW: CLO Action Button -->
+                            <div class="row mt-3 pt-2 border-top">
+                                <div class="col-12">
+                                    <button name="action_view_clos" 
+                                            type="object" 
+                                            class="btn btn-sm btn-primary w-100">
+                                        <i class="fa fa-graduation-cap"/> 
+                                        <t t-if="record.clo_count.raw_value > 0">
+                                            View <field name="clo_count"/> CLOs
+                                        </t>
+                                        <t t-else="">
+                                            Add CLOs
+                                        </t>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </t>

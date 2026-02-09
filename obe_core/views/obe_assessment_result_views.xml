@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Assessment Result List View -->
+    <record id="view_obe_assessment_result_list" model="ir.ui.view">
+        <field name="name">obe.assessment.result.list</field>
+        <field name="model">obe.assessment.result</field>
+        <field name="arch" type="xml">
+            <list string="Results"
+                  decoration-success="is_passed"
+                  decoration-danger="not is_passed">
+                <field name="student_id"/>
+                <field name="assessment_id"/>
+                <field name="total_obtained"/>
+                <field name="total_marks"/>
+                <field name="percentage" widget="percentage"/>
+                <field name="is_passed" invisible="1"/>
+                <field name="status" widget="badge"
+                       decoration-info="status=='pending'"
+                       decoration-warning="status=='submitted'"
+                       decoration-success="status=='graded'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Assessment Result Form View -->
+    <record id="view_obe_assessment_result_form" model="ir.ui.view">
+        <field name="name">obe.assessment.result.form</field>
+        <field name="model">obe.assessment.result</field>
+        <field name="arch" type="xml">
+            <form string="Assessment Result">
+                <header>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="pending,submitted,graded"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="student_id" readonly="1"/>
+                        </h1>
+                        <h2>
+                            <field name="assessment_id" readonly="1"/>
+                        </h2>
+                    </div>
+
+                    <group>
+                        <group name="marks">
+                            <field name="total_obtained"/>
+                            <field name="total_marks"/>
+                            <field name="percentage" widget="percentage"/>
+                            <field name="is_passed"/>
+                        </group>
+                        <group name="dates">
+                            <field name="submission_date"/>
+                            <field name="graded_date"/>
+                            <field name="graded_by"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Answers" name="answers">
+                            <field name="answer_ids">
+                                <list editable="bottom">
+                                    <field name="question_id" readonly="1"/>
+                                    <field name="answer_text"/>
+                                    <field name="marks_obtained"/>
+                                    <field name="max_marks"/>
+                                    <field name="is_correct"/>
+                                    <field name="feedback"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Remarks" name="remarks">
+                            <field name="remarks" nolabel="1"
+                                   placeholder="Additional remarks or feedback..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Assessment Result Search View -->
+    <record id="view_obe_assessment_result_search" model="ir.ui.view">
+        <field name="name">obe.assessment.result.search</field>
+        <field name="model">obe.assessment.result</field>
+        <field name="arch" type="xml">
+            <search string="Search Results">
+                <field name="student_id"/>
+                <field name="assessment_id"/>
+
+                <filter string="Passed" name="passed"
+                        domain="[('is_passed', '=', True)]"/>
+                <filter string="Failed" name="failed"
+                        domain="[('is_passed', '=', False)]"/>
+
+                <separator/>
+                <filter string="Pending" name="pending"
+                        domain="[('status', '=', 'pending')]"/>
+                <filter string="Submitted" name="submitted"
+                        domain="[('status', '=', 'submitted')]"/>
+                <filter string="Graded" name="graded"
+                        domain="[('status', '=', 'graded')]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Assessment" name="group_assessment"
+                            context="{'group_by': 'assessment_id'}"/>
+                    <filter string="Student" name="group_student"
+                            context="{'group_by': 'student_id'}"/>
+                    <filter string="Status" name="group_status"
+                            context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_obe_assessment_result" model="ir.actions.act_window">
+        <field name="name">Assessments Results</field>
+        <field name="res_model">obe.assessment.result</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_obe_assessment_result_search"/>
+    </record>
+
+    <!-- <menuitem id="menu_obe_assessment_root"
+              name="Assessment Management"
+              parent="menu_obe_root"/> -->
+
+    <menuitem id="menu_obe_assessment_results"
+              name="Results"
+              parent="menu_obe_assessment_root"
+              action="action_obe_assessment_result"/>
+
+</odoo>

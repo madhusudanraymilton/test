@@ -9,3 +9,6 @@ from . import clo
 from . import clo_plo_mapping
 from . import plo_peo_mapping
 from . import obe_assessment_models
+from . import assessment_answer
+from . import assessment_quetion 
+from . import assessment_result

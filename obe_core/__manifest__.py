@@ -66,9 +66,10 @@ Target Users:
         #'views/clo_plo_matrix_qweb.xml',
         #'views/clo_plo_matrix_web_views.xml',
         #'views/clo_plo_matrix_wizard_enhanced.xml',
+        'views/obe_assessment_quetions_views.xml',
+        'views/obe_assessment_result_views.xml',
     ],
-    'demo': [
-        
+    'demo':[ 
     ],
     'images': ['static/description/icon.png'],
     'installable': True,
