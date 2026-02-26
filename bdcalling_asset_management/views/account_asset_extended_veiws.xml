@@ -1,0 +1,29 @@
+<odoo>
+
+    <record id="view_account_asset_form_inherit_bdcalling" model="ir.ui.view">
+        <field name="name">account.asset.form.bdcalling</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert before Asset Values group -->
+            <xpath expr="//group[.//field[@name='original_value']]" position="before">
+
+                <group string="Product Details">
+
+                    <field name="product_id"/>
+
+                    <field name="lot_id"/>
+
+                    <field name="location_id" readonly="1"/>
+
+                    <field name="stock_value" readonly="1"/>
+
+                </group>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

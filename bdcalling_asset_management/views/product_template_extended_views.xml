@@ -1,0 +1,18 @@
+<odoo>
+
+    <record id="product_template_form_inherit_asset" model="ir.ui.view">
+        <field name="name">product.template.form.asset</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='purchase_ok']" position="after">
+
+                <field name="is_asset"/>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
