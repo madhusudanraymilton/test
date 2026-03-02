@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_asset_category_user,asset.category.user,model_asset_category,,1,1,1,1
+access_asset_asset_user,asset.asset.user,model_asset_asset,,1,1,1,1
+access_asset_assignment_user,asset.assignment.user,model_asset_assignment,,1,1,1,1
+access_asset_history_user,asset.history.user,model_asset_history,,1,1,1,1
+access_asset_depreciation_line_finance,asset.depreciation.line.finance,model_asset_depreciation_line,,1,1,1,1
+access_asset_valuation_user,asset.valuation.user,model_asset_valuation,,1,1,1,1
+access_asset_register_wizard_user,asset.register.wizard.user,model_asset_register_wizard,,1,1,1,1
+access_asset_unregister_wizard_user,asset.unregister.wizard.user,model_asset_unregister_wizard,,1,1,1,1
+access_asset_assign_wizard_user,asset.assign.wizard.user,model_asset_assign_wizard,,1,1,1,1

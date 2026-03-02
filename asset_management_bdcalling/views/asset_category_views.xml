@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Form View ──────────────────────────────────────────────────── -->
+    <record id="view_asset_category_form" model="ir.ui.view">
+        <field name="name">asset.category.form</field>
+        <field name="model">asset.category</field>
+        <field name="arch" type="xml">
+            <form string="Asset Category">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_assets"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cubes">
+                            <field name="asset_count" widget="statinfo" string="Assets"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived"
+                            bg_color="bg-danger"
+                           />
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Category Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="General">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="depreciation_method"/>
+                            <field name="duration_months"/>
+                            <field name="computation_method"/>
+                            <field name="non_depreciable_pct"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Accounting Configuration" name="accounting">
+                            <!-- <group>
+                                <group string="Accounts">
+                                    <field name="asset_id"/>
+                                    <field name="account_depreciation_id"/>
+                                    <field name="account_expense_id"/>
+                                </group>
+                                <group string="Journal">
+                                    <field name="journal_id"/>
+                                </group>
+                            </group> -->
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List View ──────────────────────────────────────────────────── -->
+    <record id="view_asset_category_list" model="ir.ui.view">
+        <field name="name">asset.category.list</field>
+        <field name="model">asset.category</field>
+        <field name="arch" type="xml">
+            <list string="Asset Categories">
+                <field name="name"/>
+                <field name="depreciation_method"/>
+                <field name="duration_months"/>
+                <field name="computation_method"/>
+                <field name="non_depreciable_pct" string="Non-Dep. %"/>
+                <field name="asset_count" string="Assets"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search View ────────────────────────────────────────────────── -->
+    <!-- <record id="view_asset_category_search" model="ir.ui.view">
+        <field name="name">asset.category.search</field>
+        <field name="model">asset.category</field>
+        <field name="arch" type="xml">
+            <search string="Asset Categories">
+                <field name="name"/>
+                <filter string="Straight Line" name="filter_straight_line"
+                        domain="[('depreciation_method', '=', 'straight_line')]"/>
+                <filter string="Declining Balance" name="filter_declining"
+                        domain="[('depreciation_method', '=', 'declining')]"/>
+                <separator/>
+                <filter string="Archived" name="filter_inactive"
+                        domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Depreciation Method" name="group_method"
+                            context="{'group_by': 'depreciation_method'}"/>
+                    <filter string="Company" name="group_company"
+                            context="{'group_by': 'company_id'}"
+                            groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <!-- ── Action ─────────────────────────────────────────────────────── -->
+    <record id="action_asset_category" model="ir.actions.act_window">
+        <field name="name">Asset Categories</field>
+        <field name="res_model">asset.category</field>
+        <field name="view_mode">list,form</field>
+        <!-- <field name="context">{'search_default_active': 1}</field> -->
+        <!-- <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Asset Category
+            </p>
+            <p>
+                Asset categories define the depreciation method, duration,
+                and accounting configuration for your assets.
+            </p>
+        </field> -->
+    </record>
+
+</odoo>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Monthly depreciation posting cron -->
+    <record id="ir_cron_depreciate_assets" model="ir.cron">
+        <field name="name">Asset: Post Monthly Depreciation Entries</field>
+        <field name="model_id" ref="model_asset_depreciation_line"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_post_depreciation()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">months</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_root"/>
+    </record>
+
+    <!-- Daily check: employee archived with unreturned assets -->
+    <record id="ir_cron_check_employee_assets" model="ir.cron">
+        <field name="name">Asset: Check Archived Employees with Unreturned Assets</field>
+        <field name="model_id" ref="model_asset_asset"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_archived_employee_assets()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_root"/>
+    </record>
+
+</odoo>

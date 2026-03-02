@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_asset_register_wizard_form" model="ir.ui.view">
+        <field name="name">asset.register.wizard.form</field>
+        <field name="model">asset.register.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Register Asset">
+                <sheet>
+                    <group string="Serial Number">
+                        <field name="lot_id" options="{'no_create': True}"/>
+                        <field name="product_id" readonly="1"/>
+                    </group>
+                    <group string="Classification">
+                        <field name="category_id"/>
+                        <field name="source_location_id"/>
+                    </group>
+                    <group string="Financials">
+                        <field name="currency_id" invisible="1"/>
+                        <field name="purchase_price"/>
+                        <field name="purchase_date"/>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1" colspan="2"
+                               placeholder="Optional notes about this registration..."/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_register" type="object"
+                            string="Register Asset" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_asset_register_wizard" model="ir.actions.act_window">
+        <field name="name">Register Asset</field>
+        <field name="res_model">asset.register.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

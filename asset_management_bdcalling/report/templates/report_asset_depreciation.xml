@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_asset_depreciation_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="asset">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Header -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h2 class="text-center">Depreciation Schedule</h2>
+                                <h5 class="text-center text-muted">
+                                    <t t-esc="asset.code"/> — <t t-esc="asset.name"/>
+                                </h5>
+                            </div>
+                        </div>
+
+                        <!-- Asset Summary -->
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Category:</td>
+                                        <td><t t-esc="asset.category_id.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Method:</td>
+                                        <td><t t-esc="dict(asset.category_id._fields['depreciation_method'].selection).get(asset.category_id.depreciation_method)"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Duration:</td>
+                                        <td><t t-esc="asset.category_id.duration_months"/> months</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Purchase Price:</td>
+                                        <td class="text-end">
+                                            <t t-esc="'{:,.2f}'.format(asset.purchase_price)"/>
+                                            <t t-esc="' ' + asset.currency_id.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Net Book Value:</td>
+                                        <td class="text-end">
+                                            <t t-esc="'{:,.2f}'.format(asset.residual_value)"/>
+                                            <t t-esc="' ' + asset.currency_id.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Registration Date:</td>
+                                        <td><t t-esc="asset.registration_date or '-'"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Depreciation Lines Table -->
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Cumulative Dep.</th>
+                                    <th class="text-end">Book Value</th>
+                                    <th class="text-center">Posted</th>
+                                    <th>Journal Entry</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="asset.depreciation_line_ids" t-as="line">
+                                    <tr t-attf-class="#{line.move_posted_check and 'table-light' or ''}">
+                                        <td><t t-esc="line.sequence"/></td>
+                                        <td><t t-esc="line.depreciation_date"/></td>
+                                        <td class="text-end">
+                                            <t t-esc="'{:,.2f}'.format(line.amount)"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="'{:,.2f}'.format(line.depreciated_value)"/>
+                                        </td>
+                                        <td class="text-end fw-bold">
+                                            <t t-esc="'{:,.2f}'.format(line.remaining_value)"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <t t-if="line.move_posted_check">✓</t>
+                                            <t t-else="">—</t>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line.move_id.name if line.move_id else '-'"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold table-secondary">
+                                    <td colspan="2">Total</td>
+                                    <td class="text-end">
+                                        <t t-esc="'{:,.2f}'.format(sum(l.amount for l in asset.depreciation_line_ids))"/>
+                                    </td>
+                                    <td colspan="4"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <div class="row mt-4">
+                            <div class="col-12 text-muted small">
+                                <p>Report generated on:
+                                    <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

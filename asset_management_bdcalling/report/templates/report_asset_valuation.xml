@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_asset_valuation_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="asset">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Header -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h2 class="text-center">Asset Valuation Report</h2>
+                                <h4 class="text-center text-muted">
+                                    <t t-esc="asset.company_id.name"/>
+                                </h4>
+                            </div>
+                        </div>
+
+                        <!-- Asset Identity -->
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Asset Code:</td>
+                                        <td><t t-esc="asset.code"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Asset Name:</td>
+                                        <td><t t-esc="asset.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Serial Number:</td>
+                                        <td><t t-esc="asset.serial_number or '-'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Category:</td>
+                                        <td><t t-esc="asset.category_id.name"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Status:</td>
+                                        <td><t t-esc="dict(asset._fields['state'].selection).get(asset.state)"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Purchase Date:</td>
+                                        <td><t t-esc="asset.purchase_date"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Registration Date:</td>
+                                        <td><t t-esc="asset.registration_date or '-'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Assigned To:</td>
+                                        <td><t t-esc="asset.current_employee_id.name or '-'"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Financial Summary -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5>Financial Summary</h5>
+                                <table class="table table-bordered">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th>Purchase Price</th>
+                                            <th>Total Depreciated</th>
+                                            <th>Net Book Value</th>
+                                            <th>Currency</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-end">
+                                                <t t-esc="'{:,.2f}'.format(asset.purchase_price)"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <t t-esc="'{:,.2f}'.format(
+                                                    sum(l.amount for l in asset.depreciation_line_ids if l.move_posted_check)
+                                                )"/>
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                <t t-esc="'{:,.2f}'.format(asset.residual_value)"/>
+                                            </td>
+                                            <td><t t-esc="asset.currency_id.name"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Footer note -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-muted small">
+                                <p>Report generated on:
+                                    <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

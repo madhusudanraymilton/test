@@ -1,0 +1,62 @@
+/* ── Asset Management Dashboard ─────────────────────────────────────────── */
+
+.o_asset_dashboard {
+    background-color: #f4f6f9;
+    min-height: 100%;
+}
+
+.o_asset_dashboard_content {
+    max-width: 1400px;
+}
+
+/* KPI Cards */
+.ams-kpi-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ams-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+}
+
+.ams-kpi-icon {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Progress bars */
+.progress {
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 28px;
+    transition: width 0.4s ease;
+}
+
+/* Card headers */
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    padding: 12px 16px;
+}
+
+/* Table */
+.table td {
+    vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .o_asset_dashboard_content {
+        padding: 12px;
+    }
+}
