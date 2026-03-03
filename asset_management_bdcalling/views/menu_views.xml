@@ -9,12 +9,12 @@
               sequence="10"/>
 
     <!-- ── Dashboard ──────────────────────────────────────────────────── -->
-    <!-- <menuitem id="menu_asset_dashboard"
+    <menuitem id="menu_asset_dashboard"
               name="Dashboard"
               parent="menu_asset_management_root"
               action="action_asset_dashboard"
               sequence="10"
-              /> -->
+              />
 
     <!-- ── Assets ─────────────────────────────────────────────────────── -->
      <menuitem id="menu_asset_assets"
@@ -23,7 +23,7 @@
               sequence="70"
               />
 
-    <!-- <menuitem id="menu_asset_all"
+    <menuitem id="menu_asset_all"
               name="All Assets"
               parent="menu_asset_assets"
               action="action_asset_asset_all"
@@ -42,7 +42,7 @@
               parent="menu_asset_assets"
               action="action_asset_asset_assigned"
               sequence="30"
-              /> -->
+              />
 
     <menuitem id="menu_asset_history"
               name="Asset History"
@@ -61,14 +61,14 @@
     <menuitem id="menu_asset_category"
               name="Asset Categories"
               parent="menu_asset_configuration"
-              action="action_asset_category"
+              action="account_asset.action_account_asset_model_form"
               sequence="10"
               />
 
     <menuitem id="menu_asset_settings"
               name="Settings"
               parent="menu_asset_configuration"
-              action="base_setup.action_general_configuration"
+              action="action_asset_settings"
               sequence="20"
               />
 

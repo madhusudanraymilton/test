@@ -5,8 +5,8 @@
         <field name="name">Asset Valuation Report</field>
         <field name="model">asset.asset</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">custom_asset_management.report_asset_valuation_template</field>
-        <field name="report_file">custom_asset_management.report_asset_valuation_template</field>
+        <field name="report_name">asset_management_bdcalling.report_asset_valuation_template</field>
+        <field name="report_file">asset_management_bdcalling.report_asset_valuation_template</field>
         <field name="print_report_name">'Asset Valuation - %s' % (object.code)</field>
         <field name="binding_model_id" ref="model_asset_asset"/>
         <field name="binding_type">report</field>
@@ -16,8 +16,8 @@
         <field name="name">Asset Depreciation Schedule</field>
         <field name="model">asset.asset</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">custom_asset_management.report_asset_depreciation_template</field>
-        <field name="report_file">custom_asset_management.report_asset_depreciation_template</field>
+        <field name="report_name">asset_management_bdcalling.report_asset_depreciation_template</field>
+        <field name="report_file">asset_management_bdcalling.report_asset_depreciation_template</field>
         <field name="print_report_name">'Depreciation Schedule - %s' % (object.code)</field>
         <field name="binding_model_id" ref="model_asset_asset"/>
         <field name="binding_type">report</field>

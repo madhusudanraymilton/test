@@ -26,23 +26,26 @@ Asset Management System (AMS)
         'mail',
         'stock',
         'account',
+        'account_asset',
         'purchase',
         'hr',
     ],
     'data': [
         # Security — MUST be first
-        # 'security/asset_security.xml',
+        #'security/asset_security.xml',
         'security/ir.model.access.csv',
         # Data
-        # 'data/asset_sequence_data.xml',
+        'data/asset_sequence_data.xml',
         # 'data/asset_location_data.xml',
         # 'data/asset_cron_data.xml',
         # Views
-        'views/asset_category_views.xml',
+        'views/account_asset_extended_views.xml',
         'views/asset_asset_views.xml',
         'views/asset_assignment_views.xml',
         'views/asset_history_views.xml',
         'views/asset_dashboard_views.xml',
+        'views/product_template_extended_views.xml',
+        'views/res_config_settings_views.xml',
         'views/wizard_register_views.xml',
         'views/wizard_unregister_views.xml',
         'views/wizard_assign_views.xml',
@@ -56,9 +59,9 @@ Asset Management System (AMS)
     ],
     'assets': {
         'web.assets_web': [
-            # 'asset_management_bdcalling/static/src/xml/asset_dashboard.xml',
-            # 'asset_management_bdcalling/static/src/js/asset_dashboard.js',
-            # 'asset_management_bdcalling/static/src/css/asset_dashboard.css',
+            'asset_management_bdcalling/static/src/xml/asset_dashboard.xml',
+            'asset_management_bdcalling/static/src/js/asset_dashboard.js',
+            'asset_management_bdcalling/static/src/css/asset_dashboard.css',
         ],
     },
     'installable': True,
