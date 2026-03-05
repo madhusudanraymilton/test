@@ -5,7 +5,6 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-
 class AssetRegisterWizard(models.TransientModel):
     _name = 'asset.register.wizard'
     _description = 'Asset Registration Wizard'
@@ -88,7 +87,7 @@ class AssetRegisterWizard(models.TransientModel):
         asset_location = (
             self.env.company.asset_location_id
             or self.env.ref(
-                'custom_asset_management.asset_stock_location',
+                'asset_management_bdcalling.asset_stock_location',
                 raise_if_not_found=False,
             )
         )
@@ -163,5 +162,5 @@ class AssetRegisterWizard(models.TransientModel):
         move._action_confirm()
         move._action_assign()
         move.move_line_ids.quantity = 1.0
-        move._action_done()
+        move._action_done() 
         return move

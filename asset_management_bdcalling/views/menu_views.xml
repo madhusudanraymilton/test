@@ -20,7 +20,7 @@
      <menuitem id="menu_asset_assets"
               name="Assets"
               parent="menu_asset_management_root"
-              sequence="70"
+              sequence="20"
               />
 
     <menuitem id="menu_asset_all"
@@ -30,23 +30,23 @@
               sequence="10"
               />
 
-    <menuitem id="menu_asset_available"
+    <!-- <menuitem id="menu_asset_available"
               name="Available Assets"
               parent="menu_asset_assets"
               action="action_asset_asset_available"
               sequence="20"
-              />
+              /> -->
 
     <menuitem id="menu_asset_assigned"
               name="Assigned Assets"
               parent="menu_asset_assets"
-              action="action_asset_asset_assigned"
+              action="action_asset_assignment"
               sequence="30"
               />
 
     <menuitem id="menu_asset_history"
               name="Asset History"
-              parent="menu_asset_configuration"
+              parent="menu_asset_assets"
               action="action_asset_history"
               sequence="40"
               />
@@ -68,10 +68,15 @@
     <menuitem id="menu_asset_settings"
               name="Settings"
               parent="menu_asset_configuration"
-              action="action_asset_settings"
+              action="base_setup.action_general_configuration"
               sequence="20"
               />
-
+    <!-- Operations -->
+    <menuitem id="menu_asset_operations"
+              name="Operations"
+              sequence="50"
+              />
+              
     <!-- ── Reports ────────────────────────────────────────────────────── -->
     <menuitem id="menu_asset_reports"
               name="Reports"

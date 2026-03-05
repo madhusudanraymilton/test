@@ -1,0 +1,42 @@
+<odoo>
+    <record id="view_partner_form_bd_geo" model="ir.ui.view">
+        <field name="name">res.partner.form.bd.geo</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='city']" position="after">
+                <field name="thana_id" placeholder="Thana"/>
+                <field name="district_id" placeholder="District"/>
+            </xpath>
+            
+            <xpath expr="//field[@name='state_id']" position="attributes">
+                <attribute name="placeholder">Division</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_search_bd_geo" model="ir.ui.view">
+        <field name="name">res.partner.search.bd.geo</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+
+            <!-- 1. Add searchable fields before the existing filters -->
+            <xpath expr="//search/field[last()]" position="after">
+                <field name="thana_id"/>
+                <field name="district_id"/>
+                <field name="state_id"/>
+            </xpath>
+
+            <!-- 2. Append group-by filters into the existing Group By group -->
+            <xpath expr="//filter[@name='group_country']" position="before">
+                <separator string="Geographical Grouping"/>
+                <filter string="Thana" name="group_by_thana"    context="{'group_by': 'thana_id'}"/>
+                <filter string="District" name="group_by_district" context="{'group_by': 'district_id'}"/>
+                <filter string="Division" name="group_by_state" context="{'group_by': 'state_id'}"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

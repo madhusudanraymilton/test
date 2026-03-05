@@ -2,7 +2,6 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
-
 class AssetUnregisterWizard(models.TransientModel):
     _name = 'asset.unregister.wizard'
     _description = 'Asset Unregistration Wizard'

@@ -63,7 +63,7 @@ class AssetAsset(models.Model):
     # ─── Classification ──────────────────────────────────────────────────────
 
     category_id = fields.Many2one(
-        'asset.category',
+        'account.asset',
         string='Asset Category',
         required=True,
         tracking=True,
