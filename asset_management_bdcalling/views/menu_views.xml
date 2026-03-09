@@ -84,12 +84,12 @@
               sequence="60"
               />
 
-    <menuitem id="menu_report_asset_valuation"
+    <!-- <menuitem id="menu_report_asset_valuation"
               name="Asset Valuation Report"
               parent="menu_asset_reports"
               action="report_asset_valuation_action"
               sequence="10"
-              />
+              /> -->
 
     <menuitem id="menu_report_asset_depreciation"
               name="Depreciation Report"

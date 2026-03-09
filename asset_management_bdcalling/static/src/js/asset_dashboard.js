@@ -1,99 +1,144 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
+import { Component, onWillStart, onMounted, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { Component, onWillStart, useState } from "@odoo/owl";
 
 export class AssetDashboard extends Component {
-    static template = "asset_management_bdcalling.AssetDashboard";
-    static props = {};
 
-    setup() {
+    static template = "asset_management_bdcalling.AssetDashboard";
+
+    setup(){
+
         this.orm = useService("orm");
         this.action = useService("action");
 
+        this.chart = null;
+
         this.state = useState({
             loading: true,
+
             total: 0,
             available: 0,
             assigned: 0,
             scrapped_disposed: 0,
-            total_value: 0,
-            net_book_value: 0,
-            pending_depreciation: 0,
+
             by_category: [],
+            recent_assignments: []
         });
 
         onWillStart(async () => {
-            await this._loadDashboardData();
+            await this.loadDashboard();
+        });
+
+        onMounted(() => {
+            this.renderChart();
         });
     }
 
-    async _loadDashboardData() {
-        this.state.loading = true;
-        try {
-            const data = await this.orm.call("asset.asset", "get_dashboard_data", []);
-            Object.assign(this.state, data);
-        } finally {
-            this.state.loading = false;
+
+    async loadDashboard(){
+
+        const data = await this.orm.call(
+            "asset.asset",
+            "get_dashboard_data",
+            []
+        );
+
+        Object.assign(this.state, data);
+        this.state.loading = false;
+    }
+
+
+    renderChart(){
+
+        if (!this.state.by_category.length){
+            return;
         }
-    }
 
-    formatCurrency(value) {
-        return new Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(value || 0);
-    }
+        const labels = this.state.by_category.map(x => x.category);
+        const values = this.state.by_category.map(x => x.count);
 
-    getPct(count) {
-        if (!this.state.total) return 0;
-        return Math.round((count / this.state.total) * 100);
-    }
+        const ctx = document.getElementById("categoryChart");
 
-    async openAllAssets() {
-        await this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "All Assets",
-            res_model: "asset.asset",
-            view_mode: "list,form",
-            domain: [],
+        if (!ctx){
+            return;
+        }
+
+        // destroy previous chart
+        if (this.chart){
+            this.chart.destroy();
+        }
+
+        this.chart = new Chart(ctx,{
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Assets",
+                    data: values,
+                    backgroundColor: "#3b82f6"
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false
+            }
         });
     }
 
-    async openAvailableAssets() {
+
+    async openAllAssets(){
+
         await this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Available Assets",
-            res_model: "asset.asset",
-            view_mode: "list,form",
-            domain: [["state", "=", "available"]],
+            type:"ir.actions.act_window",
+            name:"Assets",
+            res_model:"asset.asset",
+            view_mode:"list,form"
         });
+
     }
 
-    async openAssignedAssets() {
+
+    async openAvailableAssets(){
+
         await this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Assigned Assets",
-            res_model: "asset.asset",
-            view_mode: "list,form",
-            domain: [["state", "=", "assigned"]],
+            type:"ir.actions.act_window",
+            name:"Available Assets",
+            res_model:"asset.asset",
+            view_mode:"list,form",
+            domain:[["state","=","available"]]
         });
+
     }
 
-    async openPendingDepreciation() {
+
+    async openAssignedAssets(){
+
         await this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Pending Depreciation Lines",
-            res_model: "asset.depreciation.line",
-            view_mode: "list",
-            domain: [["move_check", "=", false]],
+            type:"ir.actions.act_window",
+            name:"Assigned Assets",
+            res_model:"asset.asset",
+            view_mode:"list,form",
+            domain:[["state","=","assigned"]]
         });
+
     }
 
-    async refresh() {
-        await this._loadDashboardData();
+
+    async refresh(){
+
+        this.state.loading = true;
+
+        await this.loadDashboard();
+
+        this.renderChart();
+
     }
+
 }
 
-registry.category("actions").add("asset_management_bdcalling.AssetDashboard", AssetDashboard);
+registry.category("actions").add(
+    "asset_management_bdcalling.AssetDashboard",
+    AssetDashboard
+);
