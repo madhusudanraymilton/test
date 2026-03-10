@@ -1,214 +1,272 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="asset_management_bdcalling.AssetDashboard">
-        <div class="o_asset_dashboard container-fluid">
+<t t-name="asset_management_bdcalling.AssetDashboard">
+<div class="ams-dashboard">
 
-            <!-- HEADER -->
-            <div class="o_asset_dashboard_header d-flex justify-content-between align-items-center py-3 mb-4 border-bottom">
-                <h3 class="fw-bold text-primary">Asset Management Dashboard</h3>
+    <!-- ══ HEADER ════════════════════════════════════════════════════════════ -->
+    <div class="ams-header">
+        <div class="ams-header-left">
+            <div class="ams-header-icon">
+                <i class="fa fa-cubes"/>
+            </div>
+            <div>
+                <h1 class="ams-title">Asset Management</h1>
+                <p class="ams-subtitle">Real-time overview of your organization's assets</p>
+            </div>
+        </div>
+        <button class="ams-refresh-btn" t-on-click="refresh">
+            <i class="fa fa-refresh"/>
+            <span>Refresh</span>
+        </button>
+    </div>
 
-                <button class="btn btn-outline-primary btn-sm d-flex align-items-center" t-on-click="refresh">
-                    <i class="fa fa-refresh me-2"/>
-                    Refresh
-                </button>
+    <!-- ══ LOADING STATE ═════════════════════════════════════════════════════ -->
+    <t t-if="state.loading">
+        <div class="ams-loading">
+            <div class="ams-spinner"></div>
+            <p class="ams-loading-text">Loading dashboard data…</p>
+        </div>
+    </t>
+
+    <!-- ══ DASHBOARD CONTENT ═════════════════════════════════════════════════ -->
+    <t t-else="">
+
+        <!-- KPI GRID -->
+        <div class="ams-kpi-grid">
+
+            <!-- Total Assets -->
+            <div class="ams-kpi-card ams-kpi-blue" t-on-click="openAllAssets">
+                <div class="ams-kpi-icon-wrap">
+                    <i class="fa fa-cubes"/>
+                </div>
+                <div class="ams-kpi-body">
+                    <span class="ams-kpi-value" t-esc="state.total"/>
+                    <span class="ams-kpi-label">Total Assets</span>
+                </div>
+                <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
             </div>
 
-            <!-- LOADING STATE -->
-            <t t-if="state.loading">
-                <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
-                    <i class="fa fa-spinner fa-spin fa-3x text-primary me-3"/>
-                    <p class="fs-5 mb-0">Loading dashboard...</p>
+            <!-- Available -->
+            <div class="ams-kpi-card ams-kpi-green" t-on-click="openAvailableAssets">
+                <div class="ams-kpi-icon-wrap">
+                    <i class="fa fa-check-circle"/>
                 </div>
-            </t>
-
-            <!-- DASHBOARD CONTENT -->
-            <t t-else="">
-                <div class="o_asset_dashboard_content">
-
-                    <!-- KPI ROW -->
-                    <div class="row g-4 mb-4">
-
-                        <!-- TOTAL ASSETS -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card shadow-sm hover-scale" t-on-click="openAllAssets">
-                                <div class="card-body d-flex align-items-center">
-                                    <div class="ams-kpi-icon bg-gradient-primary text-white me-3">
-                                        <i class="fa fa-cubes fa-2x"/>
-                                    </div>
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number fs-4 fw-bold">
-                                            <t t-esc="state.total"/>
-                                        </div>
-                                        <div class="ams-kpi-label text-muted small">
-                                            Total Assets
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- AVAILABLE -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card shadow-sm hover-scale" t-on-click="openAvailableAssets">
-                                <div class="card-body d-flex align-items-center">
-                                    <div class="ams-kpi-icon bg-gradient-success text-white me-3">
-                                        <i class="fa fa-check fa-2x"/>
-                                    </div>
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number fs-4 fw-bold">
-                                            <t t-esc="state.available"/>
-                                        </div>
-                                        <div class="ams-kpi-label text-muted small">
-                                            Available Assets
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ASSIGNED -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card shadow-sm hover-scale" t-on-click="openAssignedAssets">
-                                <div class="card-body d-flex align-items-center">
-                                    <div class="ams-kpi-icon bg-gradient-info text-white me-3">
-                                        <i class="fa fa-user fa-2x"/>
-                                    </div>
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number fs-4 fw-bold">
-                                            <t t-esc="state.assigned"/>
-                                        </div>
-                                        <div class="ams-kpi-label text-muted small">
-                                            Assigned Assets
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SCRAPPED -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card shadow-sm hover-scale">
-                                <div class="card-body d-flex align-items-center">
-                                    <div class="ams-kpi-icon bg-gradient-danger text-white me-3">
-                                        <i class="fa fa-trash fa-2x"/>
-                                    </div>
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number fs-4 fw-bold">
-                                            <t t-esc="state.scrapped_disposed"/>
-                                        </div>
-                                        <div class="ams-kpi-label text-muted small">
-                                            Scrapped
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- SECOND ROW -->
-                    <div class="row g-4 mb-4">
-
-                        <!-- CATEGORY CHART -->
-                        <div class="col-lg-8">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-white border-bottom">
-                                    <h6 class="fw-bold mb-0">Assets by Category</h6>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="categoryChart" style="height: 300px;"/>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- STATUS BREAKDOWN -->
-                        <div class="col-lg-4">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-white border-bottom">
-                                    <h6 class="fw-bold mb-0">Status Breakdown</h6>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-group list-group-flush ams-status-list">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-gradient-success">Available</span>
-                                            <span t-esc="state.available"/>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-gradient-info">Assigned</span>
-                                            <span t-esc="state.assigned"/>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-gradient-danger">Scrapped</span>
-                                            <span t-esc="state.scrapped_disposed"/>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- RECENT ASSIGNMENTS -->
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white border-bottom">
-                            <h6 class="fw-bold mb-0">Recent Assignments</h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Asset</th>
-                                            <th>Employee</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <t t-foreach="state.recent_assignments" t-as="rec" t-key="rec.id">
-                                            <tr class="align-middle">
-                                                <td><t t-esc="rec.asset"/></td>
-                                                <td><t t-esc="rec.employee"/></td>
-                                                <td><t t-esc="rec.date"/></td>
-                                            </tr>
-                                        </t>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="ams-kpi-body">
+                    <span class="ams-kpi-value" t-esc="state.available"/>
+                    <span class="ams-kpi-label">Available</span>
                 </div>
-            </t>
+                <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
+            </div>
+
+            <!-- Assigned -->
+            <div class="ams-kpi-card ams-kpi-indigo" t-on-click="openAssignedAssets">
+                <div class="ams-kpi-icon-wrap">
+                    <i class="fa fa-user-circle"/>
+                </div>
+                <div class="ams-kpi-body">
+                    <span class="ams-kpi-value" t-esc="state.assigned"/>
+                    <span class="ams-kpi-label">Assigned</span>
+                </div>
+                <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
+            </div>
+
+            <!-- Scrapped / Disposed -->
+            <div class="ams-kpi-card ams-kpi-rose" t-on-click="openScrappedAssets">
+                <div class="ams-kpi-icon-wrap">
+                    <i class="fa fa-ban"/>
+                </div>
+                <div class="ams-kpi-body">
+                    <span class="ams-kpi-value" t-esc="state.scrapped_disposed"/>
+                    <span class="ams-kpi-label">Scrapped / Disposed</span>
+                </div>
+                <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
+            </div>
 
         </div>
 
-        <!-- STYLES -->
-        <style>
-            .ams-kpi-card {
-                cursor: pointer;
-                border-radius: 0.5rem;
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-            .ams-kpi-card .ams-kpi-icon {
-                width: 60px;
-                height: 60px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 0.75rem;
-            }
-            .hover-scale:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            }
-            .bg-gradient-primary { background: linear-gradient(135deg, #4e73df, #224abe); }
-            .bg-gradient-success { background: linear-gradient(135deg, #1cc88a, #17a673); }
-            .bg-gradient-info { background: linear-gradient(135deg, #36b9cc, #2c9faf); }
-            .bg-gradient-danger { background: linear-gradient(135deg, #e74a3b, #c0392b); }
-            .ams-status-list .badge {
-                font-size: 0.9rem;
-            }
-        </style>
-    </t>
+        <!-- FINANCIAL STRIP -->
+        <div class="ams-finance-strip">
+            <div class="ams-finance-item">
+                <span class="ams-finance-label">
+                    <i class="fa fa-tag me-1"/> Total Purchase Value
+                </span>
+                <span class="ams-finance-value">
+                    <t t-esc="formatCurrency(state.total_value)"/>
+                </span>
+            </div>
+            <div class="ams-finance-divider"/>
+            <div class="ams-finance-item">
+                <span class="ams-finance-label">
+                    <i class="fa fa-balance-scale me-1"/> Net Book Value
+                </span>
+                <span class="ams-finance-value ams-finance-value-accent">
+                    <t t-esc="formatCurrency(state.net_book_value)"/>
+                </span>
+            </div>
+            <div class="ams-finance-divider"/>
+            <div class="ams-finance-item ams-finance-clickable" t-on-click="openPendingDepreciation">
+                <span class="ams-finance-label">
+                    <i class="fa fa-clock-o me-1"/> Pending Depreciation Lines
+                </span>
+                <span class="ams-finance-value ams-finance-value-warn">
+                    <t t-esc="state.pending_depreciation"/>
+                </span>
+            </div>
+        </div>
+
+        <!-- CHARTS + STATUS ROW -->
+        <div class="ams-charts-row">
+
+            <!-- Category Bar Chart -->
+            <div class="ams-card ams-card-chart">
+                <div class="ams-card-header">
+                    <span class="ams-card-title">
+                        <i class="fa fa-bar-chart me-2"/>Assets by Category
+                    </span>
+                    <span class="ams-card-badge">
+                        <t t-esc="state.by_category.length"/> categories
+                    </span>
+                </div>
+                <div class="ams-chart-wrap">
+                    <canvas t-ref="categoryChart" class="ams-canvas"/>
+                </div>
+            </div>
+
+            <!-- Status Breakdown -->
+            <div class="ams-card ams-card-status">
+                <div class="ams-card-header">
+                    <span class="ams-card-title">
+                        <i class="fa fa-pie-chart me-2"/>Status Breakdown
+                    </span>
+                </div>
+                <div class="ams-status-list">
+
+                    <div class="ams-status-item" t-on-click="openAvailableAssets">
+                        <div class="ams-status-left">
+                            <span class="ams-status-dot ams-dot-green"/>
+                            <span class="ams-status-name">Available</span>
+                        </div>
+                        <div class="ams-status-right">
+                            <span class="ams-status-count"><t t-esc="state.available"/></span>
+                            <div class="ams-status-bar-wrap">
+                                <div class="ams-status-bar ams-bar-green"
+                                     t-attf-style="width: #{state.total ? Math.round(state.available / state.total * 100) : 0}%"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ams-status-item" t-on-click="openAssignedAssets">
+                        <div class="ams-status-left">
+                            <span class="ams-status-dot ams-dot-indigo"/>
+                            <span class="ams-status-name">Assigned</span>
+                        </div>
+                        <div class="ams-status-right">
+                            <span class="ams-status-count"><t t-esc="state.assigned"/></span>
+                            <div class="ams-status-bar-wrap">
+                                <div class="ams-status-bar ams-bar-indigo"
+                                     t-attf-style="width: #{state.total ? Math.round(state.assigned / state.total * 100) : 0}%"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ams-status-item" t-on-click="openScrappedAssets">
+                        <div class="ams-status-left">
+                            <span class="ams-status-dot ams-dot-rose"/>
+                            <span class="ams-status-name">Scrapped / Disposed</span>
+                        </div>
+                        <div class="ams-status-right">
+                            <span class="ams-status-count"><t t-esc="state.scrapped_disposed"/></span>
+                            <div class="ams-status-bar-wrap">
+                                <div class="ams-status-bar ams-bar-rose"
+                                     t-attf-style="width: #{state.total ? Math.round(state.scrapped_disposed / state.total * 100) : 0}%"/>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Utilisation ring (pure CSS) -->
+                <div class="ams-util-section">
+                    <p class="ams-util-label">Utilisation Rate</p>
+                    <div class="ams-util-ring-wrap">
+                        <div class="ams-util-ring">
+                            <span class="ams-util-pct">
+                                <t t-esc="state.total ? Math.round(state.assigned / state.total * 100) : 0"/>%
+                            </span>
+                        </div>
+                        <p class="ams-util-sub">of active assets currently assigned</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RECENT ASSIGNMENTS TABLE -->
+        <div class="ams-card ams-card-table">
+            <div class="ams-card-header">
+                <span class="ams-card-title">
+                    <i class="fa fa-history me-2"/>Recent Assignments
+                </span>
+                <button class="ams-view-all-btn" t-on-click="openAssignedAssets">
+                    View all <i class="fa fa-arrow-right ms-1"/>
+                </button>
+            </div>
+            <div class="ams-table-wrap">
+                <t t-if="state.recent_assignments.length">
+                    <table class="ams-table">
+                        <thead>
+                            <tr>
+                                <th>Asset Code</th>
+                                <th>Asset Name</th>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.recent_assignments" t-as="rec" t-key="rec.id">
+                                <tr>
+                                    <td>
+                                        <span class="ams-code-badge">
+                                            <t t-esc="rec.asset_code or '-'"/>
+                                        </span>
+                                    </td>
+                                    <td class="ams-asset-name"><t t-esc="rec.asset"/></td>
+                                    <td>
+                                        <div class="ams-employee-cell">
+                                            <div class="ams-avatar">
+                                                <t t-esc="rec.employee ? rec.employee[0].toUpperCase() : '?'"/>
+                                            </div>
+                                            <t t-esc="rec.employee"/>
+                                        </div>
+                                    </td>
+                                    <td class="ams-date"><t t-esc="rec.date"/></td>
+                                    <td>
+                                        <t t-if="rec.is_active">
+                                            <span class="ams-badge ams-badge-active">Active</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="ams-badge ams-badge-returned">Returned</span>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+                <t t-else="">
+                    <div class="ams-empty-state">
+                        <i class="fa fa-inbox ams-empty-icon"/>
+                        <p>No assignments found</p>
+                    </div>
+                </t>
+            </div>
+        </div>
+
+    </t><!-- end t-else -->
+
+</div>
+</t>
+
 </templates>

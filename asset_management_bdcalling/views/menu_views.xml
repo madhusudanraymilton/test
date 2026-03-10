@@ -65,12 +65,12 @@
               sequence="10"
               />
 
-    <menuitem id="menu_asset_settings"
+    <!-- <menuitem id="menu_asset_settings"
               name="Settings"
               parent="menu_asset_configuration"
-              action="base_setup.action_general_configuration"
+              action="action_asset_settings"
               sequence="20"
-              />
+              /> -->
     <!-- Operations -->
     <menuitem id="menu_asset_operations"
               name="Operations"

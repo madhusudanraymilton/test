@@ -52,6 +52,7 @@ class AssetAsset(models.Model):
         tracking=True,
         domain="[('product_id', '=', product_id)]",
     )
+    
     serial_number = fields.Char(
         string='Serial Number',
         related='lot_id.name',
