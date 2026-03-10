@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Asset Valuation Report action (print from list) -->
     <record id="action_report_asset_valuation_list" model="ir.actions.act_window">
         <field name="name">Asset Valuation</field>
         <field name="res_model">asset.asset</field>
@@ -9,9 +8,8 @@
         <field name="context">{}</field>
     </record>
 
-    <!-- Asset Depreciation Schedule action -->
     <record id="action_report_asset_depreciation_view" model="ir.actions.act_window">
-        <field name="name">Depreciation Report</field>
+        <field name="name">Pending Depreciation Lines</field>
         <field name="res_model">asset.depreciation.line</field>
         <field name="view_mode">list</field>
         <field name="domain">[('move_posted_check', '=', False)]</field>

@@ -7,19 +7,19 @@
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
 
-            <!-- Insert inside General Information tab -->
-            <xpath expr="//div[@name='options']" position="inside">
-
-                <field name="is_asset"/>
-                <label for="is_asset"/>
-
-                <!-- <field name="asset_category_id"/> -->
-
-            </xpath>
             <xpath expr="//div[@name='options']" position="before">
-                <field name="asset_category_id" string="Asset Category" placeholder="Select Asset Category"/>
+                <field name="asset_category_id"
+                       string="Default Asset Category"
+                       placeholder="Select Odoo Asset Category"
+                       invisible="not is_asset"/>
+            </xpath>
+
+            <xpath expr="//div[@name='options']" position="inside">
+                <field name="is_asset"/>
+                <label for="is_asset" string="Is an Asset"/>
             </xpath>
 
         </field>
     </record>
+
 </odoo>

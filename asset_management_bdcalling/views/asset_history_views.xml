@@ -28,7 +28,7 @@
     </record>
 
     <!-- ── Search View ────────────────────────────────────────────────── -->
-    <!-- <record id="view_asset_history_search" model="ir.ui.view">
+    <record id="view_asset_history_search" model="ir.ui.view">
         <field name="name">asset.history.search</field>
         <field name="model">asset.history</field>
         <field name="arch" type="xml">
@@ -54,7 +54,7 @@
                 </group>
             </search>
         </field>
-    </record> -->
+    </record>
 
     <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_asset_history" model="ir.actions.act_window">

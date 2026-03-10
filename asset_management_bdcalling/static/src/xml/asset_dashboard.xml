@@ -6,173 +6,146 @@
 
             <!-- HEADER -->
             <div class="o_asset_dashboard_header d-flex justify-content-between align-items-center">
-                <h3 class="fw-bold">Asset Management Dashboard</h3>
-
+                <h3 class="fw-bold mb-0">Asset Management Dashboard</h3>
                 <button class="btn btn-primary btn-sm" t-on-click="refresh">
-                    <i class="fa fa-refresh me-2"/>Refresh
+                    <i class="fa fa-refresh me-1"/>Refresh
                 </button>
             </div>
 
-            <!-- LOADING STATE -->
+            <!-- LOADING -->
             <t t-if="state.loading">
                 <div class="ams-loading">
-                    <i class="fa fa-spinner fa-spin fa-3x"/>
-                    <p>Loading dashboard...</p>
+                    <i class="fa fa-spinner fa-spin fa-3x text-primary"/>
+                    <p class="text-muted">Loading dashboard...</p>
                 </div>
             </t>
 
-            <!-- DASHBOARD CONTENT -->
+            <!-- CONTENT -->
             <t t-else="">
-                <div class="o_asset_dashboard_content">
 
-                    <!-- KPI ROW -->
-                    <div class="row g-4">
+                <!-- KPI ROW -->
+                <div class="row g-4 mt-1">
 
-                        <!-- TOTAL ASSETS -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card" t-on-click="openAllAssets">
-                                <div class="card-body">
-                                    <div class="ams-kpi-icon bg-primary">
-                                        <i class="fa fa-cubes"/>
-                                    </div>
-
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number">
-                                            <t t-esc="state.total"/>
-                                        </div>
-                                        <div class="ams-kpi-label">
-                                            Total Assets
-                                        </div>
-                                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card ams-kpi-card" t-on-click="openAllAssets">
+                            <div class="card-body">
+                                <div class="ams-kpi-icon bg-primary">
+                                    <i class="fa fa-cubes"/>
+                                </div>
+                                <div class="ams-kpi-data">
+                                    <div class="ams-kpi-number"><t t-esc="state.total"/></div>
+                                    <div class="ams-kpi-label">Total Assets</div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- AVAILABLE -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card" t-on-click="openAvailableAssets">
-                                <div class="card-body">
-                                    <div class="ams-kpi-icon bg-success">
-                                        <i class="fa fa-check"/>
-                                    </div>
-
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number">
-                                            <t t-esc="state.available"/>
-                                        </div>
-                                        <div class="ams-kpi-label">
-                                            Available Assets
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ASSIGNED -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card" t-on-click="openAssignedAssets">
-                                <div class="card-body">
-                                    <div class="ams-kpi-icon bg-info">
-                                        <i class="fa fa-user"/>
-                                    </div>
-
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number">
-                                            <t t-esc="state.assigned"/>
-                                        </div>
-                                        <div class="ams-kpi-label">
-                                            Assigned Assets
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SCRAPPED -->
-                        <div class="col-xl-3 col-md-6">
-                            <div class="card ams-kpi-card">
-                                <div class="card-body">
-                                    <div class="ams-kpi-icon bg-danger">
-                                        <i class="fa fa-trash"/>
-                                    </div>
-
-                                    <div class="ams-kpi-data">
-                                        <div class="ams-kpi-number">
-                                            <t t-esc="state.scrapped_disposed"/>
-                                        </div>
-                                        <div class="ams-kpi-label">
-                                            Scrapped
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
 
-                    <!-- SECOND ROW -->
-                    <div class="row g-4 mt-1">
-
-                        <!-- CATEGORY CHART -->
-                        <div class="col-lg-8">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="fw-bold">Assets by Category</h6>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card ams-kpi-card" t-on-click="openAvailableAssets">
+                            <div class="card-body">
+                                <div class="ams-kpi-icon bg-success">
+                                    <i class="fa fa-check-circle"/>
                                 </div>
-
-                                <div class="card-body">
-                                    <canvas id="categoryChart"/>
+                                <div class="ams-kpi-data">
+                                    <div class="ams-kpi-number"><t t-esc="state.available"/></div>
+                                    <div class="ams-kpi-label">Available</div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- STATUS BREAKDOWN -->
-                        <div class="col-lg-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="fw-bold">Status Breakdown</h6>
-                                </div>
-
-                                <div class="card-body">
-                                    <ul class="ams-status-list">
-                                        <li>
-                                            <span class="badge bg-success">Available</span>
-                                            <span t-esc="state.available"/>
-                                        </li>
-
-                                        <li>
-                                            <span class="badge bg-info">Assigned</span>
-                                            <span t-esc="state.assigned"/>
-                                        </li>
-
-                                        <li>
-                                            <span class="badge bg-danger">Scrapped</span>
-                                            <span t-esc="state.scrapped_disposed"/>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
 
-                    <!-- RECENT ASSIGNMENTS -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h6 class="fw-bold">Recent Assignments</h6>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card ams-kpi-card" t-on-click="openAssignedAssets">
+                            <div class="card-body">
+                                <div class="ams-kpi-icon bg-info">
+                                    <i class="fa fa-user"/>
+                                </div>
+                                <div class="ams-kpi-data">
+                                    <div class="ams-kpi-number"><t t-esc="state.assigned"/></div>
+                                    <div class="ams-kpi-label">Assigned</div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="card-body">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Asset</th>
-                                        <th>Employee</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card ams-kpi-card">
+                            <div class="card-body">
+                                <div class="ams-kpi-icon bg-danger">
+                                    <i class="fa fa-trash"/>
+                                </div>
+                                <div class="ams-kpi-data">
+                                    <div class="ams-kpi-number"><t t-esc="state.scrapped_disposed"/></div>
+                                    <div class="ams-kpi-label">Scrapped / Disposed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                <tbody>
+                </div>
+
+                <!-- SECOND ROW -->
+                <div class="row g-4 mt-1">
+
+                    <!-- CHART -->
+                    <div class="col-lg-8">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="fw-bold mb-0">Assets by Category</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="categoryChart"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STATUS BREAKDOWN -->
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="fw-bold mb-0">Status Breakdown</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="ams-status-list">
+                                    <li>
+                                        <span class="badge bg-success">Available</span>
+                                        <strong><t t-esc="state.available"/></strong>
+                                    </li>
+                                    <li>
+                                        <span class="badge bg-info">Assigned</span>
+                                        <strong><t t-esc="state.assigned"/></strong>
+                                    </li>
+                                    <li>
+                                        <span class="badge bg-danger">Scrapped / Disposed</span>
+                                        <strong><t t-esc="state.scrapped_disposed"/></strong>
+                                    </li>
+                                    <li>
+                                        <span class="badge bg-warning text-dark">Pending Dep.</span>
+                                        <strong><t t-esc="state.pending_depreciation"/></strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RECENT ASSIGNMENTS -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="fw-bold mb-0">Recent Assignments</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Asset</th>
+                                    <th>Employee</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="state.recent_assignments.length">
                                     <t t-foreach="state.recent_assignments" t-as="rec" t-key="rec.id">
                                         <tr>
                                             <td><t t-esc="rec.asset"/></td>
@@ -180,14 +153,20 @@
                                             <td><t t-esc="rec.date"/></td>
                                         </tr>
                                     </t>
-                                </tbody>
-                            </table>
-                        </div>
+                                </t>
+                                <t t-else="">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-3">
+                                            No assignments yet.
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
                     </div>
-
                 </div>
-            </t>
 
+            </t>
         </div>
     </t>
 

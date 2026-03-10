@@ -6,7 +6,6 @@
             <t t-foreach="docs" t-as="asset">
                 <t t-call="web.external_layout">
                     <div class="page">
-                        <!-- Header -->
                         <div class="row mb-4">
                             <div class="col-12">
                                 <h2 class="text-center">Asset Valuation Report</h2>
@@ -16,7 +15,6 @@
                             </div>
                         </div>
 
-                        <!-- Asset Identity -->
                         <div class="row mb-3">
                             <div class="col-6">
                                 <table class="table table-sm table-borderless">
@@ -60,7 +58,6 @@
                             </div>
                         </div>
 
-                        <!-- Financial Summary -->
                         <div class="row">
                             <div class="col-12">
                                 <h5>Financial Summary</h5>
@@ -93,7 +90,6 @@
                             </div>
                         </div>
 
-                        <!-- Footer note -->
                         <div class="row mt-4">
                             <div class="col-12 text-muted small">
                                 <p>Report generated on:

@@ -6,96 +6,104 @@
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <menuitem id="menu_asset_management_root"
               name="Asset Management"
-              sequence="10"/>
+              sequence="10"
+              groups="asset_management_bdcalling.group_asset_user"/>
 
     <!-- ── Dashboard ──────────────────────────────────────────────────── -->
     <menuitem id="menu_asset_dashboard"
               name="Dashboard"
               parent="menu_asset_management_root"
               action="action_asset_dashboard"
-              sequence="10"
-              />
+              sequence="10"/>
 
     <!-- ── Assets ─────────────────────────────────────────────────────── -->
-     <menuitem id="menu_asset_assets"
+    <menuitem id="menu_asset_assets"
               name="Assets"
               parent="menu_asset_management_root"
-              sequence="20"
-              />
+              sequence="20"/>
 
     <menuitem id="menu_asset_all"
               name="All Assets"
               parent="menu_asset_assets"
               action="action_asset_asset_all"
-              sequence="10"
-              />
+              sequence="10"/>
 
-    <!-- <menuitem id="menu_asset_available"
+    <menuitem id="menu_asset_available"
               name="Available Assets"
               parent="menu_asset_assets"
               action="action_asset_asset_available"
-              sequence="20"
-              /> -->
+              sequence="20"/>
 
     <menuitem id="menu_asset_assigned"
               name="Assigned Assets"
               parent="menu_asset_assets"
-              action="action_asset_assignment"
-              sequence="30"
-              />
+              action="action_asset_asset_assigned"
+              sequence="30"/>
 
     <menuitem id="menu_asset_history"
               name="Asset History"
               parent="menu_asset_assets"
               action="action_asset_history"
-              sequence="40"
-              />
+              sequence="40"/>
 
     <!-- ── Configuration ──────────────────────────────────────────────── -->
     <menuitem id="menu_asset_configuration"
               name="Configuration"
               parent="menu_asset_management_root"
-              sequence="30"
-              />
+              sequence="50"
+              groups="asset_management_bdcalling.group_asset_manager"/>
 
+    <!--
+        FIX: Use action_asset_category (custom asset.category) instead of
+        Odoo's account_asset.action_account_asset_model_form, because
+        asset.asset.category_id now correctly points to asset.category.
+    -->
     <menuitem id="menu_asset_category"
               name="Asset Categories"
               parent="menu_asset_configuration"
-              action="account_asset.action_account_asset_model_form"
-              sequence="10"
-              />
+              action="action_asset_category"
+              sequence="10"/>
 
     <menuitem id="menu_asset_settings"
               name="Settings"
               parent="menu_asset_configuration"
               action="base_setup.action_general_configuration"
-              sequence="20"
-              />
-    <!-- Operations -->
+              sequence="20"/>
+
+    <!-- ── Operations ─────────────────────────────────────────────────── -->
+    <!--
+        FIX: Added parent="menu_asset_management_root" — previously had no parent
+        which caused this to render as a stray top-level menu entry.
+    -->
     <menuitem id="menu_asset_operations"
               name="Operations"
-              sequence="50"
-              />
-              
+              parent="menu_asset_management_root"
+              sequence="30"
+              groups="asset_management_bdcalling.group_asset_officer"/>
+
+    <menuitem id="menu_asset_register"
+              name="Register Asset"
+              parent="menu_asset_operations"
+              action="action_asset_register_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_asset_assignments"
+              name="Assignment Records"
+              parent="menu_asset_operations"
+              action="action_asset_assignment"
+              sequence="20"/>
+
     <!-- ── Reports ────────────────────────────────────────────────────── -->
     <menuitem id="menu_asset_reports"
               name="Reports"
               parent="menu_asset_management_root"
               sequence="60"
-              />
-
-    <!-- <menuitem id="menu_report_asset_valuation"
-              name="Asset Valuation Report"
-              parent="menu_asset_reports"
-              action="report_asset_valuation_action"
-              sequence="10"
-              /> -->
+              groups="asset_management_bdcalling.group_asset_officer"/>
 
     <menuitem id="menu_report_asset_depreciation"
               name="Depreciation Report"
               parent="menu_asset_reports"
               action="action_report_asset_depreciation_view"
-              sequence="20"
-            />
+              sequence="20"/>
 
 </odoo>

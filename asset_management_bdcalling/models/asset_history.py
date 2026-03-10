@@ -60,7 +60,7 @@ class AssetHistory(models.Model):
         default=lambda self: self.env.company,
     )
 
-    # ─── Append-only enforcement ────────────────────────────────────────────
+    # ─── Append-only enforcement ─────────────────────────────────────────────
 
     def write(self, vals):
         raise UserError(_(

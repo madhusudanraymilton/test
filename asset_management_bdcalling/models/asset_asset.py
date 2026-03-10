@@ -6,7 +6,6 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-
 class AssetAsset(models.Model):
     _name = 'asset.asset'
     _description = 'Asset'
@@ -61,13 +60,17 @@ class AssetAsset(models.Model):
     )
 
     # ─── Classification ──────────────────────────────────────────────────────
+    # FIX: was incorrectly pointing to 'account.asset' (Odoo native asset model).
+    # The custom asset.category carries depreciation_method, duration_months,
+    # journal_id, account_expense_id, account_depreciation_id — all consumed by
+    # _generate_depreciation_board() and _post_depreciation_move().
 
     category_id = fields.Many2one(
-        'account.asset',
+        'asset.category',
         string='Asset Category',
         required=True,
         tracking=True,
-        domain="[('company_id', '=', company_id)]",
+        domain="[('company_id', '=', company_id), ('active', '=', True)]",
     )
 
     # ─── State ───────────────────────────────────────────────────────────────
@@ -97,7 +100,8 @@ class AssetAsset(models.Model):
         currency_field='currency_id',
         required=True,
         tracking=True,
-        groups='account.group_account_manager,custom_asset_management.group_asset_manager',
+        # FIX: corrected module name from 'custom_asset_management' → 'asset_management_bdcalling'
+        groups='account.group_account_manager,asset_management_bdcalling.group_asset_manager',
     )
     currency_id = fields.Many2one(
         'res.currency',
@@ -110,7 +114,7 @@ class AssetAsset(models.Model):
         currency_field='currency_id',
         compute='_compute_residual_value',
         store=True,
-        groups='account.group_account_manager,custom_asset_management.group_asset_manager',
+        groups='account.group_account_manager,asset_management_bdcalling.group_asset_manager',
     )
 
     # ─── Location & Assignment ───────────────────────────────────────────────
@@ -118,6 +122,7 @@ class AssetAsset(models.Model):
     location_id = fields.Many2one(
         'stock.location',
         string='Asset Location',
+        readonly=True,
     )
     current_employee_id = fields.Many2one(
         'hr.employee',
@@ -155,11 +160,6 @@ class AssetAsset(models.Model):
             'A serial number can only be registered as one asset.',
         ),
         (
-            'serial_company_unique',
-            'UNIQUE(serial_number, company_id)',
-            'Serial number must be unique per company.',
-        ),
-        (
             'code_unique',
             'UNIQUE(code)',
             'Asset code must be globally unique.',
@@ -195,7 +195,9 @@ class AssetAsset(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if not vals.get('code'):
-                vals['code'] = self.env['ir.sequence'].next_by_code('asset.asset.code') or '/'
+                vals['code'] = (
+                    self.env['ir.sequence'].next_by_code('asset.asset.code') or '/'
+                )
         return super().create(vals_list)
 
     # ─── Action Buttons ──────────────────────────────────────────────────────
@@ -318,6 +320,9 @@ class AssetAsset(models.Model):
         self.depreciation_line_ids.filtered(lambda l: not l.move_posted_check).unlink()
 
         category = self.category_id
+        if not category:
+            raise UserError(_('Asset "%s" has no category assigned.') % self.code)
+
         if category.depreciation_method == 'straight_line':
             lines = self._compute_straight_line()
         else:
@@ -343,6 +348,7 @@ class AssetAsset(models.Model):
         remaining = self.purchase_price
         cumulative = 0.0
         start_date = self.registration_date or fields.Date.today()
+        decimal_places = self.currency_id.decimal_places
 
         for i in range(category.duration_months):
             dep_date = start_date + relativedelta(months=i + 1)
@@ -350,7 +356,7 @@ class AssetAsset(models.Model):
             if i == category.duration_months - 1:
                 amount = depreciable_amount - cumulative
             else:
-                amount = round(monthly_amount, self.currency_id.decimal_places)
+                amount = round(monthly_amount, decimal_places)
             cumulative += amount
             remaining -= amount
             lines.append({
@@ -371,10 +377,11 @@ class AssetAsset(models.Model):
         duration_years = category.duration_months / 12.0
         residual_pct = category.non_depreciable_pct / 100.0
 
-        if residual_pct > 0 and residual_pct < 1:
+        if 0.0 < residual_pct < 1.0:
             rate = 1 - (residual_pct ** (1.0 / duration_years))
         else:
-            rate = (1.0 / duration_years) * 2  # double-declining fallback
+            # double-declining fallback when non_depreciable_pct is 0 or 100
+            rate = (1.0 / duration_years) * 2
 
         book_value = self.purchase_price
         lines = []
@@ -398,7 +405,7 @@ class AssetAsset(models.Model):
             })
         return lines
 
-    # ─── Dashboard Data ──────────────────────────────────────────────────────
+    # ─── Cron Jobs ───────────────────────────────────────────────────────────
 
     @api.model
     def _cron_check_archived_employee_assets(self):
@@ -406,9 +413,10 @@ class AssetAsset(models.Model):
         Daily cron: find assets still assigned to archived employees and
         create a return activity on each, notifying the Asset Manager.
         """
-        archived_employees = self.env['hr.employee'].with_context(active_test=False).search([
-            ('active', '=', False),
-        ])
+        archived_employees = self.env['hr.employee'].with_context(
+            active_test=False
+        ).search([('active', '=', False)])
+
         if not archived_employees:
             return
 
@@ -417,7 +425,10 @@ class AssetAsset(models.Model):
             ('state', '=', 'assigned'),
         ])
 
-        activity_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        activity_type = self.env.ref(
+            'mail.mail_activity_data_todo', raise_if_not_found=False
+        )
+
         for asset in assets:
             _logger.warning(
                 'AMS: Asset %s is still assigned to archived employee %s',
@@ -444,6 +455,8 @@ class AssetAsset(models.Model):
                     ('is_active', '=', True),
                 ], limit=1)
                 if assignment:
+                    # FIX: capture employee_id BEFORE clearing current_employee_id
+                    employee_id = asset.current_employee_id.id
                     assignment.write({
                         'is_active': False,
                         'return_date': fields.Date.today(),
@@ -457,9 +470,11 @@ class AssetAsset(models.Model):
                         event_type='return',
                         old_state='assigned',
                         new_state='available',
-                        employee_id=asset.current_employee_id.id,
+                        employee_id=employee_id,   # captured before write
                         description=_('Auto-returned on employee archive by cron'),
                     )
+
+    # ─── Dashboard Data ──────────────────────────────────────────────────────
 
     @api.model
     def get_dashboard_data(self):
@@ -470,7 +485,9 @@ class AssetAsset(models.Model):
         total = len(assets)
         available = len(assets.filtered(lambda a: a.state == 'available'))
         assigned = len(assets.filtered(lambda a: a.state == 'assigned'))
-        scrapped_disposed = len(assets.filtered(lambda a: a.state in ('scrapped', 'disposed')))
+        scrapped_disposed = len(
+            assets.filtered(lambda a: a.state in ('scrapped', 'disposed'))
+        )
         total_value = sum(assets.mapped('purchase_price'))
         net_book_value = sum(assets.mapped('residual_value'))
 
@@ -487,6 +504,22 @@ class AssetAsset(models.Model):
             cat = asset.category_id.name or _('Uncategorised')
             category_data[cat] = category_data.get(cat, 0) + 1
 
+        # Recent assignments (last 10)
+        recent_assignments = self.env['asset.assignment'].search(
+            [('company_id', 'in', self.env.companies.ids)],
+            order='assign_date desc',
+            limit=10,
+        )
+        recent_list = [
+            {
+                'id': a.id,
+                'asset': a.asset_id.name or '',
+                'employee': a.employee_id.name or '',
+                'date': str(a.assign_date) if a.assign_date else '',
+            }
+            for a in recent_assignments
+        ]
+
         return {
             'total': total,
             'available': available,
@@ -499,4 +532,5 @@ class AssetAsset(models.Model):
                 {'category': k, 'count': v}
                 for k, v in sorted(category_data.items(), key=lambda x: -x[1])
             ],
+            'recent_assignments': recent_list,
         }

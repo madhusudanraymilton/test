@@ -70,9 +70,11 @@ class AssetAssignment(models.Model):
         default=lambda self: self.env.company,
     )
 
-    # ── No _sql_constraints: Odoo does not support PostgreSQL partial unique
-    # indexes or EXCLUDE constraints via _sql_constraints.
-    # The partial unique index is created in init() below.
+    line_ids = fields.One2many(
+        'asset.assignment.line',
+        'assignment_id',
+        string='Assignment Lines'
+    )
 
     def init(self):
         """
@@ -84,8 +86,6 @@ class AssetAssignment(models.Model):
             ON asset_assignment (asset_id)
             WHERE (is_active = true AND return_date IS NULL)
         """)
-
-    # ── ORM-level guard (fires before DB, gives a clean UserError) ───────────
 
     @api.constrains('asset_id', 'is_active', 'return_date')
     def _check_no_double_assignment(self):
@@ -119,3 +119,32 @@ class AssetAssignment(models.Model):
                     raise ValidationError(_(
                         'Assignment date cannot precede the asset registration date (%s).'
                     ) % rec.asset_id.registration_date)
+
+
+class AssetAssignmentLine(models.Model):
+    _name = 'asset.assignment.line'
+    _description = 'Asset Assignment Line'
+    _order = 'event_date desc'
+
+    assignment_id = fields.Many2one(
+        'asset.assignment',
+        string='Asset Assignment',
+        required=True,
+        ondelete='cascade',
+        index=True,
+    )
+    event_type = fields.Selection(
+        selection=[
+            ('assign', 'Assigned'),
+            ('return', 'Returned'),
+            ('note', 'Note'),
+        ],
+        string='Event Type',
+        required=True,
+    )
+    event_date = fields.Datetime(
+        string='Event Date',
+        required=True,
+        default=fields.Datetime.now,
+    )
+    description = fields.Text(string='Description')

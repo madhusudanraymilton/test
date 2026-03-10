@@ -1,92 +1,86 @@
 .o_asset_dashboard {
-
-background:#f4f6f9;
-padding:20px;
-
+    background: #f4f6f9;
+    padding: 20px;
 }
 
-.o_asset_dashboard_header{
-
-margin-bottom:20px;
-
+.o_asset_dashboard_header {
+    margin-bottom: 20px;
 }
 
-.ams-loading{
-
-height:400px;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-
+.ams-loading {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
 }
 
-/* KPI */
-
-.ams-kpi-card{
-
-border-radius:12px;
-box-shadow:0 3px 10px rgba(0,0,0,0.05);
-transition:all .2s ease;
-
+/* KPI Cards */
+.ams-kpi-card {
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
-.ams-kpi-card:hover{
-
-transform:translateY(-4px);
-box-shadow:0 10px 25px rgba(0,0,0,0.15);
-
+.ams-kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
-.ams-kpi-card .card-body{
-
-display:flex;
-align-items:center;
-gap:20px;
-padding:25px;
-
+.ams-kpi-card .card-body {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 25px;
 }
 
-.ams-kpi-icon{
-
-width:70px;
-height:70px;
-border-radius:10px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:26px;
-color:white;
-
+.ams-kpi-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: white;
+    flex-shrink: 0;
 }
 
-.ams-kpi-number{
-
-font-size:34px;
-font-weight:700;
-
+.ams-kpi-number {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
 }
 
-.ams-kpi-label{
-
-color:#666;
-font-size:14px;
-
+.ams-kpi-label {
+    color: #666;
+    font-size: 14px;
+    margin-top: 4px;
 }
 
-/* STATUS */
-
-.ams-status-list{
-
-list-style:none;
-padding:0;
-
+/* Status list */
+.ams-status-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.ams-status-list li{
+.ams-status-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 15px;
+}
 
-display:flex;
-justify-content:space-between;
-padding:8px 0;
+.ams-status-list li:last-child {
+    border-bottom: none;
+}
 
+/* Chart container */
+#categoryChart {
+    min-height: 280px;
 }

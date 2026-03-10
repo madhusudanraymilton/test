@@ -18,10 +18,7 @@ class AssetDepreciationLine(models.Model):
         ondelete='cascade',
         index=True,
     )
-    sequence = fields.Integer(
-        string='Sequence',
-        required=True,
-    )
+    sequence = fields.Integer(string='Sequence', required=True)
     depreciation_date = fields.Date(
         string='Depreciation Date',
         required=True,
@@ -71,8 +68,6 @@ class AssetDepreciationLine(models.Model):
         default=lambda self: self.env.company.currency_id,
     )
 
-    # ─── Journal Entry Creation ───────────────────────────────────────────────
-
     def _post_depreciation_move(self):
         """
         Create and post a double-entry journal entry for this depreciation line.
@@ -94,14 +89,14 @@ class AssetDepreciationLine(models.Model):
             'ref': _('Depreciation %s - Line %s') % (asset.code, self.sequence),
             'company_id': self.company_id.id,
             'line_ids': [
-                (0, 0, {  # DR: Depreciation Expense
+                (0, 0, {
                     'account_id': category.account_expense_id.id,
                     'debit': self.amount,
                     'credit': 0.0,
                     'name': _('%s Depreciation') % asset.name,
                     'currency_id': self.currency_id.id,
                 }),
-                (0, 0, {  # CR: Accumulated Depreciation
+                (0, 0, {
                     'account_id': category.account_depreciation_id.id,
                     'debit': 0.0,
                     'credit': self.amount,
@@ -120,14 +115,12 @@ class AssetDepreciationLine(models.Model):
             'move_posted_check': True,
         })
 
-        # Log history
         asset._log_history(
             event_type='depreciate',
             old_state=asset.state,
             new_state=asset.state,
             description=_('Depreciation line %s posted — amount: %s') % (
-                self.sequence,
-                self.amount,
+                self.sequence, self.amount,
             ),
             metadata={
                 'move_id': move.id,
@@ -136,8 +129,6 @@ class AssetDepreciationLine(models.Model):
             },
         )
         return move
-
-    # ─── Cron Job ────────────────────────────────────────────────────────────
 
     @api.model
     def _cron_post_depreciation(self):
@@ -171,8 +162,7 @@ class AssetDepreciationLine(models.Model):
         if failed:
             _logger.warning(
                 'AMS Depreciation Cron completed with %d failures: %s',
-                len(failed),
-                failed,
+                len(failed), failed,
             )
         else:
             _logger.info('AMS Depreciation Cron completed successfully.')

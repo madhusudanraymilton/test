@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    <!--
+        Minimal extension to account.asset form — only safe, verified overrides.
+        FIX 1: Removed broken view_id assignment on account_asset.action_account_asset_model_form
+                (setting an inherited view as view_id crashes the action).
+        FIX 2: Removed fragile xpath on label[@name='model_name_label'] which does
+                not exist in Odoo 18/19 and caused upgrade errors.
+    -->
     <record id="view_account_asset_form_inherit_custom" model="ir.ui.view">
         <field name="name">account.asset.form.inherit.custom</field>
         <field name="model">account.asset</field>
         <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
         <field name="arch" type="xml">
-
-            <xpath expr="//div[@class='oe_title']/label[@name='model_name_label']" position="attributes">
-                <attribute name="string">Asset Category</attribute>
-            </xpath>
-
+            <!-- Placeholder for future safe extensions to account.asset form -->
         </field>
-    </record>
-     <!-- Action -->
-    <record id="account_asset.action_account_asset_model_form" model="ir.actions.act_window">
-        <field name="name">Asset Categories</field>
-        <field name="view_mode">list,form</field>
-        <field name="view_id" ref="view_account_asset_form_inherit_custom"/>
     </record>
 </odoo>

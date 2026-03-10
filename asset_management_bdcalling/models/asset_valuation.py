@@ -34,17 +34,17 @@ class AssetValuation(models.Model):
             DROP VIEW IF EXISTS asset_valuation;
             CREATE OR REPLACE VIEW asset_valuation AS (
                 SELECT
-                    aa.id                           AS id,
-                    aa.name                         AS name,
-                    aa.code                         AS code,
-                    aa.category_id                  AS category_id,
-                    aa.state                        AS state,
-                    aa.purchase_price               AS purchase_price,
-                    aa.company_id                   AS company_id,
-                    aa.currency_id                  AS currency_id,
-                    COALESCE(dep.total_depreciated, 0.0) AS total_depreciated,
+                    aa.id                                               AS id,
+                    aa.name                                             AS name,
+                    aa.code                                             AS code,
+                    aa.category_id                                      AS category_id,
+                    aa.state                                            AS state,
+                    aa.purchase_price                                   AS purchase_price,
+                    aa.company_id                                       AS company_id,
+                    aa.currency_id                                      AS currency_id,
+                    COALESCE(dep.total_depreciated, 0.0)                AS total_depreciated,
                     aa.purchase_price - COALESCE(dep.total_depreciated, 0.0)
-                                                    AS residual_value
+                                                                        AS residual_value
                 FROM asset_asset aa
                 LEFT JOIN (
                     SELECT

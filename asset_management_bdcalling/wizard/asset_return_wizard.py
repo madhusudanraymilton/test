@@ -54,7 +54,6 @@ class AssetReturnWizard(models.TransientModel):
         employee = assignment.employee_id
 
         # ── 2. Close the assignment ───────────────────────────────────────────
-        # Use sudo to bypass write() protection (assignment is a normal model)
         assignment.write({
             'is_active': False,
             'return_date': self.return_date,
@@ -73,7 +72,9 @@ class AssetReturnWizard(models.TransientModel):
 
         # ── 4. Create damage activity if needed ───────────────────────────────
         if self.condition_on_return == 'damaged':
-            activity_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+            activity_type = self.env.ref(
+                'mail.mail_activity_data_todo', raise_if_not_found=False
+            )
             asset.activity_schedule(
                 activity_type_id=activity_type.id if activity_type else False,
                 summary=_('Damaged asset returned — inspection required'),

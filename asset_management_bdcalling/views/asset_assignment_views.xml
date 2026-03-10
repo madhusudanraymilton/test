@@ -51,7 +51,7 @@
         </field>
     </record>
 
-    <!-- ── Search View ──────────────────────────────────────────────────
+    <!-- ── Search View ──────────────────────────────────────────────────── -->
     <record id="view_asset_assignment_search" model="ir.ui.view">
         <field name="name">asset.assignment.search</field>
         <field name="model">asset.assignment</field>
@@ -71,14 +71,14 @@
                 </group>
             </search>
         </field>
-    </record> -->
+    </record>
 
     <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_asset_assignment" model="ir.actions.act_window">
         <field name="name">Asset Assignments</field>
         <field name="res_model">asset.assignment</field>
         <field name="view_mode">list,form</field>
-        <!-- <field name="context">{'search_default_filter_active': 1}</field> -->
+        <field name="context">{'search_default_filter_active': 1}</field>
     </record>
 
 </odoo>

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo.exceptions import UserError, ValidationError
 from odoo.tests.common import tagged
-from psycopg2 import IntegrityError
 from odoo.tools import mute_logger
 from .common import AssetTestCommon
 
@@ -10,7 +9,6 @@ from .common import AssetTestCommon
 class TestAssetCategory(AssetTestCommon):
 
     def test_create_valid_category(self):
-        """AM-01: Create a fully valid category."""
         cat = self.env['asset.category'].create({
             'name': 'Test Servers',
             'depreciation_method': 'straight_line',
@@ -28,7 +26,6 @@ class TestAssetCategory(AssetTestCommon):
         self.assertTrue(cat.active)
 
     def test_duplicate_name_same_company_raises(self):
-        """AM-01: Duplicate category name in same company raises IntegrityError."""
         self.env['asset.category'].create({
             'name': 'Duplicate Cat',
             'depreciation_method': 'straight_line',
@@ -39,7 +36,7 @@ class TestAssetCategory(AssetTestCommon):
             'account_expense_id': self.account_expense.id,
             'journal_id': self.journal.id,
         })
-        with self.assertRaises(Exception):  # IntegrityError or UserError
+        with self.assertRaises(Exception):
             with mute_logger('odoo.sql_db'):
                 self.env['asset.category'].create({
                     'name': 'Duplicate Cat',
@@ -53,7 +50,6 @@ class TestAssetCategory(AssetTestCommon):
                 })
 
     def test_invalid_duration_raises(self):
-        """AM-01: duration_months = 0 raises ValidationError."""
         with self.assertRaises(ValidationError):
             self.env['asset.category'].create({
                 'name': 'Bad Duration Cat',
@@ -67,7 +63,6 @@ class TestAssetCategory(AssetTestCommon):
             })
 
     def test_non_depreciable_pct_out_of_range_raises(self):
-        """non_depreciable_pct > 100 raises ValidationError."""
         with self.assertRaises(ValidationError):
             self.env['asset.category'].create({
                 'name': 'Bad Pct Cat',
@@ -82,14 +77,12 @@ class TestAssetCategory(AssetTestCommon):
             })
 
     def test_cannot_delete_category_with_assets(self):
-        """AM-01: Deleting a category with active assets raises UserError."""
         asset = self._register_asset(serial='SN-CAT-DEL-001')
         self.assertEqual(asset.category_id, self.category)
         with self.assertRaises(UserError):
             self.category.unlink()
 
     def test_journal_type_not_general_raises(self):
-        """Journal of type != 'general' raises ValidationError."""
         sale_journal = self.env['account.journal'].create({
             'name': 'Test Sale Journal',
             'code': 'TSALE',

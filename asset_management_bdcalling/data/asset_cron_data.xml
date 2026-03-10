@@ -4,7 +4,7 @@
     <!-- Monthly depreciation posting cron -->
     <record id="ir_cron_depreciate_assets" model="ir.cron">
         <field name="name">Asset: Post Monthly Depreciation Entries</field>
-        <field name="model_id" ref="model_asset_depreciation_line"/>
+        <field name="model_id" ref="asset_management_bdcalling.model_asset_depreciation_line"/>
         <field name="state">code</field>
         <field name="code">model._cron_post_depreciation()</field>
         <field name="interval_number">1</field>
@@ -17,7 +17,7 @@
     <!-- Daily check: employee archived with unreturned assets -->
     <record id="ir_cron_check_employee_assets" model="ir.cron">
         <field name="name">Asset: Check Archived Employees with Unreturned Assets</field>
-        <field name="model_id" ref="model_asset_asset"/>
+        <field name="model_id" ref="asset_management_bdcalling.model_asset_asset"/>
         <field name="state">code</field>
         <field name="code">model._cron_check_archived_employee_assets()</field>
         <field name="interval_number">1</field>

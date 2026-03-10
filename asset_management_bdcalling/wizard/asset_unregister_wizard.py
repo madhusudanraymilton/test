@@ -2,6 +2,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+
 class AssetUnregisterWizard(models.TransientModel):
     _name = 'asset.unregister.wizard'
     _description = 'Asset Unregistration Wizard'
@@ -34,16 +35,18 @@ class AssetUnregisterWizard(models.TransientModel):
             ) % asset.state)
 
         # ── 2. Determine asset location ───────────────────────────────────────
+        # FIX: corrected module ref from 'custom_asset_management' → 'asset_management_bdcalling'
         asset_location = (
             self.env.company.asset_location_id
             or self.env.ref(
-                'custom_asset_management.asset_stock_location',
+                'asset_management_bdcalling.asset_stock_location',
                 raise_if_not_found=False,
             )
         )
         if not asset_location:
             raise UserError(_(
-                'No Asset Location configured. Please set it in Configuration > Settings.'
+                'No Asset Location configured. '
+                'Please set it in Configuration > Settings.'
             ))
 
         # ── 3. Reverse stock move: asset_location → destination ───────────────
@@ -76,7 +79,6 @@ class AssetUnregisterWizard(models.TransientModel):
         unposted = asset.depreciation_line_ids.filtered(
             lambda l: not l.move_posted_check
         )
-        # bypass the normal unlink (no override on dep lines)
         unposted.unlink()
 
         # ── 5. Reset asset state to draft ─────────────────────────────────────

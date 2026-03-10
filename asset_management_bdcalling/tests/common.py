@@ -11,9 +11,6 @@ class AssetTestCommon(TransactionCase):
         super().setUpClass()
 
         # ── Accounts ──────────────────────────────────────────────────────────
-        account_type_asset = cls.env.ref('account.data_account_type_non_current_assets', raise_if_not_found=False)
-        account_type_expense = cls.env.ref('account.data_account_type_expenses', raise_if_not_found=False)
-
         cls.account_asset = cls.env['account.account'].create({
             'name': 'Test Asset Account',
             'code': 'TST100',
@@ -41,7 +38,7 @@ class AssetTestCommon(TransactionCase):
             'company_id': cls.env.company.id,
         })
 
-        # ── Asset Category ────────────────────────────────────────────────────
+        # ── Asset Category (custom asset.category) ────────────────────────────
         cls.category = cls.env['asset.category'].create({
             'name': 'Test Laptops',
             'depreciation_method': 'straight_line',
@@ -55,7 +52,7 @@ class AssetTestCommon(TransactionCase):
             'company_id': cls.env.company.id,
         })
 
-        # ── Product & UoM ─────────────────────────────────────────────────────
+        # ── Product ───────────────────────────────────────────────────────────
         cls.uom_unit = cls.env.ref('uom.product_uom_unit')
         cls.product = cls.env['product.product'].create({
             'name': 'Test Laptop',
@@ -67,17 +64,18 @@ class AssetTestCommon(TransactionCase):
 
         # ── Stock Locations ───────────────────────────────────────────────────
         cls.stock_location = cls.env.ref('stock.stock_location_stock')
+
+        # FIX: corrected module ref from 'custom_asset_management' → 'asset_management_bdcalling'
         cls.asset_location = cls.env.ref(
-            'custom_asset_management.asset_stock_location',
+            'asset_management_bdcalling.asset_stock_location',
             raise_if_not_found=False,
         )
         if not cls.asset_location:
             cls.asset_location = cls.env['stock.location'].create({
-                'name': 'Asset Location',
+                'name': 'Asset Location (Test)',
                 'usage': 'inventory',
             })
 
-        # Set company default
         cls.env.company.asset_location_id = cls.asset_location
 
         # ── Employee ──────────────────────────────────────────────────────────
@@ -87,7 +85,6 @@ class AssetTestCommon(TransactionCase):
         })
 
     def _create_lot(self, name='SN-TEST-001'):
-        """Create a stock.lot for the test product."""
         return self.env['stock.lot'].create({
             'name': name,
             'product_id': self.product.id,
@@ -95,7 +92,6 @@ class AssetTestCommon(TransactionCase):
         })
 
     def _add_to_inventory(self, lot, qty=1.0, location=None):
-        """Add qty to inventory for the given lot."""
         location = location or self.stock_location
         quant = self.env['stock.quant'].create({
             'product_id': self.product.id,
@@ -106,7 +102,6 @@ class AssetTestCommon(TransactionCase):
         return quant
 
     def _get_inventory_qty(self, lot, location=None):
-        """Return current inventory qty for a lot."""
         location = location or self.stock_location
         quant = self.env['stock.quant'].search([
             ('lot_id', '=', lot.id),

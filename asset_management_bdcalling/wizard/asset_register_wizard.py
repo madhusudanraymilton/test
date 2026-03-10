@@ -5,6 +5,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+
 class AssetRegisterWizard(models.TransientModel):
     _name = 'asset.register.wizard'
     _description = 'Asset Registration Wizard'
@@ -19,13 +20,13 @@ class AssetRegisterWizard(models.TransientModel):
         string='Product',
         compute='_compute_product_id',
         store=True,
-        readonly=False,
+        readonly=True,
     )
     category_id = fields.Many2one(
         'asset.category',
         string='Asset Category',
         required=True,
-        domain="[('company_id', '=', company_id)]",
+        domain="[('company_id', '=', company_id), ('active', '=', True)]",
     )
     purchase_price = fields.Monetary(
         string='Purchase Price',
@@ -45,6 +46,7 @@ class AssetRegisterWizard(models.TransientModel):
         string='Source Location',
         required=True,
         domain="[('usage', 'in', ['internal', 'transit'])]",
+        default=lambda self: self.env.ref('stock.stock_location_stock', raise_if_not_found=False),
     )
     notes = fields.Text(string='Notes')
     company_id = fields.Many2one(
@@ -56,6 +58,12 @@ class AssetRegisterWizard(models.TransientModel):
     def _compute_product_id(self):
         for rec in self:
             rec.product_id = rec.lot_id.product_id if rec.lot_id else False
+
+    @api.constrains('purchase_price')
+    def _check_purchase_price(self):
+        for rec in self:
+            if rec.purchase_price <= 0:
+                raise UserError(_('Purchase price must be greater than zero.'))
 
     def action_register(self):
         self.ensure_one()
@@ -84,6 +92,7 @@ class AssetRegisterWizard(models.TransientModel):
         )
 
         # ── 4. Determine asset location ───────────────────────────────────────
+        # FIX: corrected module ref from 'custom_asset_management' → 'asset_management_bdcalling'
         asset_location = (
             self.env.company.asset_location_id
             or self.env.ref(
@@ -98,7 +107,7 @@ class AssetRegisterWizard(models.TransientModel):
             ))
 
         # ── 5. Create and validate stock move ─────────────────────────────────
-        move = self._create_registration_move(asset_location)
+        self._create_registration_move(asset_location)
 
         # ── 6. Create asset record ────────────────────────────────────────────
         asset = self.env['asset.asset'].create({
@@ -162,5 +171,5 @@ class AssetRegisterWizard(models.TransientModel):
         move._action_confirm()
         move._action_assign()
         move.move_line_ids.quantity = 1.0
-        move._action_done() 
+        move._action_done()
         return move

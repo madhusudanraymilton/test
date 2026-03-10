@@ -17,8 +17,8 @@ Asset Management System (AMS)
 - OWL Dashboard with KPIs
 - PDF reports: valuation, depreciation schedule, employee-wise
     ''',
-    'author': 'Your Company',
-    'website': 'https://yourcompany.com',
+    'author': 'BDCalling IT',
+    'website': 'https://bdcalling.com',
     'license': 'LGPL-3',
     'depends': [
         'base',
@@ -32,20 +32,21 @@ Asset Management System (AMS)
     ],
     'data': [
         # Security — MUST be first
-        #'security/asset_security.xml',
+        'security/asset_security.xml',
         'security/ir.model.access.csv',
         # Data
         'data/asset_sequence_data.xml',
-        # 'data/asset_location_data.xml',
-        # 'data/asset_cron_data.xml',
+        #'data/asset_location_data.xml',
+        #'data/asset_cron_data.xml',
         # Views
         'views/account_asset_extended_views.xml',
+        'views/asset_category_views.xml',
         'views/asset_asset_views.xml',
         'views/asset_assignment_views.xml',
         'views/asset_history_views.xml',
         'views/asset_dashboard_views.xml',
         'views/product_template_extended_views.xml',
-        # 'views/res_config_settings_views.xml',
+        'views/res_config_settings_views.xml',
         'views/wizard_register_views.xml',
         'views/wizard_unregister_views.xml',
         'views/wizard_assign_views.xml',
@@ -58,10 +59,14 @@ Asset Management System (AMS)
         'report/templates/report_asset_depreciation.xml',
     ],
     'assets': {
-        'web.assets_web': [
+        'web.assets_backend': [
+            # Chart.js — required by the OWL dashboard
+            # Download from https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js
+            # and place at: static/lib/chartjs/chart.umd.min.js
+            'asset_management_bdcalling/static/lib/chartjs/chart.umd.min.js',
+            'asset_management_bdcalling/static/src/css/asset_dashboard.css',
             'asset_management_bdcalling/static/src/xml/asset_dashboard.xml',
             'asset_management_bdcalling/static/src/js/asset_dashboard.js',
-            'asset_management_bdcalling/static/src/css/asset_dashboard.css',
         ],
     },
     'installable': True,
