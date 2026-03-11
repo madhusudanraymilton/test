@@ -8,7 +8,11 @@
             <form string="Register Asset">
                 <sheet>
                     <group string="Serial Number">
-                        <field name="lot_id" options="{'no_create': True}"/>
+                        <!-- anchor field — keeps the domain reactive without a round-trip -->
+                        <field name="registered_lot_ids" invisible="1"/>
+                        <field name="lot_id"
+                            options="{'no_create': True}"
+                            domain="[('id', 'not in', registered_lot_ids)]"/>
                         <field name="product_id" readonly="1"/>
                     </group>
                     <group string="Classification">

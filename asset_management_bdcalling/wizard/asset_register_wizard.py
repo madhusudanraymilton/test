@@ -52,6 +52,22 @@ class AssetRegisterWizard(models.TransientModel):
         default=lambda self: self.env.company,
     )
 
+    registered_lot_ids = fields.Many2many(
+        'stock.lot',
+        compute='_compute_registered_lot_ids',
+        string='Already Registered Serials',
+        help='Lots locked by non-draft assets — excluded from the selection domain.',
+    )
+
+    @api.depends_context('uid')
+    def _compute_registered_lot_ids(self):
+        locked = self.env['asset.asset'].search([
+            ('lot_id', '!=', False),
+            ('state', '!=', 'draft'),
+        ]).mapped('lot_id')
+        for rec in self:
+            rec.registered_lot_ids = locked
+
     @api.depends('lot_id')
     def _compute_product_id(self):
         for rec in self:
@@ -72,10 +88,14 @@ class AssetRegisterWizard(models.TransientModel):
             ) % (self.lot_id.name, self.source_location_id.complete_name))
 
         # ── 2. Check not already registered ──────────────────────────────────
-        if self.env['asset.asset'].search([('lot_id', '=', self.lot_id.id)], limit=1):
+        active_asset = self.env['asset.asset'].search([
+            ('lot_id', '=', self.lot_id.id),
+            ('state', '!=', 'draft'),
+        ], limit=1)
+        if active_asset:
             raise UserError(_(
-                'Serial number "%s" is already registered as an asset.'
-            ) % self.lot_id.name)
+                'Serial number "%s" is already registered as asset %s.'
+            ) % (self.lot_id.name, active_asset.code))
 
         # ── 3. Lock lot row to prevent concurrent registration ────────────────
         self.env.cr.execute(
@@ -101,23 +121,60 @@ class AssetRegisterWizard(models.TransientModel):
         move = self._create_registration_move(asset_location)
 
         # ── 6. Create asset record ────────────────────────────────────────────
-        asset = self.env['asset.asset'].create({
-            'product_id': self.product_id.id,
-            'lot_id': self.lot_id.id,
-            'category_id': self.category_id.id,
-            'purchase_price': self.purchase_price,
-            'currency_id': self.currency_id.id,
-            'purchase_date': self.purchase_date,
-            'registration_date': fields.Date.today(),
-            'state': 'available',
-            'location_id': asset_location.id,
-            'company_id': self.company_id.id,
-            'notes': self.notes,
-        })
+        existing_draft = self.env['asset.asset'].search([
+            ('lot_id', '=', self.lot_id.id),
+            ('state', '=', 'draft'),
+        ], limit=1)
 
+        if existing_draft:
+            existing_draft.write({
+                'category_id': self.category_id.id,
+                'purchase_price': self.purchase_price,
+                'currency_id': self.currency_id.id,
+                'purchase_date': self.purchase_date,
+                'registration_date': fields.Date.today(),
+                'state': 'available',
+                'location_id': asset_location.id,
+                'notes': self.notes or existing_draft.notes,
+            })
+            asset = existing_draft
+        else:
+            asset = self.env['asset.asset'].create({
+                'product_id': self.product_id.id,
+                'lot_id': self.lot_id.id,
+                'category_id': self.category_id.id,
+                'purchase_price': self.purchase_price,
+                'currency_id': self.currency_id.id,
+                'purchase_date': self.purchase_date,
+                'registration_date': fields.Date.today(),
+                'state': 'available',
+                'location_id': asset_location.id,
+                'company_id': self.company_id.id,
+                'notes': self.notes,
+            })
         # ── 7. Generate depreciation board ────────────────────────────────────
-        asset._generate_depreciation_board()
+        # asset._generate_depreciation_board()
+        cat = self.category_id  # account.asset with state='model'
+        non_dep_pct = getattr(cat, 'prorata_value', 0.0)
 
+        odoo_asset = self.env['account.asset'].create({
+            'name':                              asset.name,
+            'model_id':                          cat.id,
+            'original_value':                    self.purchase_price,
+            'salvage_value':                     self.purchase_price * (non_dep_pct / 100.0),
+            'acquisition_date':                  self.purchase_date or fields.Date.today(),
+            'account_asset_id':                  cat.account_asset_id.id,
+            'account_depreciation_id':           cat.account_depreciation_id.id,
+            'account_depreciation_expense_id':   cat.account_depreciation_expense_id.id,
+            'journal_id':                        cat.journal_id.id,
+            'method':                            cat.method,           # 'linear'/'degressive'
+            'method_number':                     cat.method_number,    # total entries
+            'method_period':                     cat.method_period,    # '1'=monthly,'12'=yearly
+            'prorata_computation_type':          cat.prorata_computation_type,
+            'company_id':                        self.company_id.id,
+        })
+        odoo_asset.validate()          # draft → open, generates depreciation board
+        asset.write({'odoo_asset_id': odoo_asset.id})
         # ── 8. Log history ────────────────────────────────────────────────────
         asset._log_history(
             event_type='register',

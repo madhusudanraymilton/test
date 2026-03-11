@@ -10,12 +10,17 @@
                 <header>
                     <!-- Action Buttons -->
                     <button name="action_register" type="object" string="Register"
-                            class="btn-primary" invisible="state == 'register'"/>
+                            class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_unregister" type="object" string="Unregister"/>
                     <button name="action_assign" type="object" string="Assign" class="btn-primary" invisible="state == 'assigned'"/>
                     <button name="action_return" type="object" string="Return"/>
                     <button name="action_scrap" type="object" string="Scrap" confirm="Are you sure you want to scrap this asset? This cannot be undone."/>
                     <button name="action_dispose" type="object" string="Dispose" confirm="Are you sure you want to dispose this asset? This cannot be undone."/>
+                    <button name="action_view_accounting_asset" type="object" class="oe_stat_button" icon="fa-line-chart" invisible="not odoo_asset_id">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Depreciation</span>
+                        </div>
+                    </button>
                     <!-- Status Bar -->
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,available,assigned,scrapped,disposed"/>
@@ -37,9 +42,10 @@
                     <group>
                         <group string="Asset Details">
                             <field name="product_id"/>
+                            <field name="available_lot_ids" invisible="1"/>
                             <field name="lot_id"
-                                   domain="[('product_id', '=', product_id)]"/>
-                            <field name="serial_number" readonly="1"/>
+                                domain="[('id', 'in', available_lot_ids)]"/>
+                            <!-- <field name="serial_number" readonly="1"/> -->
                             <field name="category_id"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="active" invisible="1"/>
@@ -73,18 +79,27 @@
                         </page>
                         <!-- Tab 2: Depreciation -->
                         <page string="Depreciation Schedule" name="depreciation">
-                            <field name="depreciation_line_ids">
-                                <list string="Depreciation Lines" decoration-success="move_posted_check == True">
-                                    <field name="sequence" string="#"/>
-                                    <field name="depreciation_date"/>
-                                    <field name="amount" string="Amount"/>
-                                    <field name="depreciated_value" string="Cumulative Dep."/>
-                                    <field name="remaining_value" string="Book Value"/>
-                                    <field name="move_check" string="Entry Created" widget="boolean_toggle"/>
-                                    <field name="move_posted_check" string="Posted" widget="boolean_toggle"/>
-                                    <field name="move_id" string="Journal Entry"/>
+                            <button name="action_view_accounting_asset" type="object"
+                                    string="Open Full Depreciation Board"
+                                    class="btn-secondary mb-3"
+                                    invisible="not odoo_asset_id"/>
+                            <field name="depreciation_move_ids" readonly="1"
+                                invisible="not odoo_asset_id">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="date" string="Date"/>
+                                    <field name="name" string="Reference"/>
+                                    <field name="amount_total" string="Amount"/>
+                                    <field name="state" widget="badge"
+                                        decoration-success="state == 'posted'"
+                                        decoration-warning="state == 'draft'"
+                                        decoration-muted="state == 'cancel'"/>
                                 </list>
                             </field>
+                            <div class="alert alert-info" role="alert"
+                                invisible="odoo_asset_id">
+                                <i class="fa fa-info-circle me-2"/>
+                                Register this asset to generate the depreciation schedule.
+                            </div>
                         </page>
                         <!-- Tab 3: History -->
                         <page string="Lifecycle History" name="history">
@@ -227,7 +242,7 @@
                         name="filter_archived"
                         domain="[('active', '=', False)]"/>
 
-                <group expand="0" string="Group By">
+                <group expand="1" string="Group By">
                     <filter string="Category"
                             name="group_category"
                             context="{'group_by': 'category_id'}"/>

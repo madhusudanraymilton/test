@@ -50,7 +50,14 @@ class AssetAsset(models.Model):
         string='Serial Number (Lot)',
         required=True,
         tracking=True,
-        domain="[('product_id', '=', product_id)]",
+        domain="[('id', 'in', available_lot_ids)]",
+    )
+
+    available_lot_ids = fields.Many2many(
+        'stock.lot',
+        string='Available Serials',
+        compute='_compute_available_lot_ids',
+        readonly=True,
     )
     
     serial_number = fields.Char(
@@ -59,6 +66,18 @@ class AssetAsset(models.Model):
         store=True,
         readonly=True,
         index=True,
+    )
+
+    odoo_asset_id = fields.Many2one(
+        'account.asset', string='Accounting Asset',
+        readonly=True, ondelete='set null', copy=False, index=True,
+    )
+
+    # ADD this ↓
+    depreciation_move_ids = fields.One2many(
+        related='odoo_asset_id.depreciation_move_ids',
+        string='Depreciation Entries',
+        readonly=True,
     )
 
     # ─── Classification ──────────────────────────────────────────────────────
@@ -100,12 +119,14 @@ class AssetAsset(models.Model):
         tracking=True,
         groups='account.group_account_manager,custom_asset_management.group_asset_manager',
     )
+
     currency_id = fields.Many2one(
         'res.currency',
         string='Currency',
         required=True,
         default=lambda self: self.env.company.currency_id,
     )
+
     residual_value = fields.Monetary(
         string='Net Book Value',
         currency_field='currency_id',
@@ -120,6 +141,7 @@ class AssetAsset(models.Model):
         'stock.location',
         string='Asset Location',
     )
+
     current_employee_id = fields.Many2one(
         'hr.employee',
         string='Assigned To',
@@ -134,11 +156,13 @@ class AssetAsset(models.Model):
         'asset_id',
         string='Depreciation Schedule',
     )
+
     assignment_ids = fields.One2many(
         'asset.assignment',
         'asset_id',
         string='Assignment History',
     )
+
     history_ids = fields.One2many(
         'asset.history',
         'asset_id',
@@ -183,17 +207,27 @@ class AssetAsset(models.Model):
             else:
                 rec.name = rec.name or _('New Asset')
 
-    @api.depends('purchase_price', 'depreciation_line_ids.amount',
-                 'depreciation_line_ids.move_posted_check')
+    # @api.depends('purchase_price', 'depreciation_line_ids.amount',
+    #              'depreciation_line_ids.move_posted_check')
+    # def _compute_residual_value(self):
+    #     for rec in self:
+    #         posted_total = sum(
+    #             line.amount
+    #             for line in rec.depreciation_line_ids
+    #             if line.move_posted_check
+    #         )
+    #         rec.residual_value = rec.purchase_price - posted_total
+    @api.depends('odoo_asset_id', 'odoo_asset_id.value_residual', 'purchase_price')
     def _compute_residual_value(self):
         for rec in self:
-            posted_total = sum(
-                line.amount
-                for line in rec.depreciation_line_ids
-                if line.move_posted_check
+            rec.residual_value = (
+                rec.odoo_asset_id.value_residual
+                if rec.odoo_asset_id
+                else rec.purchase_price - sum(
+                    l.amount for l in rec.depreciation_line_ids if l.move_posted_check
+                )
             )
-            rec.residual_value = rec.purchase_price - posted_total
-
+    
     # ─── ORM Overrides ───────────────────────────────────────────────────────
 
     @api.model_create_multi
@@ -204,7 +238,19 @@ class AssetAsset(models.Model):
         return super().create(vals_list)
 
     # ─── Action Buttons ──────────────────────────────────────────────────────
+    def action_view_accounting_asset(self):
+        self.ensure_one()
+        if not self.odoo_asset_id:
+            raise UserError(_('No accounting asset linked. Register first.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.asset',
+            'res_id': self.odoo_asset_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
+    
     def action_register(self):
         """Open the register wizard to move serial from inventory → asset location."""
         self.ensure_one()
@@ -315,94 +361,116 @@ class AssetAsset(models.Model):
             'company_id': self.company_id.id,
         })
 
+    # ─── available lot ids ───────────────────────────────────────────────
+    @api.depends('product_id')
+    def _compute_available_lot_ids(self):
+        """
+        Returns lots that are NOT currently locked by a non-draft asset.
+        A lot is considered free when:
+          - no asset references it, OR
+          - the only referencing asset is this record itself (edit mode), OR
+          - the referencing asset is in state 'draft' (unregistered).
+        """
+        # Lots locked by active assets (excluding this record)
+        locked_lots = self.env['asset.asset'].search([
+            ('lot_id', '!=', False),
+            ('state', '!=', 'draft'),
+            ('id', 'not in', self.ids),
+        ]).mapped('lot_id')
+
+        for rec in self:
+            domain = [('product_id', '=', rec.product_id.id)] if rec.product_id else []
+            product_lots = self.env['stock.lot'].search(domain)
+            rec.available_lot_ids = product_lots - locked_lots
+
     # ─── Depreciation Board ──────────────────────────────────────────────────
 
-    def _generate_depreciation_board(self):
-        """Generate the full depreciation schedule on registration."""
-        self.ensure_one()
-        # Remove any existing unposted lines
-        self.depreciation_line_ids.filtered(lambda l: not l.move_posted_check).unlink()
+    # def _generate_depreciation_board(self):
+    #     """Generate the full depreciation schedule on registration."""
+    #     self.ensure_one()
+    #     # Remove any existing unposted lines
+    #     self.depreciation_line_ids.filtered(lambda l: not l.move_posted_check).unlink()
 
-        category = self.category_id
-        if category.depreciation_method == 'straight_line':
-            lines = self._compute_straight_line()
-        else:
-            lines = self._compute_declining_balance()
+    #     category = self.category_id
+    #     if category.depreciation_method == 'straight_line':
+    #         lines = self._compute_straight_line()
+    #     else:
+    #         lines = self._compute_declining_balance()
 
-        for line_vals in lines:
-            line_vals.update({
-                'asset_id': self.id,
-                'company_id': self.company_id.id,
-                'currency_id': self.currency_id.id,
-            })
-        self.env['asset.depreciation.line'].create(lines)
+    #     for line_vals in lines:
+    #         line_vals.update({
+    #             'asset_id': self.id,
+    #             'company_id': self.company_id.id,
+    #             'currency_id': self.currency_id.id,
+    #         })
+    #     self.env['asset.depreciation.line'].create(lines)
 
-    def _compute_straight_line(self):
-        """Straight-line depreciation schedule."""
-        self.ensure_one()
-        category = self.category_id
-        depreciable_amount = self.purchase_price * (
-            1 - category.non_depreciable_pct / 100.0
-        )
-        monthly_amount = depreciable_amount / category.duration_months
-        lines = []
-        remaining = self.purchase_price
-        cumulative = 0.0
-        start_date = self.registration_date or fields.Date.today()
+    # def _compute_straight_line(self):
+    #     """Straight-line depreciation schedule."""
+    #     self.ensure_one()
+    #     category = self.category_id
+    #     depreciable_amount = self.purchase_price * (
+    #         1 - category.non_depreciable_pct / 100.0
+    #     )
+    #     monthly_amount = depreciable_amount / category.duration_months
+    #     lines = []
+    #     remaining = self.purchase_price
+    #     cumulative = 0.0
+    #     start_date = self.registration_date or fields.Date.today()
 
-        for i in range(category.duration_months):
-            dep_date = start_date + relativedelta(months=i + 1)
-            # Last line absorbs rounding
-            if i == category.duration_months - 1:
-                amount = depreciable_amount - cumulative
-            else:
-                amount = round(monthly_amount, self.currency_id.decimal_places)
-            cumulative += amount
-            remaining -= amount
-            lines.append({
-                'sequence': i + 1,
-                'depreciation_date': dep_date,
-                'amount': amount,
-                'remaining_value': max(remaining, 0.0),
-                'depreciated_value': cumulative,
-                'move_check': False,
-                'move_posted_check': False,
-            })
-        return lines
+    #     for i in range(category.duration_months):
+    #         dep_date = start_date + relativedelta(months=i + 1)
+    #         # Last line absorbs rounding
+    #         if i == category.duration_months - 1:
+    #             amount = depreciable_amount - cumulative
+    #         else:
+    #             amount = round(monthly_amount, self.currency_id.decimal_places)
+    #         cumulative += amount
+    #         remaining -= amount
+    #         lines.append({
+    #             'sequence': i + 1,
+    #             'depreciation_date': dep_date,
+    #             'amount': amount,
+    #             'remaining_value': max(remaining, 0.0),
+    #             'depreciated_value': cumulative,
+    #             'move_check': False,
+    #             'move_posted_check': False,
+    #         })
+    #     return lines
 
-    def _compute_declining_balance(self):
-        """Declining balance depreciation schedule."""
-        self.ensure_one()
-        category = self.category_id
-        duration_years = category.duration_months / 12.0
-        residual_pct = category.non_depreciable_pct / 100.0
+    # def _compute_declining_balance(self):
+    #     """Declining balance depreciation schedule."""
+    #     self.ensure_one()
+    #     category = self.category_id
+    #     duration_years = category.duration_months / 12.0
+    #     residual_pct = category.non_depreciable_pct / 100.0
 
-        if residual_pct > 0 and residual_pct < 1:
-            rate = 1 - (residual_pct ** (1.0 / duration_years))
-        else:
-            rate = (1.0 / duration_years) * 2  # double-declining fallback
+    #     if residual_pct > 0 and residual_pct < 1:
+    #         rate = 1 - (residual_pct ** (1.0 / duration_years))
+    #     else:
+    #         rate = (1.0 / duration_years) * 2  # double-declining fallback
 
-        book_value = self.purchase_price
-        lines = []
-        start_date = self.registration_date or fields.Date.today()
-        decimal_places = self.currency_id.decimal_places
+    #     book_value = self.purchase_price
+    #     lines = []
+    #     start_date = self.registration_date or fields.Date.today()
+    #     decimal_places = self.currency_id.decimal_places
 
-        for i in range(category.duration_months):
-            dep_date = start_date + relativedelta(months=i + 1)
-            monthly_dep = round(book_value * rate / 12.0, decimal_places)
-            # Clamp to non-negative book value
-            monthly_dep = min(monthly_dep, book_value)
-            book_value -= monthly_dep
-            lines.append({
-                'sequence': i + 1,
-                'depreciation_date': dep_date,
-                'amount': monthly_dep,
-                'remaining_value': max(book_value, 0.0),
-                'depreciated_value': self.purchase_price - book_value,
-                'move_check': False,
-                'move_posted_check': False,
-            })
-        return lines
+    #     for i in range(category.duration_months):
+    #         dep_date = start_date + relativedelta(months=i + 1)
+    #         monthly_dep = round(book_value * rate / 12.0, decimal_places)
+    #         # Clamp to non-negative book value
+    #         monthly_dep = min(monthly_dep, book_value)
+    #         book_value -= monthly_dep
+    #         lines.append({
+    #             'sequence': i + 1,
+    #             'depreciation_date': dep_date,
+    #             'amount': monthly_dep,
+    #             'remaining_value': max(book_value, 0.0),
+    #             'depreciated_value': self.purchase_price - book_value,
+    #             'move_check': False,
+    #             'move_posted_check': False,
+    #         })
+    #     return lines
 
     # ─── Dashboard Data ──────────────────────────────────────────────────────
 
