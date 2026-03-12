@@ -13,10 +13,12 @@
     ],
     "data": [
         "security/ir.model.access.csv",
+        "data/customer_sequence.xml",
         "views/res_partner_extended_views.xml",
         "views/res_district_views.xml",
         "views/res_thana_views.xml",
         'views/sale_order_extended_views.xml',
+        'views/sale_report_extended_views.xml',
         'views/account_move_extended_views.xml',
         'views/stock_picking_extended_views.xml',
         # "views/sale_order_views.xml",

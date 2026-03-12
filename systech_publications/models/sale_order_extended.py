@@ -85,3 +85,27 @@ class SaleOrder(models.Model):
                 })
 
         return res
+    
+from odoo import models, fields
+
+class SaleReport(models.Model):
+    _inherit = "sale.report"
+
+    district_id = fields.Many2one("res.district", string="District", readonly=True)
+    thana_id = fields.Many2one("res.thana", string="Thana", readonly=True)
+
+    def _select_additional_fields(self):
+        res = super()._select_additional_fields()
+        res.update({
+            "district_id": "partner.district_id",
+            "thana_id": "partner.thana_id",
+        })
+        return res
+
+    def _group_by_sale(self):
+        res = super()._group_by_sale()
+        res += """
+            , partner.district_id
+            , partner.thana_id
+        """
+        return res
