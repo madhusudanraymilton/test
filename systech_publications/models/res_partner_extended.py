@@ -14,27 +14,6 @@ class ResPartnerExtended(models.Model):
       #  domain="[('thana_id', '=', thana_id)]"
     )
 
-    customer_uid = fields.Char(
-        string="Customer ID",
-        copy=False,
-        index=True
-    )
-
-    _sql_constraints = [
-        (
-            'customer_uid_unique',
-            'unique(customer_uid)',
-            'Customer ID must be unique!'
-        )
-    ]
-
-    @api.model
-    def create(self, vals):
-        if not vals.get('customer_uid'):
-            vals['customer_uid'] = self.env['ir.sequence'].next_by_code(
-                'res.partner.customer.uid'
-            )
-        return super().create(vals)
 
 
     @api.onchange('thana_id')

@@ -10,10 +10,7 @@
                 <field name="district_id" placeholder="District"/>
             </xpath>
 
-            <xpath expr="//field[@name='name']" position="after">
-                <field name="customer_uid" placeholder="Customer Unique ID"/>
-            </xpath>
-                
+    
             <xpath expr="//field[@name='state_id']" position="attributes">
                 <attribute name="placeholder">Division</attribute>
             </xpath>
@@ -44,19 +41,4 @@
         </field>
     </record>
 
-    <record id="view_partner_search_customer_uid" model="ir.ui.view">
-        <field name="name">res.partner.search.customer.uid</field>
-        <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.view_res_partner_filter"/>
-        <field name="arch" type="xml">
-
-            <xpath expr="//search/field[@name='name']" position="after">
-                <field name="customer_uid" string="Customer ID"/>
-                <!-- <filter string="Customer ID"
-                    name="customer_uid_filter"
-                    domain="[('customer_uid','!=',False)]"/> -->
-            </xpath>
-
-        </field>
-    </record>
 </odoo>
