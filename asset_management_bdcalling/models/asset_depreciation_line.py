@@ -18,10 +18,12 @@ class AssetDepreciationLine(models.Model):
         ondelete='cascade',
         index=True,
     )
+
     sequence = fields.Integer(
         string='Sequence',
         required=True,
     )
+    
     depreciation_date = fields.Date(
         string='Depreciation Date',
         required=True,

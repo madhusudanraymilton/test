@@ -86,8 +86,7 @@ class AssetAsset(models.Model):
         'account.asset',
         string='Asset Category',
         required=True,
-        tracking=True,
-        domain="[('company_id', '=', company_id)]",
+        domain="[('company_id', '=', company_id), ('state', '=', 'model')]",
     )
 
     # ─── State ───────────────────────────────────────────────────────────────

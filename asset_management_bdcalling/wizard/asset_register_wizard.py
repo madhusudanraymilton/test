@@ -25,7 +25,7 @@ class AssetRegisterWizard(models.TransientModel):
         'account.asset',
         string='Asset Category',
         required=True,
-        domain="[('company_id', '=', company_id)]",
+        domain="[('company_id', '=', company_id), ('state', '=', 'model')]",
     )
     purchase_price = fields.Monetary(
         string='Purchase Price',
@@ -154,27 +154,91 @@ class AssetRegisterWizard(models.TransientModel):
             })
         # ── 7. Generate depreciation board ────────────────────────────────────
         # asset._generate_depreciation_board()
-        cat = self.category_id  # account.asset with state='model'
-        non_dep_pct = getattr(cat, 'prorata_value', 0.0)
+        # cat = self.category_id  # account.asset with state='model'
+        # non_dep_pct = getattr(cat, 'prorata_value', 0.0)
 
-        odoo_asset = self.env['account.asset'].create({
-            'name':                              asset.name,
-            'model_id':                          cat.id,
-            'original_value':                    self.purchase_price,
-            'salvage_value':                     self.purchase_price * (non_dep_pct / 100.0),
-            'acquisition_date':                  self.purchase_date or fields.Date.today(),
-            'account_asset_id':                  cat.account_asset_id.id,
-            'account_depreciation_id':           cat.account_depreciation_id.id,
-            'account_depreciation_expense_id':   cat.account_depreciation_expense_id.id,
-            'journal_id':                        cat.journal_id.id,
-            'method':                            cat.method,           # 'linear'/'degressive'
-            'method_number':                     cat.method_number,    # total entries
-            'method_period':                     cat.method_period,    # '1'=monthly,'12'=yearly
-            'prorata_computation_type':          cat.prorata_computation_type,
-            'company_id':                        self.company_id.id,
-        })
-        odoo_asset.validate()          # draft → open, generates depreciation board
-        asset.write({'odoo_asset_id': odoo_asset.id})
+        # odoo_asset = self.env['account.asset'].create({
+        #     'name':                              asset.name,
+        #     'model_id':                          cat.id,
+        #     'original_value':                    self.purchase_price,
+        #     'salvage_value':                     self.purchase_price * (non_dep_pct / 100.0),
+        #     'acquisition_date':                  self.purchase_date or fields.Date.today(),
+        #     'account_asset_id':                  cat.account_asset_id.id,
+        #     'account_depreciation_id':           cat.account_depreciation_id.id,
+        #     'account_depreciation_expense_id':   cat.account_depreciation_expense_id.id,
+        #     'journal_id':                        cat.journal_id.id,
+        #     'method':                            cat.method,           # 'linear'/'degressive'
+        #     'method_number':                     cat.method_number,    # total entries
+        #     'method_period':                     cat.method_period,    # '1'=monthly,'12'=yearly
+        #     'prorata_computation_type':          cat.prorata_computation_type,
+        #     'company_id':                        self.company_id.id,
+        # })
+        # odoo_asset.validate()          # draft → open, generates depreciation board
+        # asset.write({'odoo_asset_id': odoo_asset.id})
+
+         # ── 7. Create & validate native accounting asset ──────────────────────
+        cat = self.category_id
+
+        # Guard: surface missing config immediately instead of silent failure
+        missing = []
+        if not cat.account_asset_id:
+            missing.append('Asset Account (account_asset_id)')
+        if not cat.account_depreciation_id:
+            missing.append('Accumulated Depreciation Account')
+        if not cat.account_depreciation_expense_id:
+            missing.append('Depreciation Expense Account')
+        if not cat.journal_id:
+            missing.append('Asset Journal')
+        if not cat.method:
+            missing.append('Depreciation Method')
+        if not cat.method_number:
+            missing.append('Number of Depreciation Entries')
+        if missing:
+            raise UserError(_(
+                'Asset category "%s" is missing required accounting configuration:\n\n'
+                '  • %s\n\n'
+                'Go to Accounting → Configuration → Asset Models and complete the setup.'
+            ) % (cat.name, '\n  • '.join(missing)))
+
+        non_dep_pct = getattr(cat, 'prorata_value', 0.0) or 0.0
+
+        try:
+            odoo_asset = self.env['account.asset'].create({
+                'name':                             asset.name,
+                'model_id':                         cat.id,
+                'original_value':                   self.purchase_price,
+                'salvage_value':                    self.purchase_price * (non_dep_pct / 100.0),
+                'acquisition_date':                 self.purchase_date or fields.Date.today(),
+                'account_asset_id':                 cat.account_asset_id.id,
+                'account_depreciation_id':          cat.account_depreciation_id.id,
+                'account_depreciation_expense_id':  cat.account_depreciation_expense_id.id,
+                'journal_id':                       cat.journal_id.id,
+                'method':                           cat.method,
+                'method_number':                    cat.method_number,
+                'method_period':                    cat.method_period,
+                'prorata_computation_type':         cat.prorata_computation_type,
+                'company_id':                       self.company_id.id,
+            })
+            odoo_asset.validate()
+            asset.write({'odoo_asset_id': odoo_asset.id})
+            _logger.info(
+                'AMS: Native accounting asset %s created for asset %s',
+                odoo_asset.id, asset.code,
+            )
+        except UserError:
+            raise  # re-raise clean UserErrors as-is
+        except Exception as exc:
+            _logger.error(
+                'AMS: Failed to create native accounting asset for %s: %s',
+                asset.code, exc,
+            )
+            raise UserError(_(
+                'Failed to generate depreciation schedule for "%s".\n\n'
+                'Error: %s\n\n'
+                'Verify that category "%s" has complete accounting setup in '
+                'Accounting → Configuration → Asset Models.'
+            ) % (asset.name, str(exc), cat.name))
+
         # ── 8. Log history ────────────────────────────────────────────────────
         asset._log_history(
             event_type='register',

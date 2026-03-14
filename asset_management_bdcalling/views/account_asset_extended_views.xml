@@ -10,6 +10,219 @@
                 <attribute name="string">Asset Category</attribute>
             </xpath>
 
+            <!-- <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fw-bold text-muted small">Asset Code:</span>
+                    <field
+                        name="asset_code"
+                        class="fw-bold text-primary"
+                        nolabel="1"
+                        readonly="1"
+                    />
+                </div>
+            </xpath>
+
+            <xpath expr="//header/field[@name='state']" position="replace">
+
+                Register: Draft → Available
+                <button
+                    name="action_register"
+                    string="Register"
+                    type="object"
+                    class="btn-primary"
+                    invisible="asset_lifecycle_state != 'draft'"
+                />
+
+                Unregister: Available → Draft
+                <button
+                    name="action_unregister"
+                    string="Unregister"
+                    type="object"
+                    invisible="asset_lifecycle_state != 'available'"
+                />
+
+                Return: Assigned → Available  (also clears assignee)
+                <button
+                    name="action_return_asset"
+                    string="Return"
+                    type="object"
+                    invisible="asset_lifecycle_state != 'assigned'"
+                    confirm="Return this asset from the current assignee?"
+                />
+
+                Scrap: any active state → Scrapped
+                <button
+                    name="action_scrap"
+                    string="Scrap"
+                    type="object"
+                    class="btn-danger"
+                    invisible="asset_lifecycle_state in ('scrapped', 'disposed')"
+                    confirm="Mark this asset as scrapped? This action cannot be easily reversed."
+                />
+
+                Dispose: any non-disposed state → Disposed
+                <button
+                    name="action_dispose"
+                    string="Dispose"
+                    type="object"
+                    class="btn-danger"
+                    invisible="asset_lifecycle_state == 'disposed'"
+                    confirm="Mark this asset as disposed? This action cannot be easily reversed."
+                />
+                <field
+                    name="asset_lifecycle_state"
+                    widget="statusbar"
+                    statusbar_visible="draft,available,assigned,scrapped,disposed"
+                    readonly="1"
+                />
+            </xpath> -->
+
+<!-- 
+            <xpath expr="//header/field[@name='state']" position="after">
+                
+            </xpath> -->
+            
+            <!-- =============================================================
+                 1.  ASSET DETAILS GROUP  — added inside the "main_page" page
+                     (appended at the bottom of that page's content)
+                 ============================================================= -->
+            <!-- <xpath expr="//page[@name='main_page']" position="before">
+                <group string="Asset Details" name="asset_details_group">
+                    <group>
+                        <field
+                            name="product_id"
+                            options="{'no_create': True, 'no_open': False}"
+                        />
+                        <field
+                            name="lot_id"
+                            options="{'no_create': True}"
+                            invisible="not product_id"
+                        />
+                    </group>
+                    Empty right column — keeps layout balanced
+                </group>
+            </xpath> -->
+
+            <!-- =============================================================
+                 2.  REMOVE asset_group_id from the "asset_values" page
+                 ============================================================= -->
+            <!-- <xpath
+                expr="//page[@name='asset_values']//field[@name='asset_group_id']"
+                position="replace"
+            /> -->
+
+            <!-- =============================================================
+                 3.  ASSIGNMENT PAGE  — currently active assignee details
+                 ============================================================= -->
+            <!-- <xpath expr="//page[@name='asset_values']" position="after">
+                <page name="assignment_page" string="Assignment">
+
+                    Current assignment info
+                    <group string="Current Assignment" name="current_assignment_group">
+                        <group>
+                            <field
+                                name="current_assignee_id"
+                                options="{'no_create': True}"
+                                widget="many2one_avatar_employee"
+                            />
+                            <field
+                                name="assignee_department_id"
+                                readonly="1"
+                                invisible="not current_assignee_id"
+                            />
+                            <field
+                                name="assignee_job_id"
+                                readonly="1"
+                                invisible="not current_assignee_id"
+                            />
+                            <field
+                                name="assignee_mobile_phone"
+                                readonly="1"
+                                invisible="not current_assignee_id"
+                            />
+                        </group>
+                        <group/>
+                    </group>
+
+                    Guard message when no assignee
+                    <div
+                        class="alert alert-info"
+                        role="alert"
+                        invisible="current_assignee_id"
+                    >
+                        <i class="fa fa-info-circle me-1"/>
+                        No employee is currently assigned to this asset.
+                        Set the <strong>Current Assignee</strong> field above and save.
+                    </div>
+
+                    Guard message when not in Available state
+                    <div
+                        class="alert alert-warning"
+                        role="alert"
+                        invisible="asset_lifecycle_state in ('available', 'assigned')"
+                    >
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        This asset must be in <strong>Available</strong> state before
+                        it can be assigned. Use the <strong>Register</strong> button
+                        in the header first.
+                    </div>
+
+                </page>
+            </xpath> -->
+
+            <!-- =============================================================
+                 4.  LIFECYCLE HISTORY PAGE  — full assignment / return audit log
+                 ============================================================= -->
+            <!-- <xpath expr="//page[@name='assignment_page']" position="after">
+                <page name="lifecycle_history_page" string="Lifecycle History">
+
+                    <field
+                        name="assignment_ids"
+                        nolabel="1"
+                        readonly="1"
+                    >
+                        <list
+                            string="Assignment History"
+                            create="false"
+                            delete="false"
+                            editable="false"
+                            decoration-success="status == 'returned'"
+                            decoration-info="status == 'active'"
+                        >
+                            <field name="assign_date" string="Assigned On"/>
+                            <field name="employee_id" string="Employee"
+                                   widget="many2one_avatar_employee"/>
+                            <field name="department_id" string="Department"
+                                   optional="show"/>
+                            <field name="job_id" string="Job Position"
+                                   optional="show"/>
+                            <field name="return_date" string="Returned On"/>
+                            <field name="duration_days" string="Days Held"
+                                   optional="show"/>
+                            <field name="status" string="Status"
+                                   widget="badge"
+                                   decoration-success="status == 'returned'"
+                                   decoration-info="status == 'active'"/>
+                            <field name="assigned_by_id" string="Assigned By"
+                                   optional="show"/>
+                            <field name="notes" string="Notes"
+                                   optional="show"/>
+                        </list>
+                    </field>
+
+                    Guard message when history is empty
+                    <div
+                        class="alert alert-info"
+                        role="alert"
+                        invisible="assignment_ids"
+                    >
+                        <i class="fa fa-history me-1"/>
+                        No assignment history found for this asset yet.
+                    </div>
+
+                </page>
+            </xpath> -->
+
         </field>
     </record>
      <!-- Action -->
@@ -18,4 +231,10 @@
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_account_asset_form_inherit_custom"/>
     </record>
+
+    <!-- <record id="action_account_asset" model="ir.actions.act_window">
+        <field name="name">Assets</field>
+        <field name="res_model">account.asset</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record> -->
 </odoo>
