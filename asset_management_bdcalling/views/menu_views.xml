@@ -26,7 +26,7 @@
     <menuitem id="menu_asset_all"
               name="All Assets"
               parent="menu_asset_assets"
-              action="action_asset_asset_all"
+              action="action_account_asset"
               sequence="10"
               />
 

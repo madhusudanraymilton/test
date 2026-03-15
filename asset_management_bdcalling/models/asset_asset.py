@@ -216,6 +216,7 @@ class AssetAsset(models.Model):
     #             if line.move_posted_check
     #         )
     #         rec.residual_value = rec.purchase_price - posted_total
+
     @api.depends('odoo_asset_id', 'odoo_asset_id.value_residual', 'purchase_price')
     def _compute_residual_value(self):
         for rec in self:
@@ -249,7 +250,6 @@ class AssetAsset(models.Model):
             'target': 'current',
         }
 
-    
     def action_register(self):
         """Open the register wizard to move serial from inventory → asset location."""
         self.ensure_one()
