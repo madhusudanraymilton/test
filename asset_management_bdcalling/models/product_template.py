@@ -10,7 +10,6 @@ class ProductTemplate(models.Model):
         default=False,
         help='Enable if this product is registered as an asset in the Asset Management System.',
     )
-    
     asset_category_id = fields.Many2one(
         'account.asset',
         string='Asset Category'

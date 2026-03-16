@@ -91,11 +91,11 @@
               sequence="10"
               /> -->
 
-    <menuitem id="menu_report_asset_depreciation"
+    <!-- <menuitem id="menu_report_asset_depreciation"
               name="Depreciation Report"
               parent="menu_asset_reports"
               action="action_report_asset_depreciation_view"
               sequence="20"
-            />
+            /> -->
 
 </odoo>

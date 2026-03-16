@@ -7,7 +7,7 @@ class AssetUnregisterWizard(models.TransientModel):
     _description = 'Asset Unregistration Wizard'
 
     asset_id = fields.Many2one(
-        'asset.asset',
+        'account.asset',
         string='Asset',
         required=True,
     )

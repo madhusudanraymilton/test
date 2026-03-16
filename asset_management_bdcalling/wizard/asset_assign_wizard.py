@@ -8,7 +8,7 @@ class AssetAssignWizard(models.TransientModel):
     _description = 'Asset Assignment Wizard'
 
     asset_id = fields.Many2one(
-        'asset.asset',
+        'account.asset',
         string='Asset',
         required=True,
     )

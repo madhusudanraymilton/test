@@ -21,9 +21,9 @@ export class AssetDashboard extends Component {
             available:            0,
             assigned:             0,
             scrapped_disposed:    0,
-            total_value:          0,
-            net_book_value:       0,
-            pending_depreciation: 0,
+            // total_value:          0,
+            // net_book_value:       0,
+            // pending_depreciation: 0,
             by_category:          [],
             recent_assignments:   [],
         });
@@ -47,7 +47,7 @@ export class AssetDashboard extends Component {
     // ── Data ─────────────────────────────────────────────────────────────────
 
     async _loadDashboard() {
-        const data = await this.orm.call("asset.asset", "get_dashboard_data", []);
+        const data = await this.orm.call("account.asset", "get_dashboard_data", []);
         Object.assign(this.state, data, { loading: false });
     }
 
@@ -129,7 +129,7 @@ export class AssetDashboard extends Component {
         await this.action.doAction({
             type: "ir.actions.act_window",
             name: "All Assets",
-            res_model: "asset.asset",
+            res_model: "account.asset",
             views: [[false, "list"], [false, "kanban"], [false, "form"]],
         });
     }
@@ -138,7 +138,7 @@ export class AssetDashboard extends Component {
         await this.action.doAction({
             type: "ir.actions.act_window",
             name: "Available Assets",
-            res_model: "asset.asset",
+            res_model: "account.asset",
             views: [[false, "list"], [false, "kanban"], [false, "form"]],
             domain: [["state", "=", "available"]],
         });
@@ -158,21 +158,21 @@ export class AssetDashboard extends Component {
         await this.action.doAction({
             type: "ir.actions.act_window",
             name: "Scrapped / Disposed Assets",
-            res_model: "asset.asset",
+            res_model: "account.asset",
             views: [[false, "list"], [false, "kanban"], [false, "form"]],
             domain: [["state", "in", ["scrapped", "disposed"]]],
         });
     }
 
-    async openPendingDepreciation() {
-        await this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Pending Depreciation",
-            res_model: "asset.depreciation.line",
-            views: [[false, "list"]],
-            domain: [["move_check", "=", false]],
-        });
-    }
+    // async openPendingDepreciation() {
+    //     await this.action.doAction({
+    //         type: "ir.actions.act_window",
+    //         name: "Pending Depreciation",
+    //         res_model: "asset.depreciation.line",
+    //         views: [[false, "list"]],
+    //         domain: [["move_check", "=", false]],
+    //     });
+    // }
 
     async refresh() {
         this.state.loading = true;

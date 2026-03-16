@@ -6,20 +6,28 @@
         <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
         <field name="arch" type="xml">
 
-            <xpath expr="//div[@class='oe_title']/label[@name='model_name_label']" position="attributes">
+            <!-- <xpath expr="//div[@class='oe_title']/label[@name='model_name_label']" position="attributes">
                 <attribute name="string">Asset Category</attribute>
-            </xpath>
+            </xpath> -->
 
             <xpath expr="//div[hasclass('oe_title')]" position="before">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="fw-bold text-muted small">Asset Code:</span>
                     <field
-                        name="asset_code"
-                        class="fw-bold text-primary"
+                        name="code"
                         nolabel="1"
                         readonly="1"
                     />
                 </div>
+            </xpath>
+
+            <xpath expr="//div//field[@name='name']" position="after">
+                <label for="product_id">Product</label>
+                <field name="product_id" string="Product" nolabel="1"/>
+                <field name="available_lot_ids" invisible="1"/>
+                <label for="lot_id">Serial Number</label>
+                <field name="lot_id"
+                    domain="[('id', 'in', available_lot_ids)]" string="Serial Number"/>
             </xpath>
 
             <xpath expr="//header/field[@name='state']" position="replace">
@@ -30,7 +38,6 @@
                     string="Register"
                     type="object"
                     class="btn-primary"
-                    invisible="asset_lifecycle_state != 'draft'"
                 />
 
                 <!-- Unregister: Available → Draft -->
@@ -38,22 +45,21 @@
                     name="action_unregister"
                     string="Unregister"
                     type="object"
-                    invisible="asset_lifecycle_state != 'available'"
                 />
-                <button 
+                <!-- Assign: Available → Assigned -->
+                <button
                     name="action_assign"
-                    type="object" 
-                    string="Assign" 
-                    class="btn-primary" 
-                    invisible="asset_lifecycle_state != 'available'"/>
+                    string="Assign"
+                    type="object"
+                />
+
                 <!-- Return: Assigned → Available  (also clears assignee) -->
-                <!-- <button
-                    name="action_return_asset"
+                <button
+                    name="action_return"
                     string="Return"
                     type="object"
-                    invisible="asset_lifecycle_state != 'assigned'"
                     confirm="Return this asset from the current assignee?"
-                /> -->
+                />
 
                 <!-- Scrap: any active state → Scrapped -->
                 <button
@@ -61,11 +67,8 @@
                     string="Scrap"
                     type="object"
                     class="btn-danger"
-                    invisible="asset_lifecycle_state in ('scrapped', 'disposed')"
                     confirm="Mark this asset as scrapped? This action cannot be easily reversed."
                 />
-
-                
 
                 <!-- Dispose: any non-disposed state → Disposed -->
                 <button
@@ -73,39 +76,80 @@
                     string="Dispose"
                     type="object"
                     class="btn-danger"
-                    invisible="asset_lifecycle_state == 'disposed'"
                     confirm="Mark this asset as disposed? This action cannot be easily reversed."
                 />
                 <field
-                    name="asset_lifecycle_state"
+                    name="state"
                     widget="statusbar"
                     statusbar_visible="draft,available,assigned,scrapped,disposed"
                     readonly="1"
                 />
             </xpath>
 
-            <xpath expr="//field[@name='name']" position="after">
-                <!-- <group string="Asset Details" name="asset_details_group"> -->
-                    <group>
-                        <field
-                            name="product_id"
-                            options="{'no_create': True, 'no_open': False}"
-
-                        />
-                        <field name="available_lot_ids" invisible="1"/>
-                        <field name="lot_id"
-                            domain="[('id', 'in', available_lot_ids)]"/>
-                    </group>
-                    <!-- Empty right column — keeps layout balanced -->
-                <!-- </group> -->
+            <xpath expr="//page[@name='main_page']//group//group[@name='asset_values']//field[@name='model_id']" position='attributes'>
+                <attribute name="string">Asset Category</attribute>
             </xpath>
 
+             <xpath expr="//page[@name='main_page']//group//group[@name='asset_values']//field[@name='asset_group_id']" position='replace'/>
+             <xpath expr="//header//button[@name='validate']" position='replace'/>
+             <xpath expr="//page[@name='related_items']" position='after'>
+                <page string="Assignment" name="assignment">
+                    <group>
+                        <field name="current_employee_id" readonly="1"/>
+                    </group>
+                    <field name="assignment_ids">
+                        <list string="Assignment History">
+                            <field name="assign_date"/>
+                            <field name="employee_id"/>
+                            <field name="condition_on_assign"/>
+                            <field name="return_date"/>
+                            <field name="condition_on_return"/>
+                            <field name="is_active"/>
+                            <field name="assigned_by"/>
+                        </list>
+                    </field>
+                </page>
+
+                <page string="Lifecycle History" name="history">
+                    <field name="history_ids">
+                        <list string="History" create="0" edit="0" delete="0">
+                            <field name="event_date"/>
+                            <field name="event_type"/>
+                            <field name="old_state"/>
+                            <field name="new_state"/>
+                            <field name="employee_id"/>
+                            <field name="user_id"/>
+                            <field name="description"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        
 <!-- 
             <xpath expr="//header/field[@name='state']" position="after">
                 
             </xpath> -->
             
-            
+            <!-- =============================================================
+                 1.  ASSET DETAILS GROUP  — added inside the "main_page" page
+                     (appended at the bottom of that page's content)
+                 ============================================================= -->
+            <!-- <xpath expr="//page[@name='main_page']" position="before">
+                <group string="Asset Details" name="asset_details_group">
+                    <group>
+                        <field
+                            name="product_id"
+                            options="{'no_create': True, 'no_open': False}"
+                        />
+                        <field
+                            name="lot_id"
+                            options="{'no_create': True}"
+                            invisible="not product_id"
+                        />
+                    </group>
+                    Empty right column — keeps layout balanced
+                </group>
+            </xpath> -->
 
             <!-- =============================================================
                  2.  REMOVE asset_group_id from the "asset_values" page
@@ -177,7 +221,7 @@
             <!-- =============================================================
                  4.  LIFECYCLE HISTORY PAGE  — full assignment / return audit log
                  ============================================================= -->
-            <xpath expr="//page[@name='related_items']" position="after">
+            <!-- <xpath expr="//page[@name='assignment_page']" position="after">
                 <page name="lifecycle_history_page" string="Lifecycle History">
 
                     <field
@@ -214,7 +258,7 @@
                         </list>
                     </field>
 
-                    <!-- Guard message when history is empty -->
+                    Guard message when history is empty
                     <div
                         class="alert alert-info"
                         role="alert"
@@ -225,7 +269,7 @@
                     </div>
 
                 </page>
-            </xpath>
+            </xpath> -->
 
         </field>
     </record>

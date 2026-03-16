@@ -9,7 +9,7 @@ class AssetAssignment(models.Model):
     _order = 'assign_date desc'
 
     asset_id = fields.Many2one(
-        'asset.asset',
+        'account.asset',
         string='Asset',
         required=True,
         ondelete='restrict',

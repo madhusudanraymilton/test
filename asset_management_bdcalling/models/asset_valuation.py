@@ -10,7 +10,7 @@ class AssetValuation(models.Model):
 
     name = fields.Char(string='Asset Name', readonly=True)
     code = fields.Char(string='Asset Code', readonly=True)
-    category_id = fields.Many2one('asset.category', string='Category', readonly=True)
+    category_id = fields.Many2one('account.asset.category', string='Category', readonly=True)
     state = fields.Selection(
         selection=[
             ('draft', 'Draft'),
@@ -45,7 +45,7 @@ class AssetValuation(models.Model):
                     COALESCE(dep.total_depreciated, 0.0) AS total_depreciated,
                     aa.purchase_price - COALESCE(dep.total_depreciated, 0.0)
                                                     AS residual_value
-                FROM asset_asset aa
+                FROM account_asset aa
                 LEFT JOIN (
                     SELECT
                         asset_id,

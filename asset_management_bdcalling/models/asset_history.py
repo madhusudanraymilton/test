@@ -10,7 +10,7 @@ class AssetHistory(models.Model):
     _rec_name = 'event_type'
 
     asset_id = fields.Many2one(
-        'asset.asset',
+        'account.asset',
         string='Asset',
         required=True,
         ondelete='cascade',

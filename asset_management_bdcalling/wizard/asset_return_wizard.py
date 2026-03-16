@@ -8,7 +8,7 @@ class AssetReturnWizard(models.TransientModel):
     _description = 'Asset Return Wizard'
 
     asset_id = fields.Many2one(
-        'asset.asset',
+        'account.asset',
         string='Asset',
         required=True,
     )

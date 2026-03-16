@@ -40,7 +40,6 @@ Asset Management System (AMS)
         # 'data/asset_cron_data.xml',
         # Views
         'views/account_asset_extended_views.xml',
-        'views/asset_asset_views.xml',
         'views/asset_assignment_views.xml',
         'views/asset_history_views.xml',
         'views/asset_dashboard_views.xml',
@@ -53,9 +52,9 @@ Asset Management System (AMS)
         'views/asset_report_views.xml',
         'views/menu_views.xml',
         # Reports
-        'report/asset_valuation_report.xml',
-        'report/templates/report_asset_valuation.xml',
-        'report/templates/report_asset_depreciation.xml',
+        # 'report/asset_valuation_report.xml',
+        # 'report/templates/report_asset_valuation.xml',
+        # 'report/templates/report_asset_depreciation.xml',
     ],
     'assets': {
         'web.assets_web': [
