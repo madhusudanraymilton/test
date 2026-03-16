@@ -6,28 +6,29 @@
         <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
         <field name="arch" type="xml">
 
-            <!-- <xpath expr="//div[@class='oe_title']/label[@name='model_name_label']" position="attributes">
+            <xpath expr="//div[@class='oe_title']/label[@name='model_name_label']" position="attributes">
                 <attribute name="string">Asset Category</attribute>
-            </xpath> -->
+            </xpath>
 
             <xpath expr="//div[hasclass('oe_title')]" position="before">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="fw-bold text-muted small">Asset Code:</span>
+                    <span class="fw-bold text-muted small" invisible="state == 'model'">Asset Code:</span>
                     <field
                         name="code"
                         nolabel="1"
                         readonly="1"
+                        invisible="state == 'model'"
                     />
                 </div>
             </xpath>
 
             <xpath expr="//div//field[@name='name']" position="after">
-                <label for="product_id">Product</label>
-                <field name="product_id" string="Product" nolabel="1"/>
+                <label for="product_id" invisible="state == 'model'">Product</label>
+                <field name="product_id" string="Product" nolabel="1" invisible="state == 'model'"/>
                 <field name="available_lot_ids" invisible="1"/>
-                <label for="lot_id">Serial Number</label>
+                <label for="lot_id" invisible="state == 'model'">Serial Number</label>
                 <field name="lot_id"
-                    domain="[('id', 'in', available_lot_ids)]" string="Serial Number"/>
+                    domain="[('id', 'in', available_lot_ids)]" string="Serial Number" invisible="state == 'model'"/>
             </xpath>
 
             <xpath expr="//header/field[@name='state']" position="replace">
@@ -38,6 +39,7 @@
                     string="Register"
                     type="object"
                     class="btn-primary"
+                    invisible="state == 'model'"
                 />
 
                 <!-- Unregister: Available → Draft -->
@@ -45,12 +47,14 @@
                     name="action_unregister"
                     string="Unregister"
                     type="object"
+                    invisible="state == 'model'"
                 />
                 <!-- Assign: Available → Assigned -->
                 <button
                     name="action_assign"
                     string="Assign"
                     type="object"
+                    invisible="state == 'model'"
                 />
 
                 <!-- Return: Assigned → Available  (also clears assignee) -->
@@ -59,6 +63,7 @@
                     string="Return"
                     type="object"
                     confirm="Return this asset from the current assignee?"
+                    invisible="state == 'model'"
                 />
 
                 <!-- Scrap: any active state → Scrapped -->
@@ -68,6 +73,7 @@
                     type="object"
                     class="btn-danger"
                     confirm="Mark this asset as scrapped? This action cannot be easily reversed."
+                    invisible="state == 'model'"
                 />
 
                 <!-- Dispose: any non-disposed state → Disposed -->
@@ -77,12 +83,14 @@
                     type="object"
                     class="btn-danger"
                     confirm="Mark this asset as disposed? This action cannot be easily reversed."
+                    invisible="state == 'model'"
                 />
                 <field
                     name="state"
                     widget="statusbar"
                     statusbar_visible="draft,available,assigned,scrapped,disposed"
                     readonly="1"
+                    invisible="state == 'model'"
                 />
             </xpath>
 
@@ -280,9 +288,8 @@
         <field name="view_id" ref="view_account_asset_form_inherit_custom"/>
     </record>
 
-    <record id="action_account_asset" model="ir.actions.act_window">
+    <record id="account_asset.action_account_asset_form" model="ir.actions.act_window">
         <field name="name">Assets</field>
-        <field name="res_model">account.asset</field>
         <field name="view_mode">kanban,list,form</field>
     </record>
-</odoo>
+</odoo> 

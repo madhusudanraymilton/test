@@ -362,22 +362,22 @@ class AccountAssetExtended(models.Model):
 
     # ─── Dates & Financials ──────────────────────────────────────────────────
 
-    # purchase_date = fields.Date(string='Purchase Date', tracking=True)
-    # registration_date = fields.Date(string='Registration Date', readonly=True)
-    # purchase_price = fields.Monetary(
-    #     string='Purchase Price',
-    #     currency_field='currency_id',
-    #     required=True,
-    #     tracking=True,
-    #     groups='account.group_account_manager,custom_asset_management.group_asset_manager',
-    # )
+    purchase_date = fields.Date(string='Purchase Date', tracking=True)
+    registration_date = fields.Date(string='Registration Date', readonly=True)
+    purchase_price = fields.Monetary(
+        string='Purchase Price',
+        currency_field='currency_id',
+        required=True,
+        tracking=True,
+        groups='account.group_account_manager,custom_asset_management.group_asset_manager',
+    )
 
-    # currency_id = fields.Many2one(
-    #     'res.currency',
-    #     string='Currency',
-    #     required=True,
-    #     default=lambda self: self.env.company.currency_id,
-    # )
+    currency_id = fields.Many2one(
+        'res.currency',
+        string='Currency',
+        required=True,
+        default=lambda self: self.env.company.currency_id,
+    )
 
     # residual_value = fields.Monetary(
     #     string='Net Book Value',
@@ -486,7 +486,7 @@ class AccountAssetExtended(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if not vals.get('code'):
-                vals['code'] = self.env['ir.sequence'].next_by_code('asset.asset.code') or '/'
+                vals['code'] = self.env['ir.sequence'].next_by_code('account.asset.code') or '/'
         return super().create(vals_list)
 
     # ─── Action Buttons ──────────────────────────────────────────────────────
@@ -516,8 +516,8 @@ class AccountAssetExtended(models.Model):
             'context': {
                 'default_asset_id': self.id,
                 'default_lot_id': self.lot_id.id,
-                'default_category_id': self.category_id.id,
-                'default_purchase_price': self.purchase_price,
+                'default_model_id': self.model_id.id,
+                # 'default_purchase_price': self.purchase_price,
             },
         }
 
@@ -624,7 +624,7 @@ class AccountAssetExtended(models.Model):
           - the referencing asset is in state 'draft' (unregistered).
         """
         # Lots locked by active assets (excluding this record)
-        locked_lots = self.env['asset.asset'].search([
+        locked_lots = self.env['account.asset'].search([
             ('lot_id', '!=', False),
             ('state', '!=', 'draft'),
             ('id', 'not in', self.ids),
@@ -810,7 +810,7 @@ class AccountAssetExtended(models.Model):
         # Category breakdown
         category_data = {}
         for asset in assets:
-            cat = asset.category_id.name or _('Uncategorised')
+            cat = asset.model_id.name or _('Uncategorised')
             category_data[cat] = category_data.get(cat, 0) + 1
 
         return {

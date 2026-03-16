@@ -25,7 +25,7 @@ class AssetRegisterWizard(models.TransientModel):
         'account.asset',
         string='Asset Category',
         required=True,
-        domain="[('company_id', '=', company_id), ('state', '=', 'model')]",
+        domain="[('state', '=', 'model'), ('company_id', 'in', [company_id, False])]",
     )
     purchase_price = fields.Monetary(
         string='Purchase Price',
@@ -61,7 +61,7 @@ class AssetRegisterWizard(models.TransientModel):
 
     @api.depends_context('uid')
     def _compute_registered_lot_ids(self):
-        locked = self.env['asset.asset'].search([
+        locked = self.env['account.asset'].search([
             ('lot_id', '!=', False),
             ('state', '!=', 'draft'),
         ]).mapped('lot_id')
@@ -88,7 +88,7 @@ class AssetRegisterWizard(models.TransientModel):
             ) % (self.lot_id.name, self.source_location_id.complete_name))
 
         # ── 2. Check not already registered ──────────────────────────────────
-        active_asset = self.env['asset.asset'].search([
+        active_asset = self.env['account.asset'].search([
             ('lot_id', '=', self.lot_id.id),
             ('state', '!=', 'draft'),
         ], limit=1)
@@ -121,7 +121,7 @@ class AssetRegisterWizard(models.TransientModel):
         move = self._create_registration_move(asset_location)
 
         # ── 6. Create asset record ────────────────────────────────────────────
-        existing_draft = self.env['asset.asset'].search([
+        existing_draft = self.env['account.asset'].search([
             ('lot_id', '=', self.lot_id.id),
             ('state', '=', 'draft'),
         ], limit=1)
@@ -139,7 +139,7 @@ class AssetRegisterWizard(models.TransientModel):
             })
             asset = existing_draft
         else:
-            asset = self.env['asset.asset'].create({
+            asset = self.env['account.asset'].create({
                 'product_id': self.product_id.id,
                 'lot_id': self.lot_id.id,
                 'category_id': self.category_id.id,
@@ -252,7 +252,7 @@ class AssetRegisterWizard(models.TransientModel):
         return {
             'type': 'ir.actions.act_window',
             'name': _('Asset'),
-            'res_model': 'asset.asset',
+            'res_model': 'account.asset',
             'res_id': asset.id,
             'view_mode': 'form',
             'target': 'current',

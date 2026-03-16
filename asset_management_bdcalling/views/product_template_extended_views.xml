@@ -17,7 +17,7 @@
 
             </xpath>
             <xpath expr="//div[@name='options']" position="before">
-                <field name="asset_category_id" string="Asset Category" placeholder="Select Asset Category"/>
+                <field name="asset_category_id" string="Asset Category" placeholder="Select Asset Category" invisible="not is_asset"/>
             </xpath>
 
         </field>
