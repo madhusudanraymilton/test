@@ -51,27 +51,35 @@
         </field>
     </record>
 
-    <!-- ── Search View ──────────────────────────────────────────────────
+    <!-- ── Search View ────────────────────────────────────────────────── -->
     <record id="view_asset_assignment_search" model="ir.ui.view">
         <field name="name">asset.assignment.search</field>
         <field name="model">asset.assignment</field>
         <field name="arch" type="xml">
             <search string="Assignments">
+
+                <!-- ── Searchable Fields ─────────────────────── -->
                 <field name="asset_id"/>
                 <field name="employee_id"/>
+
+                <!-- ── Filters ───────────────────────────────── -->
                 <filter string="Currently Assigned" name="filter_active"
                         domain="[('is_active', '=', True)]"/>
                 <filter string="Returned" name="filter_returned"
                         domain="[('is_active', '=', False)]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Employee" name="group_employee"
-                            context="{'group_by': 'employee_id'}"/>
-                    <filter string="Asset" name="group_asset"
-                            context="{'group_by': 'asset_id'}"/>
-                </group>
+
+                <!-- ── Separator visually divides Filters from Group By ── -->
+                <separator/>
+
+                <!-- ── Group By ──────────────────────────────── -->
+                <filter string="Employee" name="group_employee"
+                        context="{'group_by': 'employee_id'}"/>
+                <filter string="Asset" name="group_asset"
+                        context="{'group_by': 'asset_id'}"/>
+
             </search>
         </field>
-    </record> -->
+    </record>
 
     <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_asset_assignment" model="ir.actions.act_window">

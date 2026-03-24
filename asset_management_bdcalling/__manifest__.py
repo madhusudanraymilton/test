@@ -44,7 +44,7 @@ Asset Management System (AMS)
         'views/asset_history_views.xml',
         'views/asset_dashboard_views.xml',
         'views/product_template_extended_views.xml',
-        # 'views/res_config_settings_views.xml',
+        'views/res_config_settings_views.xml',
         'views/wizard_register_views.xml',
         'views/wizard_unregister_views.xml',
         'views/wizard_assign_views.xml',

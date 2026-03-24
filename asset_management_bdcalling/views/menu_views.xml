@@ -17,7 +17,7 @@
               />
 
     <!-- ── Assets ─────────────────────────────────────────────────────── -->
-     <menuitem id="menu_asset_assets"
+    <menuitem id="menu_asset_assets"
               name="Assets"
               parent="menu_asset_management_root"
               sequence="20"
@@ -65,12 +65,12 @@
               sequence="10"
               />
 
-    <!-- <menuitem id="menu_asset_settings"
+    <menuitem id="menu_asset_settings"
               name="Settings"
               parent="menu_asset_configuration"
               action="action_asset_settings"
               sequence="20"
-              /> -->
+              />
     <!-- Operations -->
     <menuitem id="menu_asset_operations"
               name="Operations"

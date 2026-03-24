@@ -28,7 +28,7 @@
     </record>
 
     <!-- ── Search View ────────────────────────────────────────────────── -->
-    <!-- <record id="view_asset_history_search" model="ir.ui.view">
+    <record id="view_asset_history_search" model="ir.ui.view">
         <field name="name">asset.history.search</field>
         <field name="model">asset.history</field>
         <field name="arch" type="xml">
@@ -36,6 +36,10 @@
                 <field name="asset_id"/>
                 <field name="employee_id"/>
                 <field name="user_id"/>
+                <field name="serial_number" string="Serial Number"/>
+                
+                <filter string="Registered" name="filter_register"
+                        domain="[('event_type', '=', 'register')]"/>
                 <filter string="Register Events" name="filter_register"
                         domain="[('event_type', '=', 'register')]"/>
                 <filter string="Assign Events" name="filter_assign"
@@ -44,17 +48,19 @@
                         domain="[('event_type', '=', 'return')]"/>
                 <filter string="Depreciation Events" name="filter_depreciate"
                         domain="[('event_type', '=', 'depreciate')]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Asset" name="group_asset"
-                            context="{'group_by': 'asset_id'}"/>
-                    <filter string="Event Type" name="group_event_type"
-                            context="{'group_by': 'event_type'}"/>
-                    <filter string="User" name="group_user"
-                            context="{'group_by': 'user_id'}"/>
-                </group>
+                
+                <filter string="Asset" name="group_asset"
+                        context="{'group_by': 'asset_id'}"/>
+                <filter string="Event Type" name="group_event_type"
+                        context="{'group_by': 'event_type'}"/>
+                <filter string="User" name="group_user"
+                        context="{'group_by': 'user_id'}"/>
+                <filter string="Serial Number" name="group_by_serial_number"
+                        context="{'group_by': 'serial_number'}"/>
+             
             </search>
         </field>
-    </record> -->
+    </record>
 
     <!-- ── Action ─────────────────────────────────────────────────────── -->
     <record id="action_asset_history" model="ir.actions.act_window">

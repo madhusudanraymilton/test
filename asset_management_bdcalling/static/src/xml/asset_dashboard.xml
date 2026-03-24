@@ -12,7 +12,7 @@
             </div>
             <div>
                 <h1 class="ams-title">Asset Management</h1>
-                <p class="ams-subtitle">Real-time overview of your organization's assets</p>
+                <p class="ams-subtitle">Real-time overview of your organisation's assets</p>
             </div>
         </div>
         <button class="ams-refresh-btn" t-on-click="refresh">
@@ -24,7 +24,7 @@
     <!-- ══ LOADING STATE ═════════════════════════════════════════════════════ -->
     <t t-if="state.loading">
         <div class="ams-loading">
-            <div class="ams-spinner"></div>
+            <div class="ams-spinner"/>
             <p class="ams-loading-text">Loading dashboard data…</p>
         </div>
     </t>
@@ -32,14 +32,11 @@
     <!-- ══ DASHBOARD CONTENT ═════════════════════════════════════════════════ -->
     <t t-else="">
 
-        <!-- KPI GRID -->
+        <!-- ── KPI GRID ──────────────────────────────────────────────────── -->
         <div class="ams-kpi-grid">
 
-            <!-- Total Assets -->
             <div class="ams-kpi-card ams-kpi-blue" t-on-click="openAllAssets">
-                <div class="ams-kpi-icon-wrap">
-                    <i class="fa fa-cubes"/>
-                </div>
+                <div class="ams-kpi-icon-wrap"><i class="fa fa-cubes"/></div>
                 <div class="ams-kpi-body">
                     <span class="ams-kpi-value" t-esc="state.total"/>
                     <span class="ams-kpi-label">Total Assets</span>
@@ -47,11 +44,8 @@
                 <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
             </div>
 
-            <!-- Available -->
             <div class="ams-kpi-card ams-kpi-green" t-on-click="openAvailableAssets">
-                <div class="ams-kpi-icon-wrap">
-                    <i class="fa fa-check-circle"/>
-                </div>
+                <div class="ams-kpi-icon-wrap"><i class="fa fa-check-circle"/></div>
                 <div class="ams-kpi-body">
                     <span class="ams-kpi-value" t-esc="state.available"/>
                     <span class="ams-kpi-label">Available</span>
@@ -59,11 +53,8 @@
                 <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
             </div>
 
-            <!-- Assigned -->
             <div class="ams-kpi-card ams-kpi-indigo" t-on-click="openAssignedAssets">
-                <div class="ams-kpi-icon-wrap">
-                    <i class="fa fa-user-circle"/>
-                </div>
+                <div class="ams-kpi-icon-wrap"><i class="fa fa-user-circle"/></div>
                 <div class="ams-kpi-body">
                     <span class="ams-kpi-value" t-esc="state.assigned"/>
                     <span class="ams-kpi-label">Assigned</span>
@@ -71,11 +62,8 @@
                 <div class="ams-kpi-arrow"><i class="fa fa-arrow-right"/></div>
             </div>
 
-            <!-- Scrapped / Disposed -->
             <div class="ams-kpi-card ams-kpi-rose" t-on-click="openScrappedAssets">
-                <div class="ams-kpi-icon-wrap">
-                    <i class="fa fa-ban"/>
-                </div>
+                <div class="ams-kpi-icon-wrap"><i class="fa fa-ban"/></div>
                 <div class="ams-kpi-body">
                     <span class="ams-kpi-value" t-esc="state.scrapped_disposed"/>
                     <span class="ams-kpi-label">Scrapped / Disposed</span>
@@ -85,8 +73,14 @@
 
         </div>
 
-        <!-- FINANCIAL STRIP -->
+        <!-- ── FINANCIAL STRIP ───────────────────────────────────────────────
+             total_value       = sum of original_value on all AMS assets
+             net_book_value    = sum of value_residual (native computed field)
+             total_depreciated = total_value − net_book_value
+             pending_depreciation = count of draft depreciation moves due today
+        ─────────────────────────────────────────────────────────────────── -->
         <div class="ams-finance-strip">
+
             <div class="ams-finance-item">
                 <span class="ams-finance-label">
                     <i class="fa fa-tag me-1"/> Total Purchase Value
@@ -95,7 +89,9 @@
                     <t t-esc="formatCurrency(state.total_value)"/>
                 </span>
             </div>
+
             <div class="ams-finance-divider"/>
+
             <div class="ams-finance-item">
                 <span class="ams-finance-label">
                     <i class="fa fa-balance-scale me-1"/> Net Book Value
@@ -104,8 +100,22 @@
                     <t t-esc="formatCurrency(state.net_book_value)"/>
                 </span>
             </div>
+
             <div class="ams-finance-divider"/>
-            <div class="ams-finance-item ams-finance-clickable" t-on-click="openPendingDepreciation">
+
+            <div class="ams-finance-item">
+                <span class="ams-finance-label">
+                    <i class="fa fa-line-chart me-1"/> Total Depreciated
+                </span>
+                <span class="ams-finance-value ams-finance-value-warn">
+                    <t t-esc="formatCurrency(state.total_depreciated)"/>
+                </span>
+            </div>
+
+            <div class="ams-finance-divider"/>
+
+            <div class="ams-finance-item ams-finance-clickable"
+                 t-on-click="openPendingDepreciation">
                 <span class="ams-finance-label">
                     <i class="fa fa-clock-o me-1"/> Pending Depreciation Lines
                 </span>
@@ -113,9 +123,10 @@
                     <t t-esc="state.pending_depreciation"/>
                 </span>
             </div>
+
         </div>
 
-        <!-- CHARTS + STATUS ROW -->
+        <!-- ── CHARTS + STATUS ROW ──────────────────────────────────────────── -->
         <div class="ams-charts-row">
 
             <!-- Category Bar Chart -->
@@ -133,7 +144,7 @@
                 </div>
             </div>
 
-            <!-- Status Breakdown -->
+            <!-- Status Breakdown + Utilisation -->
             <div class="ams-card ams-card-status">
                 <div class="ams-card-header">
                     <span class="ams-card-title">
@@ -148,7 +159,9 @@
                             <span class="ams-status-name">Available</span>
                         </div>
                         <div class="ams-status-right">
-                            <span class="ams-status-count"><t t-esc="state.available"/></span>
+                            <span class="ams-status-count">
+                                <t t-esc="state.available"/>
+                            </span>
                             <div class="ams-status-bar-wrap">
                                 <div class="ams-status-bar ams-bar-green"
                                      t-attf-style="width: #{state.total ? Math.round(state.available / state.total * 100) : 0}%"/>
@@ -162,7 +175,9 @@
                             <span class="ams-status-name">Assigned</span>
                         </div>
                         <div class="ams-status-right">
-                            <span class="ams-status-count"><t t-esc="state.assigned"/></span>
+                            <span class="ams-status-count">
+                                <t t-esc="state.assigned"/>
+                            </span>
                             <div class="ams-status-bar-wrap">
                                 <div class="ams-status-bar ams-bar-indigo"
                                      t-attf-style="width: #{state.total ? Math.round(state.assigned / state.total * 100) : 0}%"/>
@@ -176,7 +191,9 @@
                             <span class="ams-status-name">Scrapped / Disposed</span>
                         </div>
                         <div class="ams-status-right">
-                            <span class="ams-status-count"><t t-esc="state.scrapped_disposed"/></span>
+                            <span class="ams-status-count">
+                                <t t-esc="state.scrapped_disposed"/>
+                            </span>
                             <div class="ams-status-bar-wrap">
                                 <div class="ams-status-bar ams-bar-rose"
                                      t-attf-style="width: #{state.total ? Math.round(state.scrapped_disposed / state.total * 100) : 0}%"/>
@@ -186,23 +203,31 @@
 
                 </div>
 
-                <!-- Utilisation ring (pure CSS) -->
+                <!-- Utilisation ring (CSS conic-gradient driven by inline var) -->
                 <div class="ams-util-section">
                     <p class="ams-util-label">Utilisation Rate</p>
                     <div class="ams-util-ring-wrap">
-                        <div class="ams-util-ring">
+                        <!--
+                            The util-pct CSS custom property MUST be set via
+                            inline style so the conic-gradient in asset_dashboard.css
+                            (.ams-util-ring) picks up the correct percentage.
+                        -->
+                        <div class="ams-util-ring"
+                             t-attf-style="--util-pct: #{utilisationPct}%">
                             <span class="ams-util-pct">
-                                <t t-esc="state.total ? Math.round(state.assigned / state.total * 100) : 0"/>%
+                                <t t-esc="utilisationPct"/>%
                             </span>
                         </div>
-                        <p class="ams-util-sub">of active assets currently assigned</p>
+                        <p class="ams-util-sub">
+                            of active assets currently assigned
+                        </p>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- RECENT ASSIGNMENTS TABLE -->
+        <!-- ── RECENT ASSIGNMENTS TABLE ──────────────────────────────────────── -->
         <div class="ams-card ams-card-table">
             <div class="ams-card-header">
                 <span class="ams-card-title">
@@ -225,29 +250,39 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="state.recent_assignments" t-as="rec" t-key="rec.id">
+                            <t t-foreach="state.recent_assignments"
+                               t-as="rec"
+                               t-key="rec.id">
                                 <tr>
                                     <td>
                                         <span class="ams-code-badge">
-                                            <t t-esc="rec.asset_code or '-'"/>
+                                            <t t-esc="rec.asset_code || '—'"/>
                                         </span>
                                     </td>
-                                    <td class="ams-asset-name"><t t-esc="rec.asset"/></td>
+                                    <td class="ams-asset-name">
+                                        <t t-esc="rec.asset || '—'"/>
+                                    </td>
                                     <td>
                                         <div class="ams-employee-cell">
                                             <div class="ams-avatar">
                                                 <t t-esc="rec.employee ? rec.employee[0].toUpperCase() : '?'"/>
                                             </div>
-                                            <t t-esc="rec.employee"/>
+                                            <t t-esc="rec.employee || '—'"/>
                                         </div>
                                     </td>
-                                    <td class="ams-date"><t t-esc="rec.date"/></td>
+                                    <td class="ams-date">
+                                        <t t-esc="rec.date || '—'"/>
+                                    </td>
                                     <td>
                                         <t t-if="rec.is_active">
-                                            <span class="ams-badge ams-badge-active">Active</span>
+                                            <span class="ams-badge ams-badge-active">
+                                                Active
+                                            </span>
                                         </t>
                                         <t t-else="">
-                                            <span class="ams-badge ams-badge-returned">Returned</span>
+                                            <span class="ams-badge ams-badge-returned">
+                                                Returned
+                                            </span>
                                         </t>
                                     </td>
                                 </tr>
@@ -264,7 +299,7 @@
             </div>
         </div>
 
-    </t><!-- end t-else -->
+    </t><!-- end t-else (loading complete) -->
 
 </div>
 </t>

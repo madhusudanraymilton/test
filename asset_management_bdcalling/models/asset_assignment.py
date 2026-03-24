@@ -7,6 +7,7 @@ class AssetAssignment(models.Model):
     _name = 'asset.assignment'
     _description = 'Asset Assignment Record'
     _order = 'assign_date desc'
+    _rec_name = 'asset_id'
 
     asset_id = fields.Many2one(
         'account.asset',

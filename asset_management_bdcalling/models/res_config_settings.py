@@ -10,7 +10,7 @@ class ResConfigSettings(models.TransientModel):
         string='Default Asset Location',
         related='company_id.asset_location_id',
         readonly=False,
-        domain="[('usage', '=', 'inventory')]",
+        domain="[('usage', '=', 'internal')]",
         help='Default stock location where registered assets are moved to.',
     )
     auto_return_on_employee_archive = fields.Boolean(
@@ -33,7 +33,7 @@ class ResCompany(models.Model):
     asset_location_id = fields.Many2one(
         'stock.location',
         string='Default Asset Location',
-        domain="[('usage', '=', 'inventory')]",
+        domain="[('usage', '=', 'internal')]",
     )
     auto_return_on_employee_archive = fields.Boolean(
         string='Auto-Return Assets on Employee Archive',

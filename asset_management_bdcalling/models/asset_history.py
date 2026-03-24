@@ -16,6 +16,13 @@ class AssetHistory(models.Model):
         ondelete='cascade',
         index=True,
     )
+    serial_number = fields.Char(
+        string='Serial Number',
+        related='asset_id.lot_id.name',
+        readonly=True,
+        compute='_compute_serial_number',
+        store=True,
+    )
     event_type = fields.Selection(
         selection=[
             ('register', 'Registered'),
@@ -59,6 +66,11 @@ class AssetHistory(models.Model):
         required=True,
         default=lambda self: self.env.company,
     )
+
+    @api.depends('asset_id.lot_id')
+    def _compute_serial_number(self):
+        for record in self:
+            record.serial_number = record.asset_id.lot_id.name if record.asset_id.lot_id else False
 
     # ─── Append-only enforcement ────────────────────────────────────────────
 
