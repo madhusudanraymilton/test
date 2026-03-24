@@ -1,69 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-   <record id="res_config_settings_view_form_asset" model="ir.ui.view">
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Asset Management — Settings Block
+         Inherits the global res.config.settings form and injects a dedicated
+         "Asset Management" app settings section following Odoo 19 conventions.
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="res_config_settings_view_form_asset" model="ir.ui.view">
         <field name="name">res.config.settings.view.form.inherit.asset.management</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <div class="app_settings_block" data-string="Asset Management">
-                    <h2>Asset Management</h2>
 
-                    <div class="row mt16 o_settings_container">
+                <app data-string="Asset Management"
+                     string="Asset Management"
+                     name="asset_management_bdcalling"
+                     groups="base.group_system">
 
-                        <!-- Default Asset Location -->
-                        <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="asset_location_id"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="asset_location_id"/>
-                                <div class="text-muted">
-                                    Default stock location where registered assets are moved.
-                                </div>
-                            </div>
-                        </div>
+                    <!-- ── INVENTORY ─────────────────────────────────────── -->
+                    <block title="Inventory &amp; Locations"
+                           name="asset_inventory_block">
 
-                        <!-- Auto Return on Employee Archive -->
-                        <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="auto_return_on_employee_archive"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="auto_return_on_employee_archive"/>
-                                <div class="text-muted">
-                                    Automatically return assigned assets when an employee is archived.
-                                </div>
-                            </div>
-                        </div>
+                        <setting string="Default Asset Location"
+                                 help="Stock location where serial numbers are moved when an asset is registered."
+                                 documentation="/documentation/asset-location">
+                            <field name="asset_location_id"
+                                   placeholder="e.g. WH/Asset Storage"/>
+                        </setting>
 
-                        <!-- Allow Future Assignment Date -->
-                        <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="asset_assign_date_future_allowed"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="asset_assign_date_future_allowed"/>
-                                <div class="text-muted">
-                                    Allow assignment dates in the future.
-                                </div>
-                            </div>
-                        </div>
+                    </block>
 
-                    </div>
-                
-                </div>
+                    <!-- ── LIFECYCLE AUTOMATION ──────────────────────────── -->
+                    <block title="Lifecycle Automation"
+                           name="asset_lifecycle_block">
+
+                        <setting string="Auto-Return on Employee Archive"
+                                 help="Automatically return all assigned assets to Available when an employee is archived. A daily cron handles any that remain open.">
+                            <field name="auto_return_on_employee_archive"/>
+                        </setting>
+
+                        <setting string="Allow Future Assignment Dates"
+                                 help="Let users pick a future date when assigning an asset. By default only today or earlier is accepted.">
+                            <field name="asset_assign_date_future_allowed"/>
+                        </setting>
+
+                    </block>
+
+                    <!-- ── ASSIGNMENT DEFAULTS ───────────────────────────── -->
+                    <block title="Assignment Defaults"
+                           name="asset_assignment_block">
+
+                        <setting string="Default Assignment Condition"
+                                 help="Pre-selected condition shown in the Assign wizard. Users can override it per assignment.">
+                            <field name="asset_default_assign_condition"/>
+                        </setting>
+
+                        <setting string="Require Notes on Return"
+                                 help="Make the Notes field mandatory when a user confirms the return of an asset.">
+                            <field name="asset_require_return_notes"/>
+                        </setting>
+
+                    </block>
+
+                    <!-- ── NOTIFICATIONS ────────────────────────────────── -->
+                    <block title="Notifications"
+                           name="asset_notifications_block">
+
+                        <setting string="Notify Employee on Assignment"
+                                 help="Send an automatic email to the employee's work address when an asset is assigned to them.">
+                            <field name="asset_notify_employee_on_assign"/>
+                        </setting>
+
+                    </block>
+
+                    <!-- ── FINANCIALS ────────────────────────────────────── -->
+                    <block title="Financials &amp; Reporting"
+                           name="asset_financials_block">
+
+                        <setting string="Low-Value Asset Threshold"
+                                 help="Assets purchased below this amount are highlighted as low-value in reports and the dashboard. Set to 0 to disable.">
+                            <field name="asset_low_value_threshold"/>
+                        </setting>
+
+                    </block>
+
+                </app>
+
             </xpath>
         </field>
     </record>
 
+    <!-- Stand-alone action — Asset Management → Configuration → Settings -->
     <record id="action_asset_settings" model="ir.actions.act_window">
-    <field name="name">Asset Settings</field>
-    <field name="type">ir.actions.act_window</field>
-    <field name="res_model">res.config.settings</field>
-    <field name="view_mode">form</field>
-    <field name="view_id" ref="res_config_settings_view_form_asset"/> <!-- your inherited view -->
-    <field name="target">current</field>
-    <field name="context">{'module': 'asset_management_bdcalling', 'bin_size': False}</field>
-</record>
+        <field name="name">Asset Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="res_config_settings_view_form_asset"/>
+        <field name="target">current</field>
+        <field name="context">
+            {'module': 'asset_management_bdcalling', 'bin_size': False}
+        </field>
+    </record>
+
 </odoo>

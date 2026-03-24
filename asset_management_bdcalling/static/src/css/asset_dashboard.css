@@ -1,20 +1,39 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    AMS Dashboard — Professional Design
-   Color palette:
-     Blue:   #2563EB / #EFF6FF
-     Green:  #059669 / #ECFDF5
-     Indigo: #4F46E5 / #EEF2FF
-     Rose:   #E11D48 / #FFF1F2
-     Neutral: #1E293B, #475569, #94A3B8, #F1F5F9, #F8FAFC
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Root & Layout ─────────────────────────────────────────────────────── */
+
+/*
+ * Odoo 19 wraps every client action in overflow:hidden ancestors:
+ *
+ *   .o_action_manager  { overflow: hidden }   ← clips the page
+ *     .o_action        { overflow: hidden }   ← clips the page
+ *       .o_view_controller
+ *         <AssetDashboard />
+ *
+ * Unlock BOTH ancestors when they contain our dashboard so the full
+ * page can scroll naturally. :has() is supported in all Chromium 105+
+ * browsers (Odoo 19 minimum requirement).
+ * Scoped to .ams-dashboard so no other Odoo view is affected.
+ */
+.o_action_manager:has(.ams-dashboard),
+.o_action_manager:has(.ams-dashboard) > .o_action,
+.o_action_manager:has(.ams-dashboard) > .o_action > .o_view_controller {
+    overflow-y: auto   !important;
+    overflow-x: hidden !important;
+    height: auto       !important;
+    max-height: none   !important;
+}
+
 .ams-dashboard {
     background: #F1F5F9;
-    min-height: 100vh;
+    /* fill the unlocked scroll container; grow beyond viewport when needed */
+    min-height: 100%;
     padding: 28px 32px 48px;
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     color: #1E293B;
+    box-sizing: border-box;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
@@ -24,13 +43,11 @@
     justify-content: space-between;
     margin-bottom: 28px;
 }
-
 .ams-header-left {
     display: flex;
     align-items: center;
     gap: 16px;
 }
-
 .ams-header-icon {
     width: 52px;
     height: 52px;
@@ -44,7 +61,6 @@
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
     flex-shrink: 0;
 }
-
 .ams-title {
     font-size: 24px;
     font-weight: 700;
@@ -52,13 +68,11 @@
     margin: 0;
     letter-spacing: -0.5px;
 }
-
 .ams-subtitle {
     font-size: 13px;
     color: #64748B;
     margin: 2px 0 0;
 }
-
 .ams-refresh-btn {
     display: flex;
     align-items: center;
@@ -74,7 +88,6 @@
     transition: all 0.18s ease;
     white-space: nowrap;
 }
-
 .ams-refresh-btn:hover {
     background: #2563EB;
     border-color: #2563EB;
@@ -91,7 +104,6 @@
     min-height: 360px;
     gap: 20px;
 }
-
 .ams-spinner {
     width: 44px;
     height: 44px;
@@ -100,16 +112,8 @@
     border-radius: 50%;
     animation: ams-spin 0.7s linear infinite;
 }
-
-@keyframes ams-spin {
-    to { transform: rotate(360deg); }
-}
-
-.ams-loading-text {
-    color: #64748B;
-    font-size: 14px;
-    margin: 0;
-}
+@keyframes ams-spin { to { transform: rotate(360deg); } }
+.ams-loading-text { color: #64748B; font-size: 14px; margin: 0; }
 
 /* ── KPI Grid ───────────────────────────────────────────────────────────── */
 .ams-kpi-grid {
@@ -118,13 +122,8 @@
     gap: 16px;
     margin-bottom: 16px;
 }
-
-@media (max-width: 1200px) {
-    .ams-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 600px) {
-    .ams-kpi-grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 1200px) { .ams-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .ams-kpi-grid { grid-template-columns: 1fr; } }
 
 .ams-kpi-card {
     background: #fff;
@@ -140,17 +139,13 @@
     position: relative;
     overflow: hidden;
 }
-
 .ams-kpi-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
     border-radius: 14px 14px 0 0;
 }
-
 .ams-kpi-blue::before   { background: linear-gradient(90deg, #2563EB, #60A5FA); }
 .ams-kpi-green::before  { background: linear-gradient(90deg, #059669, #34D399); }
 .ams-kpi-indigo::before { background: linear-gradient(90deg, #4F46E5, #818CF8); }
@@ -160,62 +155,30 @@
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.10);
 }
-
 .ams-kpi-blue:hover   { border-color: #BFDBFE; }
 .ams-kpi-green:hover  { border-color: #A7F3D0; }
 .ams-kpi-indigo:hover { border-color: #C7D2FE; }
 .ams-kpi-rose:hover   { border-color: #FECDD3; }
 
 .ams-kpi-icon-wrap {
-    width: 52px;
-    height: 52px;
+    width: 52px; height: 52px;
     border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
 }
-
 .ams-kpi-blue   .ams-kpi-icon-wrap { background: #EFF6FF; color: #2563EB; }
 .ams-kpi-green  .ams-kpi-icon-wrap { background: #ECFDF5; color: #059669; }
 .ams-kpi-indigo .ams-kpi-icon-wrap { background: #EEF2FF; color: #4F46E5; }
 .ams-kpi-rose   .ams-kpi-icon-wrap { background: #FFF1F2; color: #E11D48; }
 
-.ams-kpi-body {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-width: 0;
-}
-
+.ams-kpi-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .ams-kpi-value {
-    font-size: 32px;
-    font-weight: 800;
-    color: #0F172A;
-    line-height: 1;
-    letter-spacing: -1px;
+    font-size: 32px; font-weight: 800; color: #0F172A;
+    line-height: 1; letter-spacing: -1px;
 }
-
-.ams-kpi-label {
-    font-size: 12.5px;
-    color: #64748B;
-    margin-top: 5px;
-    font-weight: 500;
-    letter-spacing: 0.2px;
-}
-
-.ams-kpi-arrow {
-    color: #CBD5E1;
-    font-size: 13px;
-    flex-shrink: 0;
-    transition: color 0.18s, transform 0.18s;
-}
-
-.ams-kpi-card:hover .ams-kpi-arrow {
-    color: #94A3B8;
-    transform: translateX(3px);
-}
+.ams-kpi-label { font-size: 12.5px; color: #64748B; margin-top: 5px; font-weight: 500; }
+.ams-kpi-arrow { color: #CBD5E1; font-size: 13px; flex-shrink: 0; transition: color 0.18s, transform 0.18s; }
+.ams-kpi-card:hover .ams-kpi-arrow { color: #94A3B8; transform: translateX(3px); }
 
 /* ── Financial Strip ────────────────────────────────────────────────────── */
 .ams-finance-strip {
@@ -228,46 +191,12 @@
     margin-bottom: 16px;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
 }
-
-.ams-finance-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.ams-finance-clickable {
-    cursor: pointer;
-    transition: opacity 0.18s;
-}
-
-.ams-finance-clickable:hover {
-    opacity: 0.85;
-}
-
-.ams-finance-divider {
-    width: 1px;
-    height: 44px;
-    background: rgba(255,255,255,0.12);
-    margin: 0 28px;
-    flex-shrink: 0;
-}
-
-.ams-finance-label {
-    font-size: 12px;
-    color: #94A3B8;
-    font-weight: 500;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-}
-
-.ams-finance-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: #F1F5F9;
-    letter-spacing: -0.5px;
-}
-
+.ams-finance-item { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.ams-finance-clickable { cursor: pointer; transition: opacity 0.18s; }
+.ams-finance-clickable:hover { opacity: 0.85; }
+.ams-finance-divider { width: 1px; height: 44px; background: rgba(255,255,255,0.12); margin: 0 28px; flex-shrink: 0; }
+.ams-finance-label { font-size: 12px; color: #94A3B8; font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase; }
+.ams-finance-value { font-size: 22px; font-weight: 700; color: #F1F5F9; letter-spacing: -0.5px; }
 .ams-finance-value-accent { color: #34D399; }
 .ams-finance-value-warn   { color: #FCD34D; }
 
@@ -279,7 +208,6 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     overflow: hidden;
 }
-
 .ams-card-header {
     display: flex;
     align-items: center;
@@ -287,21 +215,8 @@
     padding: 16px 20px;
     border-bottom: 1px solid #F1F5F9;
 }
-
-.ams-card-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1E293B;
-}
-
-.ams-card-badge {
-    background: #F1F5F9;
-    color: #475569;
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-}
+.ams-card-title { font-size: 14px; font-weight: 600; color: #1E293B; }
+.ams-card-badge { background: #F1F5F9; color: #475569; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
 
 /* ── Charts Row ─────────────────────────────────────────────────────────── */
 .ams-charts-row {
@@ -310,157 +225,63 @@
     gap: 16px;
     margin-bottom: 16px;
 }
+@media (max-width: 1000px) { .ams-charts-row { grid-template-columns: 1fr; } }
 
-@media (max-width: 1000px) {
-    .ams-charts-row { grid-template-columns: 1fr; }
-}
-
-.ams-chart-wrap {
-    padding: 20px;
-    height: 280px;
-}
-
-.ams-canvas {
-    width: 100% !important;
-    height: 100% !important;
-}
+.ams-chart-wrap { padding: 20px; height: 280px; }
+.ams-canvas { width: 100% !important; height: 100% !important; }
 
 /* ── Status Breakdown ───────────────────────────────────────────────────── */
-.ams-status-list {
-    padding: 8px 0;
-}
-
+.ams-status-list { padding: 8px 0; }
 .ams-status-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: background 0.15s;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; cursor: pointer; transition: background 0.15s;
 }
-
-.ams-status-item:hover {
-    background: #F8FAFC;
-}
-
-.ams-status-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.ams-status-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
+.ams-status-item:hover { background: #F8FAFC; }
+.ams-status-left { display: flex; align-items: center; gap: 10px; }
+.ams-status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .ams-dot-green  { background: #059669; }
 .ams-dot-indigo { background: #4F46E5; }
 .ams-dot-rose   { background: #E11D48; }
-
-.ams-status-name {
-    font-size: 13.5px;
-    font-weight: 500;
-    color: #334155;
-}
-
-.ams-status-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.ams-status-count {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0F172A;
-    min-width: 28px;
-    text-align: right;
-}
-
-.ams-status-bar-wrap {
-    width: 80px;
-    height: 6px;
-    background: #F1F5F9;
-    border-radius: 99px;
-    overflow: hidden;
-}
-
-.ams-status-bar {
-    height: 100%;
-    border-radius: 99px;
-    transition: width 0.6s ease;
-    min-width: 4px;
-}
-
+.ams-status-name { font-size: 13.5px; font-weight: 500; color: #334155; }
+.ams-status-right { display: flex; align-items: center; gap: 12px; }
+.ams-status-count { font-size: 15px; font-weight: 700; color: #0F172A; min-width: 28px; text-align: right; }
+.ams-status-bar-wrap { width: 80px; height: 6px; background: #F1F5F9; border-radius: 99px; overflow: hidden; }
+.ams-status-bar { height: 100%; border-radius: 99px; transition: width 0.6s ease; min-width: 4px; }
 .ams-bar-green  { background: #059669; }
 .ams-bar-indigo { background: #4F46E5; }
 .ams-bar-rose   { background: #E11D48; }
 
-/* Utilisation Section */
-.ams-util-section {
-    padding: 16px 20px 20px;
-    border-top: 1px solid #F1F5F9;
-}
-
-.ams-util-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #94A3B8;
-    margin: 0 0 12px;
-}
-
-.ams-util-ring-wrap {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
+/* Utilisation section */
+.ams-util-section { padding: 16px 20px 20px; border-top: 1px solid #F1F5F9; }
+.ams-util-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #94A3B8; margin: 0 0 12px; }
+.ams-util-ring-wrap { display: flex; align-items: center; gap: 14px; }
 .ams-util-ring {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
+    width: 56px; height: 56px; border-radius: 50%;
     background: conic-gradient(#4F46E5 0% var(--util-pct, 0%), #EEF2FF var(--util-pct, 0%) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative;
 }
-
 .ams-util-ring::after {
-    content: '';
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #fff;
+    content: ''; position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #fff;
 }
+.ams-util-pct { position: relative; z-index: 1; font-size: 12px; font-weight: 700; color: #4F46E5; }
+.ams-util-sub { font-size: 12px; color: #64748B; margin: 0; line-height: 1.4; }
 
-.ams-util-pct {
-    position: relative;
-    z-index: 1;
-    font-size: 12px;
-    font-weight: 700;
-    color: #4F46E5;
-}
+/* ════════════════════════════════════════════════════════════════════════════
+   RECENT ASSIGNMENTS — Scrollable Table Card
+   ════════════════════════════════════════════════════════════════════════════ */
 
-.ams-util-sub {
-    font-size: 12px;
-    color: #64748B;
-    margin: 0;
-    line-height: 1.4;
-}
-
-/* ── Recent Assignments Table ───────────────────────────────────────────── */
 .ams-card-table {
-    margin-bottom: 8px;
+    /* Let the card grow to fill remaining space on large screens */
+    display: flex;
+    flex-direction: column;
 }
 
+/* Header: fixed, never scrolls */
+.ams-card-table .ams-card-header {
+    flex-shrink: 0;
+}
+
+/* ── View-all button ────────────────────────────────────────────────────── */
 .ams-view-all-btn {
     background: none;
     border: none;
@@ -471,52 +292,119 @@
     padding: 4px 0;
     transition: opacity 0.15s;
 }
+.ams-view-all-btn:hover { opacity: 0.75; }
 
-.ams-view-all-btn:hover {
-    opacity: 0.75;
+/* ── Scroll container ───────────────────────────────────────────────────── */
+.ams-table-scroll-container {
+    /*
+     * Fixed height so the card does not grow unbounded.
+     * 52 px ≈ one row height; 6 rows visible before scrolling.
+     * Adjust the value to suit your screen density preference.
+     */
+    max-height: 312px;          /* 6 rows × ~52 px */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Smooth momentum scrolling on iOS / macOS trackpads */
+    -webkit-overflow-scrolling: touch;
+
+    /* Custom, minimal scrollbar */
+    scrollbar-width: thin;                   /* Firefox */
+    scrollbar-color: #CBD5E1 transparent;    /* Firefox */
 }
 
+/* WebKit scrollbar */
+.ams-table-scroll-container::-webkit-scrollbar {
+    width: 5px;
+}
+.ams-table-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.ams-table-scroll-container::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 99px;
+}
+.ams-table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* ── Sticky thead ───────────────────────────────────────────────────────── */
 .ams-table-wrap {
-    overflow-x: auto;
+    overflow-x: auto;    /* horizontal scroll for very narrow viewports */
 }
 
 .ams-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13.5px;
+    table-layout: fixed;   /* prevents column-width jitter while scrolling */
 }
 
+/* thead sticks to the top of .ams-table-scroll-container, not the page */
 .ams-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     background: #F8FAFC;
     color: #64748B;
     font-size: 11.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    padding: 10px 20px;
+    padding: 10px 16px;
     border-bottom: 1px solid #F1F5F9;
     white-space: nowrap;
+    /* Hairline shadow so rows slide visibly under the header */
+    box-shadow: 0 1px 0 #E2E8F0;
 }
 
+/* Column widths (adjust as needed) */
+.ams-table th:nth-child(1),
+.ams-table td:nth-child(1) { width: 110px; }  /* Asset Code */
+.ams-table th:nth-child(2),
+.ams-table td:nth-child(2) { width: auto; }    /* Asset Name — flexible */
+.ams-table th:nth-child(3),
+.ams-table td:nth-child(3) { width: 170px; }  /* Employee */
+.ams-table th:nth-child(4),
+.ams-table td:nth-child(4) { width: 100px; }  /* Date */
+.ams-table th:nth-child(5),
+.ams-table td:nth-child(5) { width: 90px; }   /* Status */
+
+/* ── Table body rows ────────────────────────────────────────────────────── */
 .ams-table tbody tr {
     border-bottom: 1px solid #F8FAFC;
     transition: background 0.13s;
 }
-
-.ams-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.ams-table tbody tr:hover {
-    background: #F8FAFC;
-}
+.ams-table tbody tr:last-child { border-bottom: none; }
+.ams-table tbody tr:hover      { background: #F8FAFC; }
 
 .ams-table td {
-    padding: 13px 20px;
+    padding: 12px 16px;
     color: #334155;
     vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+/* ── Fade-out at bottom edge ────────────────────────────────────────────── */
+.ams-table-fade-wrapper {
+    position: relative;
+}
+.ams-table-fade-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.95));
+    pointer-events: none;
+    border-radius: 0 0 14px 14px;
+    /* hide the fade when the list is short enough to not scroll */
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+/* ── Cell decorations ───────────────────────────────────────────────────── */
 .ams-code-badge {
     background: #EFF6FF;
     color: #2563EB;
@@ -524,69 +412,50 @@
     font-weight: 600;
     padding: 3px 9px;
     border-radius: 6px;
-    white-space: nowrap;
     font-family: "Consolas", "Courier New", monospace;
-}
-
-.ams-asset-name {
-    font-weight: 500;
-    color: #1E293B;
-}
-
-.ams-employee-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.ams-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4F46E5, #7C3AED);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.ams-date {
-    color: #64748B;
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-.ams-badge {
     display: inline-block;
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
-
+.ams-asset-name { font-weight: 500; color: #1E293B; }
+.ams-employee-cell { display: flex; align-items: center; gap: 10px; }
+.ams-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ams-date { color: #64748B; font-size: 13px; white-space: nowrap; }
+.ams-badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 20px; white-space: nowrap;
+}
 .ams-badge-active   { background: #ECFDF5; color: #059669; }
 .ams-badge-returned { background: #F1F5F9; color: #64748B; }
 
-/* ── Empty State ────────────────────────────────────────────────────────── */
+/* ── Empty state ────────────────────────────────────────────────────────── */
 .ams-empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 48px 20px; color: #94A3B8; gap: 10px;
+}
+.ams-empty-icon { font-size: 36px; }
+.ams-empty-state p { margin: 0; font-size: 14px; }
+
+/* ── Scroll indicator (shown only when list overflows) ──────────────────── */
+.ams-scroll-hint {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 20px;
+    gap: 6px;
+    padding: 8px 20px;
+    font-size: 11.5px;
     color: #94A3B8;
-    gap: 10px;
+    border-top: 1px solid #F1F5F9;
+    background: #FAFAFA;
+    border-radius: 0 0 14px 14px;
+    user-select: none;
 }
-
-.ams-empty-icon {
-    font-size: 36px;
-}
-
-.ams-empty-state p {
-    margin: 0;
-    font-size: 14px;
-}
+.ams-scroll-hint i { font-size: 10px; }

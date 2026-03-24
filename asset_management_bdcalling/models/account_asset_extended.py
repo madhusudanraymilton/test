@@ -446,6 +446,7 @@ class AccountAssetExtended(models.Model):
         # assets from companies the user can switch to.
         assets = self.sudo().search([
             ('lot_id',     '!=', False),
+            ('asset_state', 'not in', ['draft']),
             ('company_id', 'in', company_ids),
         ])
 

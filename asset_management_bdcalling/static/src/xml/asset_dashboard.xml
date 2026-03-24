@@ -21,7 +21,7 @@
         </button>
     </div>
 
-    <!-- ══ LOADING STATE ═════════════════════════════════════════════════════ -->
+    <!-- ══ LOADING ═══════════════════════════════════════════════════════════ -->
     <t t-if="state.loading">
         <div class="ams-loading">
             <div class="ams-spinner"/>
@@ -29,7 +29,7 @@
         </div>
     </t>
 
-    <!-- ══ DASHBOARD CONTENT ═════════════════════════════════════════════════ -->
+    <!-- ══ CONTENT ═══════════════════════════════════════════════════════════ -->
     <t t-else="">
 
         <!-- ── KPI GRID ──────────────────────────────────────────────────── -->
@@ -73,12 +73,7 @@
 
         </div>
 
-        <!-- ── FINANCIAL STRIP ───────────────────────────────────────────────
-             total_value       = sum of original_value on all AMS assets
-             net_book_value    = sum of value_residual (native computed field)
-             total_depreciated = total_value − net_book_value
-             pending_depreciation = count of draft depreciation moves due today
-        ─────────────────────────────────────────────────────────────────── -->
+        <!-- ── FINANCIAL STRIP ──────────────────────────────────────────── -->
         <div class="ams-finance-strip">
 
             <div class="ams-finance-item">
@@ -117,7 +112,7 @@
             <div class="ams-finance-item ams-finance-clickable"
                  t-on-click="openPendingDepreciation">
                 <span class="ams-finance-label">
-                    <i class="fa fa-clock-o me-1"/> Pending Depreciation Lines
+                    <i class="fa fa-clock-o me-1"/> Pending Depreciation
                 </span>
                 <span class="ams-finance-value ams-finance-value-warn">
                     <t t-esc="state.pending_depreciation"/>
@@ -126,7 +121,7 @@
 
         </div>
 
-        <!-- ── CHARTS + STATUS ROW ──────────────────────────────────────────── -->
+        <!-- ── CHARTS + STATUS ROW ──────────────────────────────────────── -->
         <div class="ams-charts-row">
 
             <!-- Category Bar Chart -->
@@ -159,9 +154,7 @@
                             <span class="ams-status-name">Available</span>
                         </div>
                         <div class="ams-status-right">
-                            <span class="ams-status-count">
-                                <t t-esc="state.available"/>
-                            </span>
+                            <span class="ams-status-count"><t t-esc="state.available"/></span>
                             <div class="ams-status-bar-wrap">
                                 <div class="ams-status-bar ams-bar-green"
                                      t-attf-style="width: #{state.total ? Math.round(state.available / state.total * 100) : 0}%"/>
@@ -175,9 +168,7 @@
                             <span class="ams-status-name">Assigned</span>
                         </div>
                         <div class="ams-status-right">
-                            <span class="ams-status-count">
-                                <t t-esc="state.assigned"/>
-                            </span>
+                            <span class="ams-status-count"><t t-esc="state.assigned"/></span>
                             <div class="ams-status-bar-wrap">
                                 <div class="ams-status-bar ams-bar-indigo"
                                      t-attf-style="width: #{state.total ? Math.round(state.assigned / state.total * 100) : 0}%"/>
@@ -191,9 +182,7 @@
                             <span class="ams-status-name">Scrapped / Disposed</span>
                         </div>
                         <div class="ams-status-right">
-                            <span class="ams-status-count">
-                                <t t-esc="state.scrapped_disposed"/>
-                            </span>
+                            <span class="ams-status-count"><t t-esc="state.scrapped_disposed"/></span>
                             <div class="ams-status-bar-wrap">
                                 <div class="ams-status-bar ams-bar-rose"
                                      t-attf-style="width: #{state.total ? Math.round(state.scrapped_disposed / state.total * 100) : 0}%"/>
@@ -203,15 +192,10 @@
 
                 </div>
 
-                <!-- Utilisation ring (CSS conic-gradient driven by inline var) -->
+                <!-- Utilisation ring -->
                 <div class="ams-util-section">
                     <p class="ams-util-label">Utilisation Rate</p>
                     <div class="ams-util-ring-wrap">
-                        <!--
-                            The util-pct CSS custom property MUST be set via
-                            inline style so the conic-gradient in asset_dashboard.css
-                            (.ams-util-ring) picks up the correct percentage.
-                        -->
                         <div class="ams-util-ring"
                              t-attf-style="--util-pct: #{utilisationPct}%">
                             <span class="ams-util-pct">
@@ -227,79 +211,117 @@
 
         </div>
 
-        <!-- ── RECENT ASSIGNMENTS TABLE ──────────────────────────────────────── -->
+        <!-- ══ RECENT ASSIGNMENTS — Scrollable Table ═════════════════════════
+             Layout:
+               ┌─────────────────────────────────────────────────────────────┐
+               │ Card header  (sticky, never scrolls)                        │
+               ├─────────────────────────────────────────────────────────────┤
+               │ ┌─────────────────────────────────────────────────────────┐ │
+               │ │ <thead> — sticky inside scroll container               │ │
+               │ │ <tbody> — scrolls                                       │ │
+               │ └─────────────────────────────────────────────────────────┘ │
+               ├─────────────────────────────────────────────────────────────┤
+               │ Scroll hint footer  (shown when rows overflow)              │
+               └─────────────────────────────────────────────────────────────┘
+        ════════════════════════════════════════════════════════════════════ -->
         <div class="ams-card ams-card-table">
+
+            <!-- Fixed card header -->
             <div class="ams-card-header">
                 <span class="ams-card-title">
                     <i class="fa fa-history me-2"/>Recent Assignments
                 </span>
-                <button class="ams-view-all-btn" t-on-click="openAssignedAssets">
-                    View all <i class="fa fa-arrow-right ms-1"/>
-                </button>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Live count badge -->
+                    <span class="ams-card-badge">
+                        <t t-esc="state.recent_assignments.length"/> records
+                    </span>
+                    <button class="ams-view-all-btn" t-on-click="openAssignedAssets">
+                        View all <i class="fa fa-arrow-right ms-1"/>
+                    </button>
+                </div>
             </div>
-            <div class="ams-table-wrap">
-                <t t-if="state.recent_assignments.length">
-                    <table class="ams-table">
-                        <thead>
-                            <tr>
-                                <th>Asset Code</th>
-                                <th>Asset Name</th>
-                                <th>Employee</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="state.recent_assignments"
-                               t-as="rec"
-                               t-key="rec.id">
-                                <tr>
-                                    <td>
-                                        <span class="ams-code-badge">
-                                            <t t-esc="rec.asset_code || '—'"/>
-                                        </span>
-                                    </td>
-                                    <td class="ams-asset-name">
-                                        <t t-esc="rec.asset || '—'"/>
-                                    </td>
-                                    <td>
-                                        <div class="ams-employee-cell">
-                                            <div class="ams-avatar">
-                                                <t t-esc="rec.employee ? rec.employee[0].toUpperCase() : '?'"/>
-                                            </div>
-                                            <t t-esc="rec.employee || '—'"/>
-                                        </div>
-                                    </td>
-                                    <td class="ams-date">
-                                        <t t-esc="rec.date || '—'"/>
-                                    </td>
-                                    <td>
-                                        <t t-if="rec.is_active">
-                                            <span class="ams-badge ams-badge-active">
-                                                Active
-                                            </span>
-                                        </t>
-                                        <t t-else="">
-                                            <span class="ams-badge ams-badge-returned">
-                                                Returned
-                                            </span>
-                                        </t>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                </t>
-                <t t-else="">
-                    <div class="ams-empty-state">
-                        <i class="fa fa-inbox ams-empty-icon"/>
-                        <p>No assignments found</p>
+
+            <!-- Content: scrollable area OR empty state -->
+            <t t-if="state.recent_assignments.length">
+
+                <!--
+                    .ams-table-fade-wrapper provides the gradient fade-out at
+                    the bottom edge, giving a visual cue that more rows exist.
+                    .ams-table-scroll-container is the actual overflow:auto box.
+                -->
+                <div class="ams-table-fade-wrapper">
+                    <div class="ams-table-scroll-container" t-ref="assignmentScroll">
+                        <div class="ams-table-wrap">
+                            <table class="ams-table">
+                                <thead>
+                                    <tr>
+                                        <th>Asset Code</th>
+                                        <th>Asset Name</th>
+                                        <th>Employee</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.recent_assignments"
+                                       t-as="rec"
+                                       t-key="rec.id">
+                                        <tr>
+                                            <td>
+                                                <span class="ams-code-badge">
+                                                    <t t-esc="rec.asset_code || '—'"/>
+                                                </span>
+                                            </td>
+                                            <td class="ams-asset-name">
+                                                <t t-esc="rec.asset || '—'"/>
+                                            </td>
+                                            <td>
+                                                <div class="ams-employee-cell">
+                                                    <div class="ams-avatar">
+                                                        <t t-esc="rec.employee ? rec.employee[0].toUpperCase() : '?'"/>
+                                                    </div>
+                                                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                                        <t t-esc="rec.employee || '—'"/>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="ams-date">
+                                                <t t-esc="rec.date || '—'"/>
+                                            </td>
+                                            <td>
+                                                <t t-if="rec.is_active">
+                                                    <span class="ams-badge ams-badge-active">Active</span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="ams-badge ams-badge-returned">Returned</span>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </t>
-            </div>
+                </div>
+
+                <!-- Scroll-hint footer — hidden via JS when not overflowing -->
+                <div class="ams-scroll-hint" t-ref="scrollHint">
+                    <i class="fa fa-arrows-v"/>
+                    <span>Scroll to see more assignments</span>
+                </div>
+
+            </t>
+            <t t-else="">
+                <div class="ams-empty-state">
+                    <i class="fa fa-inbox ams-empty-icon"/>
+                    <p>No assignments found</p>
+                </div>
+            </t>
+
         </div>
 
-    </t><!-- end t-else (loading complete) -->
+    </t><!-- end t-else (loaded) -->
 
 </div>
 </t>
