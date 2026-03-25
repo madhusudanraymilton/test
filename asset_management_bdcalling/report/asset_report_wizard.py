@@ -117,32 +117,22 @@ class AssetReportWizard(models.TransientModel):
     # ─── Data Methods (called directly from QWeb templates) ──────────────────
 
     def get_employee_report_data(self):
-        """
-        Returns a list of dicts — one per employee — containing their assigned
-        assets plus an assignment map keyed by asset id.
-
-        Layout:
-            [{'employee': hr.employee|False, 'assets': [...], 'assign_map': {...},
-              'count': int, 'total_value': float, 'total_nbv': float}, ...]
-
-        Employees with no assets are omitted.  The last entry (employee=False)
-        collects all un-assigned assets when asset_state_filter is 'all'.
-        """
         assets = self._get_assets()
         if self.employee_ids:
             assets = assets.filtered(
                 lambda a: a.current_employee_id in self.employee_ids
-                or (not a.current_employee_id and self.asset_state_filter == 'all')
             )
+        else:
+            # ── CHANGE: exclude unassigned assets entirely ──────────────────
+            assets = assets.filtered(lambda a: a.current_employee_id)
 
-        # Group by employee id (0 = unassigned)
+        # Group by employee id
         grouped = defaultdict(list)
         for asset in assets:
-            key = asset.current_employee_id.id if asset.current_employee_id else 0
+            key = asset.current_employee_id.id
             grouped[key].append(asset)
 
-        # Pre-fetch employee records to avoid N+1 queries
-        employee_ids_needed = [k for k in grouped if k]
+        employee_ids_needed = list(grouped.keys())
         emp_index = {
             e.id: e
             for e in self.env['hr.employee'].sudo().browse(employee_ids_needed)
@@ -150,9 +140,10 @@ class AssetReportWizard(models.TransientModel):
 
         result = []
         for emp_id, emp_assets in grouped.items():
-            employee = emp_index.get(emp_id, False)
+            employee = emp_index.get(emp_id)
+            if not employee:          # belt-and-suspenders: skip if somehow False
+                continue
 
-            # Build assignment map: asset.id → active asset.assignment or False
             assign_map = {}
             for a in emp_assets:
                 active = a.assignment_ids.filtered(
@@ -169,8 +160,7 @@ class AssetReportWizard(models.TransientModel):
                 'total_nbv':   sum(a.value_residual  for a in emp_assets),
             })
 
-        # Sort: named employees first (alpha), unassigned last
-        result.sort(key=lambda x: (not x['employee'], x['employee'].name if x['employee'] else ''))
+        result.sort(key=lambda x: x['employee'].name)
         return result
 
     def get_category_report_data(self):
