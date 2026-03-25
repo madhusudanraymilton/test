@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_asset_movement_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="wizard">
+            <t t-call="web.external_layout">
+                <div class="page">
+
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h2>Asset Movement Report</h2>
+                            <h5 class="text-muted">
+                                <t t-esc="wizard.company_id.name"/>
+                                &amp;nbsp;—&amp;nbsp;
+                                <t t-esc="wizard.date_from or 'All dates'"/>
+                                &amp;nbsp;to&amp;nbsp;
+                                <t t-esc="wizard.date_to or 'Today'"/>
+                            </h5>
+                        </div>
+                    </div>
+
+                    <t t-set="histories" t-value="wizard.get_movement_report_data()"/>
+
+                    <t t-if="not histories">
+                        <p class="text-muted text-center">
+                            No movement events found for the selected period and filters.
+                        </p>
+                    </t>
+
+                    <t t-if="histories">
+
+                        <!-- ── Event-type legend ──────────────────────── -->
+                        <div class="row mb-3" style="font-size:11px;">
+                            <div class="col-12">
+                                <span class="badge me-1" style="background:#059669;">Register</span>
+                                <span class="badge me-1" style="background:#4F46E5;">Assign</span>
+                                <span class="badge me-1" style="background:#2563EB;">Return</span>
+                                <span class="badge me-1" style="background:#D97706;">Unregister</span>
+                                <span class="badge me-1" style="background:#E11D48;">Scrap / Dispose</span>
+                                <span class="badge me-1" style="background:#64748B;">Note / Other</span>
+                                <span class="float-end text-muted">
+                                    Total events: <strong><t t-esc="len(histories)"/></strong>
+                                </span>
+                            </div>
+                        </div>
+
+                        <table class="table table-sm table-bordered" style="font-size:11.5px;">
+                            <thead style="background:#1E293B;color:#fff;">
+                                <tr>
+                                    <th>Date / Time</th>
+                                    <th>Asset Code</th>
+                                    <th>Asset Name</th>
+                                    <th>Serial No.</th>
+                                    <th>Event</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Employee</th>
+                                    <th>Performed By</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="histories" t-as="h">
+                                    <!-- Badge colour per event type -->
+                                    <t t-set="evt_color" t-value="
+                                        '#059669' if h.event_type == 'register'   else
+                                        '#D97706' if h.event_type == 'unregister' else
+                                        '#4F46E5' if h.event_type == 'assign'     else
+                                        '#2563EB' if h.event_type == 'return'     else
+                                        '#E11D48' if h.event_type in ('scrap', 'dispose') else
+                                        '#0891B2' if h.event_type == 'depreciate' else
+                                        '#64748B'
+                                    "/>
+                                    <tr>
+                                        <td class="text-nowrap" style="font-size:10.5px;">
+                                            <t t-esc="h.event_date.strftime('%Y-%m-%d %H:%M') if h.event_date else '—'"/>
+                                        </td>
+                                        <td class="text-nowrap">
+                                            <t t-esc="h.asset_id.code if h.asset_id else '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="h.asset_id.name if h.asset_id else '—'"/>
+                                        </td>
+                                        <td class="text-nowrap">
+                                            <t t-esc="h.serial_number or '—'"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-attf-style="background:#{evt_color};color:#fff;
+                                                  padding:2px 8px;border-radius:12px;
+                                                  font-size:10px;font-weight:600;white-space:nowrap;">
+                                                <t t-esc="(h.event_type or '').capitalize()"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <t t-esc="(h.old_state or '—').capitalize()"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="(h.new_state or '—').capitalize()"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="h.employee_id.name if h.employee_id else '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="h.user_id.name if h.user_id else '—'"/>
+                                        </td>
+                                        <td style="font-size:10.5px;color:#475569;max-width:160px;
+                                                   overflow:hidden;text-overflow:ellipsis;">
+                                            <t t-esc="h.description or '—'"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+
+                    <div class="row mt-4">
+                        <div class="col-12 text-muted" style="font-size:11px;">
+                            Generated:
+                            <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+
+</odoo>

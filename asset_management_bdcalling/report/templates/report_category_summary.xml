@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_category_summary_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="wizard">
+            <t t-call="web.external_layout">
+                <div class="page">
+
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h2>Category-wise Asset Summary</h2>
+                            <h5 class="text-muted"><t t-esc="wizard.company_id.name"/></h5>
+                        </div>
+                    </div>
+
+                    <t t-set="data" t-value="wizard.get_category_report_data()"/>
+
+                    <t t-if="not data">
+                        <p class="text-muted text-center">No assets match the selected filters.</p>
+                    </t>
+
+                    <!-- ── KPI summary strip ──────────────────────────── -->
+                    <t t-if="data">
+                        <t t-set="grand_count"  t-value="sum(g['count']       for g in data)"/>
+                        <t t-set="grand_orig"   t-value="sum(g['total_value'] for g in data)"/>
+                        <t t-set="grand_nbv"    t-value="sum(g['total_nbv']   for g in data)"/>
+                        <t t-set="grand_dep"    t-value="sum(g['total_dep']   for g in data)"/>
+
+                        <div class="row mb-4" style="text-align:center;">
+                            <div class="col-3">
+                                <div style="background:#EFF6FF;border-radius:8px;padding:12px;">
+                                    <div style="font-size:22px;font-weight:800;color:#2563EB;">
+                                        <t t-esc="grand_count"/>
+                                    </div>
+                                    <div style="font-size:11px;color:#64748B;">Total Assets</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div style="background:#F0FDF4;border-radius:8px;padding:12px;">
+                                    <div style="font-size:22px;font-weight:800;color:#059669;">
+                                        <t t-esc="'{:,.2f}'.format(grand_orig)"/>
+                                    </div>
+                                    <div style="font-size:11px;color:#64748B;">Purchase Value</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div style="background:#FFF7ED;border-radius:8px;padding:12px;">
+                                    <div style="font-size:22px;font-weight:800;color:#D97706;">
+                                        <t t-esc="'{:,.2f}'.format(grand_dep)"/>
+                                    </div>
+                                    <div style="font-size:11px;color:#64748B;">Total Depreciated</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div style="background:#EEF2FF;border-radius:8px;padding:12px;">
+                                    <div style="font-size:22px;font-weight:800;color:#4F46E5;">
+                                        <t t-esc="'{:,.2f}'.format(grand_nbv)"/>
+                                    </div>
+                                    <div style="font-size:11px;color:#64748B;">Net Book Value</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Category detail table ──────────────────── -->
+                        <table class="table table-sm table-bordered" style="font-size:12px;">
+                            <thead style="background:#1E293B;color:#fff;">
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Available</th>
+                                    <th class="text-center">Assigned</th>
+                                    <th class="text-center">Inactive</th>
+                                    <th class="text-end">Purchase Value</th>
+                                    <th class="text-end">Depreciated</th>
+                                    <th class="text-end">Net Book Value</th>
+                                    <th class="text-end">Dep. %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="data" t-as="group">
+                                    <t t-set="dep_pct" t-value="round(group['total_dep'] / group['total_value'] * 100, 1) if group['total_value'] else 0"/>
+                                    <tr>
+                                        <td class="fw-bold">
+                                            <t t-esc="group['category'].name if group['category'] else 'Uncategorised'"/>
+                                        </td>
+                                        <td class="text-center fw-bold">
+                                            <t t-esc="group['count']"/>
+                                        </td>
+                                        <td class="text-center" style="color:#059669;">
+                                            <t t-esc="group['available']"/>
+                                        </td>
+                                        <td class="text-center" style="color:#4F46E5;">
+                                            <t t-esc="group['assigned']"/>
+                                        </td>
+                                        <td class="text-center" style="color:#E11D48;">
+                                            <t t-esc="group['inactive']"/>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <t t-esc="'{:,.2f}'.format(group['total_value'])"/>
+                                        </td>
+                                        <td class="text-end text-nowrap" style="color:#D97706;">
+                                            <t t-esc="'{:,.2f}'.format(group['total_dep'])"/>
+                                        </td>
+                                        <td class="text-end text-nowrap fw-bold">
+                                            <t t-esc="'{:,.2f}'.format(group['total_nbv'])"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="dep_pct"/>%
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot style="background:#F1F5F9;font-weight:700;">
+                                <tr>
+                                    <td>Grand Total</td>
+                                    <td class="text-center"><t t-esc="grand_count"/></td>
+                                    <td colspan="3"></td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_orig)"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_dep)"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_nbv)"/>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- ── Per-category asset list ────────────────── -->
+                        <t t-foreach="data" t-as="group">
+                            <div style="page-break-before: always; margin-top: 16px;">
+                                <h5 style="border-bottom:2px solid #2563EB;padding-bottom:4px;color:#1E293B;">
+                                    <t t-esc="group['category'].name if group['category'] else 'Uncategorised'"/>
+                                    <small class="text-muted ms-2" style="font-size:13px;">
+                                        (<t t-esc="group['count']"/> assets)
+                                    </small>
+                                </h5>
+                                <table class="table table-sm table-bordered" style="font-size:11px;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Serial No.</th>
+                                            <th>Status</th>
+                                            <th>Assigned To</th>
+                                            <th>Reg. Date</th>
+                                            <th class="text-end">Purchase Value</th>
+                                            <th class="text-end">Net Book Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="group['assets']" t-as="asset">
+                                            <tr>
+                                                <td><t t-esc="asset.code or '—'"/></td>
+                                                <td><t t-esc="asset.name or '—'"/></td>
+                                                <td><t t-esc="asset.lot_id.name if asset.lot_id else '—'"/></td>
+                                                <td><t t-esc="(asset.asset_state or '').capitalize()"/></td>
+                                                <td><t t-esc="asset.current_employee_id.name if asset.current_employee_id else '—'"/></td>
+                                                <td><t t-esc="asset.registration_date or '—'"/></td>
+                                                <td class="text-end"><t t-esc="'{:,.2f}'.format(asset.original_value or 0)"/></td>
+                                                <td class="text-end"><t t-esc="'{:,.2f}'.format(asset.value_residual or 0)"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                    </t>
+
+                    <div class="row mt-4">
+                        <div class="col-12 text-muted" style="font-size:11px;">
+                            Generated:
+                            <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+
+</odoo>

@@ -97,5 +97,10 @@
               action="action_report_asset_depreciation_view"
               sequence="20"
             /> -->
+    <menuitem id="menu_asset_report_wizard"
+              name="Asset Reports"
+              parent="menu_asset_reports"
+              action="asset_management_bdcalling.action_asset_report_wizard"
+              sequence="10"/>
 
 </odoo>

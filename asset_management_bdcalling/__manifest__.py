@@ -50,11 +50,19 @@ Asset Management System (AMS)
         'views/wizard_assign_views.xml',
         'views/wizard_return_views.xml',
         'views/asset_report_views.xml',
-        'views/menu_views.xml',
+        
         # Reports
         # 'report/asset_valuation_report.xml',
         # 'report/templates/report_asset_valuation.xml',
         # 'report/templates/report_asset_depreciation.xml',
+        'report/asset_report_actions.xml',          # ← new
+        'views/asset_report_wizard_views.xml',       # ← new
+        'report/templates/report_employee_asset.xml',
+        'report/templates/report_category_summary.xml',
+        'report/templates/report_depreciation_schedule.xml',
+        'report/templates/report_asset_movement.xml',
+        'report/templates/report_asset_valuation_full.xml',
+        'views/menu_views.xml',
     ],
     'assets': {
         'web.assets_web': [

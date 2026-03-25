@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_asset_valuation_full_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="wizard">
+            <t t-call="web.external_layout">
+                <div class="page">
+
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h2>Asset Valuation Report</h2>
+                            <h5 class="text-muted">
+                                <t t-esc="wizard.company_id.name"/>
+                                &amp;nbsp;—&amp;nbsp; As of
+                                <t t-esc="wizard.date_to or context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/>
+                            </h5>
+                        </div>
+                    </div>
+
+                    <t t-set="d" t-value="wizard.get_valuation_report_data()"/>
+                    <t t-set="assets" t-value="d['assets']"/>
+
+                    <t t-if="not assets">
+                        <p class="text-muted text-center">No assets match the selected filters.</p>
+                    </t>
+
+                    <t t-if="assets">
+
+                        <!-- ── Portfolio summary strip ─────────────────── -->
+                        <div class="row mb-4"
+                             style="background:#1E293B;color:#fff;border-radius:10px;
+                                    margin:0 0 20px;padding:16px 24px;">
+                            <div class="col-3 text-center">
+                                <div style="font-size:26px;font-weight:800;">
+                                    <t t-esc="len(assets)"/>
+                                </div>
+                                <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;
+                                            letter-spacing:0.5px;">Total Assets</div>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div style="font-size:26px;font-weight:800;color:#60A5FA;">
+                                    <t t-esc="'{:,.2f}'.format(d['total_orig'])"/>
+                                </div>
+                                <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;
+                                            letter-spacing:0.5px;">Purchase Value</div>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div style="font-size:26px;font-weight:800;color:#FCD34D;">
+                                    <t t-esc="'{:,.2f}'.format(d['total_dep'])"/>
+                                </div>
+                                <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;
+                                            letter-spacing:0.5px;">Total Depreciated</div>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div style="font-size:26px;font-weight:800;color:#34D399;">
+                                    <t t-esc="'{:,.2f}'.format(d['total_nbv'])"/>
+                                </div>
+                                <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;
+                                            letter-spacing:0.5px;">Net Book Value</div>
+                            </div>
+                        </div>
+
+                        <!-- ── Asset-level valuation table ────────────── -->
+                        <table class="table table-sm table-bordered" style="font-size:11.5px;">
+                            <thead style="background:#1E293B;color:#fff;">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Asset Code</th>
+                                    <th>Asset Name</th>
+                                    <th>Serial No.</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Assigned To</th>
+                                    <th>Acq. Date</th>
+                                    <th class="text-end">Purchase Value</th>
+                                    <th class="text-end">Depreciated</th>
+                                    <th class="text-end fw-bold">Net Book Value</th>
+                                    <th class="text-end">Dep. %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="assets" t-as="asset">
+                                    <t t-set="dep"     t-value="(asset.original_value or 0) - (asset.value_residual or 0)"/>
+                                    <t t-set="dep_pct" t-value="round(dep / asset.original_value * 100, 1) if asset.original_value else 0"/>
+                                    <tr>
+                                        <td class="text-muted" style="font-size:10px;">
+                                            <t t-esc="asset_index + 1"/>
+                                        </td>
+                                        <td class="text-nowrap fw-bold" style="color:#2563EB;">
+                                            <t t-esc="asset.code or '—'"/>
+                                        </td>
+                                        <td><t t-esc="asset.name or '—'"/></td>
+                                        <td class="text-nowrap">
+                                            <t t-esc="asset.lot_id.name if asset.lot_id else '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="asset.model_id.name if asset.model_id else '—'"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <t t-set="state_color" t-value="
+                                                '#059669' if asset.asset_state == 'available' else
+                                                '#4F46E5' if asset.asset_state == 'assigned'  else
+                                                '#E11D48'
+                                            "/>
+                                            <span t-attf-style="color:#{state_color};font-weight:600;">
+                                                <t t-esc="(asset.asset_state or '').capitalize()"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <t t-esc="asset.current_employee_id.name if asset.current_employee_id else '—'"/>
+                                        </td>
+                                        <td class="text-nowrap">
+                                            <t t-esc="asset.acquisition_date or '—'"/>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <t t-esc="'{:,.2f}'.format(asset.original_value or 0)"/>
+                                        </td>
+                                        <td class="text-end text-nowrap" style="color:#D97706;">
+                                            <t t-esc="'{:,.2f}'.format(dep)"/>
+                                        </td>
+                                        <td class="text-end text-nowrap fw-bold">
+                                            <t t-esc="'{:,.2f}'.format(asset.value_residual or 0)"/>
+                                        </td>
+                                        <td class="text-end" style="font-size:10.5px;">
+                                            <t t-esc="dep_pct"/>%
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot style="background:#F1F5F9;font-weight:700;">
+                                <tr>
+                                    <td colspan="8">Grand Total</td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(d['total_orig'])"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(d['total_dep'])"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(d['total_nbv'])"/>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </t>
+
+                    <div class="row mt-4">
+                        <div class="col-12 text-muted" style="font-size:11px;">
+                            Generated:
+                            <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                            &amp;nbsp;|&amp;nbsp; Currency: <t t-esc="wizard.company_id.currency_id.name"/>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+
+</odoo>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_employee_asset_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="wizard">
+            <t t-call="web.external_layout">
+                <div class="page">
+
+                    <!-- ── Title ─────────────────────────────────────── -->
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h2>Employee-wise Asset Report</h2>
+                            <h5 class="text-muted">
+                                <t t-esc="wizard.company_id.name"/>
+                                <t t-if="wizard.date_from or wizard.date_to">
+                                    &amp;nbsp;—&amp;nbsp;
+                                    <t t-esc="wizard.date_from or ''"/>
+                                    &amp;nbsp;to&amp;nbsp;
+                                    <t t-esc="wizard.date_to or ''"/>
+                                </t>
+                            </h5>
+                        </div>
+                    </div>
+
+                    <!-- ── Per-employee sections ─────────────────────── -->
+                    <t t-set="data" t-value="wizard.get_employee_report_data()"/>
+
+                    <t t-if="not data">
+                        <p class="text-muted text-center">No assets match the selected filters.</p>
+                    </t>
+
+                    <t t-foreach="data" t-as="group">
+                        <div style="page-break-inside: avoid; margin-bottom: 24px;">
+
+                            <div style="background:#1E293B;color:#fff;padding:8px 14px;
+                                        border-radius:6px;margin-bottom:0;"
+                                 class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">
+                                    <t t-esc="group['employee'].name if group['employee'] else 'Unassigned'"/>
+                                    <t t-if="group['employee'] and group['employee'].job_title">
+                                        &amp;nbsp;—&amp;nbsp;
+                                        <small><t t-esc="group['employee'].job_title"/></small>
+                                    </t>
+                                </span>
+                                <span class="small">
+                                    <t t-esc="group['count']"/> asset(s)
+                                </span>
+                            </div>
+
+                            <table class="table table-sm table-bordered mb-0"
+                                   style="font-size:12px;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Asset Name</th>
+                                        <th>Serial No.</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Assign Date</th>
+                                        <th>Condition</th>
+                                        <th class="text-end">Purchase Value</th>
+                                        <th class="text-end">Net Book Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="group['assets']" t-as="asset">
+                                        <t t-set="asgn" t-value="group['assign_map'].get(asset.id)"/>
+                                        <tr>
+                                            <td class="text-nowrap">
+                                                <t t-esc="asset.code or '—'"/>
+                                            </td>
+                                            <td><t t-esc="asset.name or '—'"/></td>
+                                            <td class="text-nowrap">
+                                                <t t-esc="asset.lot_id.name if asset.lot_id else '—'"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="asset.model_id.name if asset.model_id else '—'"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <t t-esc="(asset.asset_state or '').capitalize()"/>
+                                            </td>
+                                            <td class="text-nowrap">
+                                                <t t-esc="asgn.assign_date if asgn else '—'"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="(asgn.condition_on_assign or '—').capitalize() if asgn else '—'"/>
+                                            </td>
+                                            <td class="text-end text-nowrap">
+                                                <t t-esc="'{:,.2f}'.format(asset.original_value or 0)"/>
+                                            </td>
+                                            <td class="text-end text-nowrap">
+                                                <t t-esc="'{:,.2f}'.format(asset.value_residual or 0)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfoot style="background:#F1F5F9;font-weight:700;">
+                                    <tr>
+                                        <td colspan="7">Subtotal</td>
+                                        <td class="text-end text-nowrap">
+                                            <t t-esc="'{:,.2f}'.format(group['total_value'] or 0)"/>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <t t-esc="'{:,.2f}'.format(group['total_nbv'] or 0)"/>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </t>
+
+                    <!-- ── Report footer ─────────────────────────────── -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-muted" style="font-size:11px;">
+                            Generated:
+                            <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                            &amp;nbsp;|&amp;nbsp; Status filter: <t t-esc="wizard.asset_state_filter"/>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+
+</odoo>

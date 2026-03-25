@@ -8,4 +8,4 @@ access_asset_assign_wizard_user,asset.assign.wizard.user,model_asset_assign_wiza
 access_product_template,product.template,model_product_template,,1,1,1,1
 access_res_config_settings,res.config.settings,model_res_config_settings,,1,1,1,1
 access_asset_return_wizard,asset.return.wizard,model_asset_return_wizard,,1,1,1,1
-
+access_asset_report_wizard,asset.report.wizard,model_asset_report_wizard,,1,1,1,1

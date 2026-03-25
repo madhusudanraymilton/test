@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         ir.actions.report — one per report type.
+         model = asset.report.wizard  (docs = the wizard record)
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="report_paperformat_a4" model="report.paperformat">
+        <field name="name">A4</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">20</field>
+        <field name="margin_bottom">20</field>
+        <field name="margin_left">15</field>
+        <field name="margin_right">15</field>
+        <field name="header_line">False</field>
+    </record>
+    
+
+    <record id="action_report_employee_asset" model="ir.actions.report">
+        <field name="name">Employee-wise Asset Report</field>
+        <field name="model">asset.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asset_management_bdcalling.report_employee_asset_template</field>
+        <field name="report_file">asset_management_bdcalling.report_employee_asset_template</field>
+        <field name="print_report_name">'Employee Asset Report - ' + (object.company_id.name or '')</field>
+        <field name="paperformat_id" ref="asset_management_bdcalling.report_paperformat_a4"/>
+    </record>
+
+    <record id="action_report_category_summary" model="ir.actions.report">
+        <field name="name">Category-wise Asset Summary</field>
+        <field name="model">asset.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asset_management_bdcalling.report_category_summary_template</field>
+        <field name="report_file">asset_management_bdcalling.report_category_summary_template</field>
+        <field name="print_report_name">'Category Asset Summary - ' + (object.company_id.name or '')</field>
+        <field name="paperformat_id" ref="asset_management_bdcalling.report_paperformat_a4"/>
+    </record>
+
+    <record id="action_report_depreciation_schedule" model="ir.actions.report">
+        <field name="name">Depreciation Report</field>
+        <field name="model">asset.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asset_management_bdcalling.report_depreciation_schedule_template</field>
+        <field name="report_file">asset_management_bdcalling.report_depreciation_schedule_template</field>
+        <field name="print_report_name">'Depreciation Report - ' + (object.company_id.name or '')</field>
+        <field name="paperformat_id" ref="asset_management_bdcalling.report_paperformat_a4"/>
+    </record>
+
+    <record id="action_report_asset_movement" model="ir.actions.report">
+        <field name="name">Asset Movement Report</field>
+        <field name="model">asset.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asset_management_bdcalling.report_asset_movement_template</field>
+        <field name="report_file">asset_management_bdcalling.report_asset_movement_template</field>
+        <field name="print_report_name">'Asset Movement Report - ' + (object.company_id.name or '')</field>
+        <field name="paperformat_id" ref="asset_management_bdcalling.report_paperformat_a4"/>
+    </record>
+
+    <record id="action_report_asset_valuation_full" model="ir.actions.report">
+        <field name="name">Asset Valuation Report</field>
+        <field name="model">asset.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asset_management_bdcalling.report_asset_valuation_full_template</field>
+        <field name="report_file">asset_management_bdcalling.report_asset_valuation_full_template</field>
+        <field name="print_report_name">'Asset Valuation Report - ' + (object.company_id.name or '')</field>
+        <field name="paperformat_id" ref="asset_management_bdcalling.report_paperformat_a4"/>
+    </record>
+
+    <!-- Wizard window action — opened from the Reports menu -->
+    <record id="action_asset_report_wizard" model="ir.actions.act_window">
+        <field name="name">Asset Reports</field>
+        <field name="res_model">asset.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Generate Asset Reports</p>
+        </field>
+    </record>
+
+</odoo>

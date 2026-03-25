@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_asset_report_wizard_form" model="ir.ui.view">
+        <field name="name">asset.report.wizard.form</field>
+        <field name="model">asset.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Asset Report">
+                <sheet>
+
+                    <!-- ── Report Type ────────────────────────────────── -->
+                    <group>
+                        <field name="report_type" widget="radio"/>
+                    </group>
+
+                    <separator/>
+
+                    <!-- ── Filters ────────────────────────────────────── -->
+                    <group string="Filters" name="filters_group">
+                        <group>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                            <field name="asset_state_filter"/>
+                            <field name="category_ids"
+                                   widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="date_from"
+                                   invisible="report_type == 'valuation'"/>
+                            <field name="date_to"
+                                   invisible="report_type == 'valuation'"/>
+                            <field name="employee_ids"
+                                   widget="many2many_tags"
+                                   invisible="report_type not in ('employee', 'movement')"
+                                   options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <!-- ── Context hints ──────────────────────────────── -->
+                    <div class="alert alert-info" role="alert"
+                         invisible="report_type != 'movement'">
+                        <i class="fa fa-info-circle me-1"/>
+                        Movement report shows all lifecycle events
+                        (register, assign, return, scrap, dispose)
+                        within the selected date range.
+                    </div>
+
+                    <div class="alert alert-info" role="alert"
+                         invisible="report_type != 'depreciation'">
+                        <i class="fa fa-info-circle me-1"/>
+                        Depreciation report shows posted and pending
+                        journal entries per asset. Leave dates empty
+                        to include the full depreciation board.
+                    </div>
+
+                </sheet>
+                <footer>
+                    <button name="action_print_report"
+                            type="object"
+                            string="Generate PDF"
+                            class="btn-primary"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

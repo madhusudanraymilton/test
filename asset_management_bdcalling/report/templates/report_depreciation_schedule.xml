@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_depreciation_schedule_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="wizard">
+            <t t-call="web.external_layout">
+                <div class="page">
+
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h2>Depreciation Report</h2>
+                            <h5 class="text-muted">
+                                <t t-esc="wizard.company_id.name"/>
+                                <t t-if="wizard.date_from or wizard.date_to">
+                                    &amp;nbsp;—&amp;nbsp;
+                                    <t t-esc="wizard.date_from or 'Start'"/>
+                                    &amp;nbsp;to&amp;nbsp;
+                                    <t t-esc="wizard.date_to or 'Today'"/>
+                                </t>
+                            </h5>
+                        </div>
+                    </div>
+
+                    <t t-set="data" t-value="wizard.get_depreciation_report_data()"/>
+
+                    <t t-if="not data">
+                        <p class="text-muted text-center">
+                            No depreciation entries found for the selected period and filters.
+                        </p>
+                    </t>
+
+                    <t t-if="data">
+                        <!-- ── Portfolio summary ───────────────────────── -->
+                        <t t-set="grand_orig"   t-value="sum(d['original_value'] for d in data)"/>
+                        <t t-set="grand_cum"    t-value="sum(d['cumulative_dep'] for d in data)"/>
+                        <t t-set="grand_period" t-value="sum(d['period_dep']     for d in data)"/>
+                        <t t-set="grand_nbv"    t-value="sum(d['nbv']            for d in data)"/>
+
+                        <table class="table table-sm table-bordered mb-4" style="font-size:12px;">
+                            <thead style="background:#1E293B;color:#fff;">
+                                <tr>
+                                    <th>Asset Code</th>
+                                    <th>Asset Name</th>
+                                    <th>Category</th>
+                                    <th>Acq. Date</th>
+                                    <th class="text-end">Original Value</th>
+                                    <th class="text-end">Cum. Depreciated</th>
+                                    <th class="text-end">Period Posted</th>
+                                    <th class="text-center">Pending</th>
+                                    <th class="text-end fw-bold">Net Book Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="data" t-as="d">
+                                    <tr>
+                                        <td class="text-nowrap">
+                                            <t t-esc="d['asset'].code or '—'"/>
+                                        </td>
+                                        <td><t t-esc="d['asset'].name or '—'"/></td>
+                                        <td>
+                                            <t t-esc="d['asset'].model_id.name if d['asset'].model_id else '—'"/>
+                                        </td>
+                                        <td class="text-nowrap">
+                                            <t t-esc="d['asset'].acquisition_date or '—'"/>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <t t-esc="'{:,.2f}'.format(d['original_value'])"/>
+                                        </td>
+                                        <td class="text-end text-nowrap" style="color:#D97706;">
+                                            <t t-esc="'{:,.2f}'.format(d['cumulative_dep'])"/>
+                                        </td>
+                                        <td class="text-end text-nowrap" style="color:#059669;">
+                                            <t t-esc="'{:,.2f}'.format(d['period_dep'])"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <t t-if="d['pending_period']">
+                                                <span style="color:#E11D48;font-weight:600;">
+                                                    <t t-esc="len(d['pending_period'])"/>
+                                                </span>
+                                            </t>
+                                            <t t-else="">—</t>
+                                        </td>
+                                        <td class="text-end text-nowrap fw-bold">
+                                            <t t-esc="'{:,.2f}'.format(d['nbv'])"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot style="background:#F1F5F9;font-weight:700;">
+                                <tr>
+                                    <td colspan="4">Grand Total</td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_orig)"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_cum)"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_period)"/>
+                                    </td>
+                                    <td></td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-esc="'{:,.2f}'.format(grand_nbv)"/>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- ── Per-asset depreciation move detail ──────── -->
+                        <t t-foreach="data" t-as="d">
+                            <t t-if="d['period_moves']">
+                                <div style="page-break-inside: avoid; margin-bottom: 20px;">
+                                    <h6 style="border-bottom:1.5px solid #CBD5E1;padding-bottom:3px;
+                                               color:#1E293B;font-size:12px;">
+                                        <t t-esc="d['asset'].code or ''"/>
+                                        &amp;nbsp;—&amp;nbsp;
+                                        <t t-esc="d['asset'].name or ''"/>
+                                    </h6>
+                                    <table class="table table-sm" style="font-size:11px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Reference</th>
+                                                <th class="text-end">Amount</th>
+                                                <th class="text-center">State</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="d['period_moves']" t-as="move">
+                                                <tr t-attf-style="color: #{move.state == 'posted' and '#059669' or '#D97706'}">
+                                                    <td class="text-nowrap">
+                                                        <t t-esc="move.date"/>
+                                                    </td>
+                                                    <td><t t-esc="move.name or '—'"/></td>
+                                                    <td class="text-end text-nowrap">
+                                                        <t t-esc="'{:,.2f}'.format(move.amount_total or 0)"/>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <t t-esc="(move.state or '').capitalize()"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                        </t>
+                    </t>
+
+                    <div class="row mt-4">
+                        <div class="col-12 text-muted" style="font-size:11px;">
+                            Generated:
+                            <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+
+</odoo>
