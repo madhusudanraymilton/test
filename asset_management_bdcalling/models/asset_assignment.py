@@ -2,7 +2,6 @@
 # from odoo import api, fields, models, _
 # from odoo.exceptions import ValidationError, UserError
 
-
 # class AssetAssignment(models.Model):
 #     _name = 'asset.assignment'
 #     _description = 'Asset Assignment Record'
@@ -120,6 +119,7 @@
 #                     raise ValidationError(_(
 #                         'Assignment date cannot precede the asset registration date (%s).'
 #                     ) % rec.asset_id.registration_date)
+
 
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _

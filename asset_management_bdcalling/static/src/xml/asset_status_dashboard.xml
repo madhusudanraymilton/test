@@ -25,31 +25,149 @@
 
     <!-- ══ FILTER BAR ═══════════════════════════════════════════════════════ -->
     <div class="asd-filter-bar">
+
+        <!-- ── Asset Product search ──────────────────────────────────────── -->
         <div class="asd-filter-item">
             <label class="asd-filter-label">
-                <i class="fa fa-tag me-1"/> Asset Product
+                <i class="fa fa-tag me-1"/> Asset
             </label>
-            <p class="asd-filter-value">
-                <t t-if="state.productName">
-                    <span class="asd-filter-chip"><t t-esc="state.productName"/></span>
-                </t>
-                <t t-else=""><span class="asd-filter-empty">All products</span></t>
-            </p>
+
+            <div class="asd-search-field-wrap" data-field="product">
+                <div class="asd-sf-inner">
+                    <!-- Leading icon / clear button -->
+                    <span class="asd-sf-icon">
+                        <t t-if="state.productId">
+                            <i class="fa fa-tag" style="color:#2563EB;"/>
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-search"/>
+                        </t>
+                    </span>
+
+                    <input
+                        t-ref="productSearchInput"
+                        class="asd-sf-input"
+                        type="text"
+                        placeholder="Search product…"
+                        autocomplete="off"
+                        t-model="state.productQuery"
+                        t-on-input="onProductInput"
+                        t-on-focus="onProductFocus"
+                    />
+
+                    <!-- Clear button — only when a product is selected -->
+                    <button t-if="state.productId"
+                            class="asd-sf-clear"
+                            title="Clear product filter"
+                            t-on-click.stop="clearProduct">
+                        <i class="fa fa-times"/>
+                    </button>
+
+                    <!-- Spinner while searching -->
+                    <span t-if="state.productSearching" class="asd-sf-spinner"/>
+                </div>
+
+                <!-- Dropdown results -->
+                <div t-if="state.showProductDrop" class="asd-sf-dropdown">
+                    <t t-if="!state.productResults.length and !state.productSearching">
+                        <div class="asd-sf-empty">
+                            <i class="fa fa-inbox me-1"/> No asset products found
+                        </div>
+                    </t>
+                    <t t-if="state.productSearching">
+                        <div class="asd-sf-empty">
+                            <span class="asd-sf-spinner-inline"/> Searching…
+                        </div>
+                    </t>
+                    <t t-foreach="state.productResults" t-as="p" t-key="p.id">
+                        <div class="asd-sf-option"
+                             t-att-class="state.productId === p.id ? 'asd-sf-option-active' : ''"
+                             t-on-click.stop="() => this.selectProduct(p.id, p.name)">
+                            <i class="fa fa-tag me-2" style="color:#2563EB;font-size:11px;"/>
+                            <span><t t-esc="p.name"/></span>
+                            <t t-if="state.productId === p.id">
+                                <i class="fa fa-check ms-auto" style="color:#059669;"/>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
         </div>
+
         <div class="asd-filter-divider"/>
+
+        <!-- ── Specific Asset search ──────────────────────────────────────── -->
         <div class="asd-filter-item">
             <label class="asd-filter-label">
                 <i class="fa fa-cube me-1"/> Specific Asset
             </label>
-            <p class="asd-filter-value">
-                <t t-if="state.assetName">
-                    <span class="asd-filter-chip asd-chip-indigo"><t t-esc="state.assetName"/></span>
-                </t>
-                <t t-else=""><span class="asd-filter-empty">All assets</span></t>
-            </p>
+
+            <div class="asd-search-field-wrap" data-field="asset">
+                <div class="asd-sf-inner">
+                    <span class="asd-sf-icon">
+                        <t t-if="state.assetId">
+                            <i class="fa fa-cube" style="color:#4F46E5;"/>
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-search"/>
+                        </t>
+                    </span>
+
+                    <input
+                        t-ref="assetSearchInput"
+                        class="asd-sf-input"
+                        type="text"
+                        placeholder="Search code or name…"
+                        autocomplete="off"
+                        t-model="state.assetQuery"
+                        t-on-input="onAssetInput"
+                        t-on-focus="onAssetFocus"
+                    />
+
+                    <button t-if="state.assetId"
+                            class="asd-sf-clear"
+                            title="Clear asset filter"
+                            t-on-click.stop="clearAsset">
+                        <i class="fa fa-times"/>
+                    </button>
+
+                    <span t-if="state.assetSearching" class="asd-sf-spinner"/>
+                </div>
+
+                <div t-if="state.showAssetDrop" class="asd-sf-dropdown">
+                    <t t-if="!state.assetResults.length and !state.assetSearching">
+                        <div class="asd-sf-empty">
+                            <i class="fa fa-inbox me-1"/> No registered assets found
+                        </div>
+                    </t>
+                    <t t-if="state.assetSearching">
+                        <div class="asd-sf-empty">
+                            <span class="asd-sf-spinner-inline"/> Searching…
+                        </div>
+                    </t>
+                    <t t-foreach="state.assetResults" t-as="a" t-key="a.id">
+                        <div class="asd-sf-option"
+                             t-att-class="state.assetId === a.id ? 'asd-sf-option-active' : ''"
+                             t-on-click.stop="() => this.selectAsset(a.id, a.name, a.code)">
+                            <span class="asd-sf-option-code">
+                                <t t-esc="a.code || '#' + a.id"/>
+                            </span>
+                            <span class="asd-sf-option-name">
+                                <t t-esc="a.name"/>
+                            </span>
+                            <t t-if="state.assetId === a.id">
+                                <i class="fa fa-check ms-auto" style="color:#059669;"/>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
         </div>
+
         <div class="asd-filter-divider"/>
-        <div class="asd-filter-item">
+
+        <!-- ── Total count ────────────────────────────────────────────────── -->
+        <div class="asd-filter-item" style="flex:0;min-width:120px;">
             <label class="asd-filter-label">
                 <i class="fa fa-cubes me-1"/> Total Records
             </label>
@@ -57,7 +175,9 @@
                 <span class="asd-badge-total"><t t-esc="fmtInt(state.total)"/> assets</span>
             </p>
         </div>
+
     </div>
+    <!-- /filter bar -->
 
     <!-- ══ LOADING / ERROR ══════════════════════════════════════════════════ -->
     <t t-if="state.loading">
@@ -80,26 +200,6 @@
 
         <!-- ── STATE CARD ROW ─────────────────────────────────────────────── -->
         <div class="asd-state-cards">
-
-            <!-- Draft -->
-            <div class="asd-state-card asd-card-draft"
-                 t-on-click="() => this.setTab('draft')">
-                <div class="asd-sc-accent"/>
-                <div class="asd-sc-icon"><i class="fa fa-file-text-o"/></div>
-                <div class="asd-sc-body">
-                    <span class="asd-sc-count"><t t-esc="fmtInt(state.counts.draft)"/></span>
-                    <span class="asd-sc-label">Draft</span>
-                    <div class="asd-sc-bar-wrap">
-                        <div class="asd-sc-bar asd-bar-draft"
-                             t-attf-style="width:#{statePct('draft')}%"/>
-                    </div>
-                </div>
-                <div class="asd-sc-nav" t-on-click.stop="() => this.navigateToList('draft')">
-                    <i class="fa fa-external-link"/>
-                </div>
-            </div>
-
-            <!-- Available -->
             <div class="asd-state-card asd-card-available"
                  t-on-click="() => this.setTab('available')">
                 <div class="asd-sc-accent"/>
@@ -179,34 +279,24 @@
                     t-on-click="() => this.setTab('overview')">
                 <i class="fa fa-th-large"/> Overview
             </button>
-            <button t-att-class="'asd-tab asd-tab-draft'     + (state.activeTab === 'draft'     ? ' asd-tab-active' : '')"
-                    t-on-click="() => this.setTab('draft')">
-                <i class="fa fa-file-text-o"/>
-                Draft
-                <span class="asd-tab-badge asd-tbadge-draft"><t t-esc="state.counts.draft"/></span>
-            </button>
-            <button t-att-class="'asd-tab asd-tab-available' + (state.activeTab === 'available' ? ' asd-tab-active' : '')"
+            <button t-att-class="'asd-tab' + (state.activeTab === 'available' ? ' asd-tab-active' : '')"
                     t-on-click="() => this.setTab('available')">
-                <i class="fa fa-check-circle"/>
-                Available
+                <i class="fa fa-check-circle"/> Available
                 <span class="asd-tab-badge asd-tbadge-available"><t t-esc="state.counts.available"/></span>
             </button>
-            <button t-att-class="'asd-tab asd-tab-assigned'  + (state.activeTab === 'assigned'  ? ' asd-tab-active' : '')"
+            <button t-att-class="'asd-tab' + (state.activeTab === 'assigned'  ? ' asd-tab-active' : '')"
                     t-on-click="() => this.setTab('assigned')">
-                <i class="fa fa-user-circle-o"/>
-                Assigned
+                <i class="fa fa-user-circle-o"/> Assigned
                 <span class="asd-tab-badge asd-tbadge-assigned"><t t-esc="state.counts.assigned"/></span>
             </button>
-            <button t-att-class="'asd-tab asd-tab-scrapped'  + (state.activeTab === 'scrapped'  ? ' asd-tab-active' : '')"
+            <button t-att-class="'asd-tab' + (state.activeTab === 'scrapped'  ? ' asd-tab-active' : '')"
                     t-on-click="() => this.setTab('scrapped')">
-                <i class="fa fa-times-circle"/>
-                Scrapped
+                <i class="fa fa-times-circle"/> Scrapped
                 <span class="asd-tab-badge asd-tbadge-scrapped"><t t-esc="state.counts.scrapped"/></span>
             </button>
-            <button t-att-class="'asd-tab asd-tab-disposed'  + (state.activeTab === 'disposed'  ? ' asd-tab-active' : '')"
+            <button t-att-class="'asd-tab' + (state.activeTab === 'disposed'  ? ' asd-tab-active' : '')"
                     t-on-click="() => this.setTab('disposed')">
-                <i class="fa fa-archive"/>
-                Disposed
+                <i class="fa fa-archive"/> Disposed
                 <span class="asd-tab-badge asd-tbadge-disposed"><t t-esc="state.counts.disposed"/></span>
             </button>
         </div>
@@ -237,10 +327,9 @@
                 </div>
             </div>
 
-            <!-- Donut + breakdown row -->
+            <!-- Donut + activity -->
             <div class="asd-overview-row">
 
-                <!-- Donut chart -->
                 <div class="asd-card asd-donut-card">
                     <div class="asd-card-header">
                         <span class="asd-card-title"><i class="fa fa-pie-chart me-2"/>Distribution</span>
@@ -253,7 +342,7 @@
                         </div>
                     </div>
                     <div class="asd-donut-legend">
-                        <t t-foreach="['draft','available','assigned','scrapped','disposed']" t-as="s" t-key="s">
+                        <t t-foreach="['available','assigned','scrapped','disposed']" t-as="s" t-key="s">
                             <div class="asd-legend-item" t-on-click="() => this.setTab(s)">
                                 <span class="asd-legend-dot" t-attf-style="background:#{STATE_META[s].color}"/>
                                 <span class="asd-legend-name"><t t-esc="STATE_META[s].label"/></span>
@@ -263,7 +352,6 @@
                     </div>
                 </div>
 
-                <!-- Recent activity -->
                 <div class="asd-card asd-activity-card">
                     <div class="asd-card-header">
                         <span class="asd-card-title"><i class="fa fa-history me-2"/>Recent Activity</span>
@@ -291,14 +379,13 @@
                     </div>
                 </div>
 
-            </div><!-- /.asd-overview-row -->
+            </div>
 
         </t><!-- /overview tab -->
 
-        <!-- ══ STATE TABS (draft / available / assigned / scrapped / disposed) -->
+        <!-- ══ STATE TABS ════════════════════════════════════════════════════ -->
         <t t-if="state.activeTab !== 'overview'">
 
-            <!-- Search + navigate-to-list bar -->
             <div class="asd-list-toolbar">
                 <div class="asd-search-wrap">
                     <i class="fa fa-search asd-search-icon"/>
@@ -313,7 +400,6 @@
                 </button>
             </div>
 
-            <!-- Asset card grid -->
             <t t-set="cards" t-value="filteredCards"/>
 
             <t t-if="!cards.length">
@@ -329,7 +415,6 @@
                          t-att-style="'border-left-color:' + STATE_META[card.asset_state].color"
                          t-on-click="() => this.navigateToAsset(card.id)">
 
-                        <!-- card header -->
                         <div class="asd-ac-head">
                             <span class="asd-ac-code"><t t-esc="card.code || '—'"/></span>
                             <span class="asd-ac-state-pill"
@@ -338,12 +423,10 @@
                             </span>
                         </div>
 
-                        <!-- asset name -->
                         <div class="asd-ac-name" t-att-title="card.name">
                             <t t-esc="card.name || '—'"/>
                         </div>
 
-                        <!-- serial + category -->
                         <div class="asd-ac-meta">
                             <span class="asd-ac-meta-item">
                                 <i class="fa fa-barcode"/> <t t-esc="card.serial || '—'"/>
@@ -353,7 +436,6 @@
                             </span>
                         </div>
 
-                        <!-- employee (shown when assigned) -->
                         <t t-if="card.employee">
                             <div class="asd-ac-employee">
                                 <div class="asd-ac-avatar">
@@ -366,7 +448,6 @@
                             </div>
                         </t>
 
-                        <!-- financial footer -->
                         <div class="asd-ac-footer">
                             <div class="asd-ac-fin">
                                 <span class="asd-ac-fin-label">Purchase</span>
@@ -388,7 +469,6 @@
                             </div>
                         </div>
 
-                        <!-- depreciation bar -->
                         <div class="asd-dep-bar-wrap">
                             <div class="asd-dep-bar"
                                  t-attf-style="width:#{Math.min(card.dep_pct,100)}%"/>
@@ -400,7 +480,7 @@
 
                     </div>
                 </t>
-            </div><!-- /.asd-asset-grid -->
+            </div>
 
         </t><!-- /state tabs -->
 

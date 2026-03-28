@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -47,6 +47,17 @@ class AccountAssetExtended(models.Model):
     lot_id = fields.Many2one(
         'stock.lot',
         string='Serial Number (Lot)',
+        required=True,
+        tracking=True,
+        domain="[('id', 'in', available_lot_ids)]",
+    )
+    
+    lot_ids = fields.Many2many(
+        'stock.lot',
+        'account_asset_lot_rel',   # relation table
+        'asset_id',
+        'lot_id',
+        string='Serial Numbers',
         required=True,
         tracking=True,
         domain="[('id', 'in', available_lot_ids)]",
@@ -133,39 +144,87 @@ class AccountAssetExtended(models.Model):
 
     # ─── SQL Constraints ─────────────────────────────────────────────────────
 
-    _sql_constraints = [
-        (
-            'lot_unique',
-            'UNIQUE(lot_id)',
-            'A serial number can only be registered as one asset.',
-        ),
-        (
-            'code_unique',
-            'UNIQUE(code)',
-            'Asset code must be globally unique.',
-        ),
-    ]
+    # _sql_constraints = [
+    #     (
+    #         'lot_unique',
+    #         'UNIQUE(lot_id)',
+    #         'A serial number can only be registered as one asset.',
+    #     ),
+    #     (
+    #         'code_unique',
+    #         'UNIQUE(code)',
+    #         'Asset code must be globally unique.',
+    #     ),
+    # ]
 
+    @api.constrains('code')
+    def _check_code_unique(self):
+        for rec in self:
+            if rec.code:
+                existing = self.search([
+                    ('code', '=', rec.code),
+                    ('id', '!=', rec.id)
+                ], limit=1)
+                if existing:
+                    raise ValidationError("Asset code must be unique.")
+    
+    @api.constrains('lot_ids')
+    def _check_lot_unique(self):
+        for rec in self:
+            for lot in rec.lot_ids:
+                existing = self.search([
+                    ('lot_ids', 'in', lot.id),
+                    ('id', '!=', rec.id)
+                ], limit=1)
+
+                if existing:
+                    raise ValidationError(
+                        f"Serial {lot.name} already used in another asset."
+                    )
+                    
     # ─── Compute Methods ─────────────────────────────────────────────────────
-    @api.depends('product_id', 'lot_id')
+    @api.depends('product_id', 'lot_ids')
     def _compute_name(self):
         for rec in self:
-            if rec.product_id and rec.lot_id:
-                rec.name = f'{rec.product_id.name} [{rec.lot_id.name}]'
+            if rec.product_id and rec.lot_ids:
+                lot_names = ', '.join(rec.lot_ids.mapped('name'))
+                rec.name = f'{rec.product_id.name} [{lot_names}]'
             elif rec.product_id:
                 rec.name = rec.product_id.name
             else:
-                rec.name = rec.name or _('New Asset')
-
+                rec.name = _('New Asset')
     
     # ─── ORM Overrides ───────────────────────────────────────────────────────
 
     @api.model_create_multi
     def create(self, vals_list):
+        new_vals_list = []
+
         for vals in vals_list:
-            if not vals.get('code'):
-                vals['code'] = self.env['ir.sequence'].next_by_code('account.asset.code') or '/'
-        return super().create(vals_list)
+            lot_ids = vals.get('lot_ids')
+
+            # If multiple lots selected → split
+            if lot_ids and isinstance(lot_ids, list):
+                lot_id_list = lot_ids[0][2] if lot_ids[0][0] == 6 else []
+
+                for lot_id in lot_id_list:
+                    new_vals = vals.copy()
+                    new_vals['lot_ids'] = [(6, 0, [lot_id])]
+
+                    if not new_vals.get('code'):
+                        new_vals['code'] = self.env['ir.sequence'].next_by_code(
+                            'account.asset.code'
+                        ) or '/'
+
+                    new_vals_list.append(new_vals)
+            else:
+                if not vals.get('code'):
+                    vals['code'] = self.env['ir.sequence'].next_by_code(
+                        'account.asset.code'
+                    ) or '/'
+                new_vals_list.append(vals)
+
+        return super().create(new_vals_list)
 
     
     def action_register(self):
@@ -205,14 +264,15 @@ class AccountAssetExtended(models.Model):
         move._action_confirm()
         move._action_assign()
 
-        self.env['stock.move.line'].create({
-            'move_id': move.id,
-            'product_id': self.product_id.id,
-            'qty_done': 1,
-            'location_id': source_location.id,
-            'location_dest_id': scrap_location.id,
-            'lot_id': self.lot_id.id,
-        })
+        for lot in self.lot_ids:
+            self.env['stock.move.line'].create({
+                'move_id': move.id,
+                'product_id': self.product_id.id,
+                'qty_done': 1,
+                'location_id': source_location.id,
+                'location_dest_id': scrap_location.id,
+                'lot_id': lot.id,
+            })
 
         move._action_done()
 
@@ -254,14 +314,15 @@ class AccountAssetExtended(models.Model):
         move._action_confirm()
         move._action_assign()
         
-        self.env['stock.move.line'].create({
-            'move_id': move.id,
-            'product_id': self.product_id.id,
-            'qty_done': 1,
-            'location_id': source_location.id,
-            'location_dest_id': destination_location.id,
-            'lot_id': self.lot_id.id,
-        })
+        for lot in self.lot_ids:
+            self.env['stock.move.line'].create({
+                'move_id': move.id,
+                'product_id': self.product_id.id,
+                'qty_done': 1,
+                'location_id': source_location.id,
+                'location_dest_id': destination_location.id,
+                'lot_id': lot.id,
+            })
         
         move._action_done()
         

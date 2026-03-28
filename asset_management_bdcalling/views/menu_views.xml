@@ -9,12 +9,22 @@
               sequence="10"/>
 
     <!-- ── Dashboard ──────────────────────────────────────────────────── -->
-    <menuitem id="menu_asset_dashboard"
+    <menuitem id="menu_dashboard"
               name="Dashboard"
               parent="menu_asset_management_root"
+              sequence="10"
+              />
+    <menuitem id="menu_asset_dashboard"
+              name="Asset Dashboard"
+              parent="menu_dashboard"
               action="action_asset_dashboard"
               sequence="10"
               />
+    <menuitem id="menu_asset_status_dashboard"
+              name="Asset Status Dashboard"
+              parent="menu_dashboard"
+              action="action_asset_status_dashboard"
+              sequence="20"/>
 
     <!-- ── Assets ─────────────────────────────────────────────────────── -->
     <menuitem id="menu_asset_assets"
@@ -55,7 +65,7 @@
     <menuitem id="menu_asset_configuration"
               name="Configuration"
               parent="menu_asset_management_root"
-              sequence="30"
+              sequence="60"
               />
 
     <menuitem id="menu_asset_category"
@@ -81,7 +91,7 @@
     <menuitem id="menu_asset_reports"
               name="Reports"
               parent="menu_asset_management_root"
-              sequence="60"
+              sequence="30"
               />
 
     <!-- <menuitem id="menu_report_asset_valuation"
@@ -102,15 +112,11 @@
               parent="menu_asset_reports"
               action="asset_management_bdcalling.action_asset_report_wizard"
               sequence="10"/>
-    <menuitem id="menu_asset_status_dashboard"
-              name="Asset Status Dashboard"
-              parent="menu_asset_reports"
-              action="action_asset_status_dashboard"
-              sequence="20"/>
+    
     <menuitem id="menu_asset_status_dashboard_wizard"
               name="Asset Status by Product"
               parent="menu_asset_reports"
               action="action_asset_status_dashboard_wizard"
-              sequence="30"/>
+              sequence="20"/>
 
 </odoo>

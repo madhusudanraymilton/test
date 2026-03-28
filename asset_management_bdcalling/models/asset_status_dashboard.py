@@ -139,7 +139,11 @@ class AssetStatusDashboard(models.TransientModel):
         """
         company = self.env['res.company'].browse(company_id) if company_id else self.env.company
 
-        domain = [('company_id', '=', company.id)]
+        domain = [
+            ('lot_id',     '!=', False),
+            ('asset_state', 'not in', ['draft']),
+            ('company_id', 'in', company.id),
+        ]
         if asset_id:
             domain.append(('id', '=', asset_id))
         elif product_id:

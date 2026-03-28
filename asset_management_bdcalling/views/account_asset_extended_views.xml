@@ -26,22 +26,25 @@
             <!-- ── 3. Product + Serial fields after the Name field ───────────
                  Only on real assets, not on category forms.                  -->
             <xpath expr="//div//field[@name='name']" position="after">
-                <label for="product_id" invisible="state == 'model'">
-                    Product
-                </label>
-                <field name="product_id"
-                       nolabel="1"
-                       invisible="state == 'model'"/>
+                <group>
+                    <label for="product_id" invisible="state == 'model'">
+                        Product
+                    </label>
+                    <field name="product_id"
+                        nolabel="1"
+                        invisible="state == 'model'"/>
 
-                <field name="available_lot_ids" invisible="1"/>
+                    <field name="available_lot_ids" invisible="1"/>
 
-                <label for="lot_id" invisible="state == 'model'">
-                    Serial Number
-                </label>
-                <field name="lot_id"
-                       nolabel="1"
-                       domain="[('id', 'in', available_lot_ids)]"
-                       invisible="state == 'model'"/>
+                    <label for="lot_ids" invisible="state == 'model'">
+                        Serial Number
+                    </label>
+                    <!-- <field name="lot_id"
+                        nolabel="1"
+                        domain="[('id', 'in', available_lot_ids)]"
+                        invisible="state == 'model'"/> -->
+                    <field name="lot_ids" widget="many2many_tags" nolabel="1" domain="[('id', 'in', available_lot_ids)]" invisible="state == 'model'"/>
+                </group>
             </xpath>
 
             <!-- ── 4. Replace native state widget + validate button ──────────
@@ -213,6 +216,30 @@
                 <field name="lot_id"/>
                 <field name="asset_state"/>
             </xpath> -->
+            <xpath expr="//list" position="replace">
+                <list string="Assets">
+
+                    <field name="name"/>
+                    <field name="asset_properties"/>
+                    <field name="acquisition_date"/>
+                    <field name="original_value"/>
+                    <field name="method"/>
+                    <field name="book_value"/>
+                    <field name="value_residual" widget="monetary"/>
+                    <field name="account_asset_id"/>
+                    <field name="account_depreciation_id"/>
+                    <field name="account_depreciation_expense_id"/>
+                    <field name="analytic_distribution" widget="analytic_distribution"
+                        groups="analytic.group_analytic_accounting"/>
+                    <field name="currency_id" groups="base.group_multi_currency"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="parent_id"/>
+                    <field name="state"/>
+                    <field name="activity_exception_decoration" widget="activity_exception"/>
+                    <field name="activity_ids" widget="list_activity"/>
+
+                </list>
+            </xpath>
 
             <!-- ✅ 2. Add your custom asset_state -->
             <xpath expr="//field[@name='state']" position="replace">
@@ -231,6 +258,8 @@
                 <attribute name="decoration-warning">asset_state == 'assigned'</attribute>
                 <attribute name="decoration-danger">asset_state in ('scrapped','disposed')</attribute>
             </xpath>
+
+            
 
         </field>
     </record>
