@@ -17,6 +17,37 @@
                                 &amp;nbsp;to&amp;nbsp;
                                 <t t-esc="wizard.date_to or 'Today'"/>
                             </h5>
+
+                            <!-- Applied cascade filters shown as pills -->
+                            <div style="margin-top:6px;font-size:11px;color:#64748B;">
+                                <t t-if="wizard.category_ids">
+                                    <span style="background:#EEF2FF;color:#4F46E5;
+                                                padding:2px 8px;border-radius:12px;margin:2px;">
+                                        Categories:
+                                        <strong>
+                                            <t t-esc="', '.join(wizard.category_ids.mapped('name'))"/>
+                                        </strong>
+                                    </span>
+                                </t>
+                                <t t-if="wizard.product_ids">
+                                    <span style="background:#EFF6FF;color:#2563EB;
+                                                padding:2px 8px;border-radius:12px;margin:2px;">
+                                        Assets:
+                                        <strong>
+                                            <t t-esc="', '.join(wizard.product_ids.mapped('name'))"/>
+                                        </strong>
+                                    </span>
+                                </t>
+                                <t t-if="wizard.lot_ids">
+                                    <span style="background:#F0FDF4;color:#059669;
+                                                padding:2px 8px;border-radius:12px;margin:2px;">
+                                        Serials:
+                                        <strong>
+                                            <t t-esc="', '.join(wizard.lot_ids.mapped('name'))"/>
+                                        </strong>
+                                    </span>
+                                </t>
+                            </div>
                         </div>
                     </div>
 

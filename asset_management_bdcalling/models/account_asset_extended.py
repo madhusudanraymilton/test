@@ -457,14 +457,29 @@ class AccountAssetExtended(models.Model):
             1 for a in assets if a.asset_state in ('scrapped', 'disposed')
         )
 
-        # Native fields: original_value (set before validate), value_residual (computed)
-        total_value       = sum(assets.mapped('original_value'))
-        net_book_value    = sum(assets.mapped('value_residual'))
+        active_assets     = assets.filtered(
+            lambda a: a.asset_state in ('available', 'assigned')
+        )
+        
+        # # Native fields: original_value (set before validate), value_residual (computed)
+        # total_value       = sum(assets.mapped('original_value'))
+        # net_book_value    = sum(assets.mapped('value_residual'))
+        # total_depreciated = total_value - net_book_value
+
+        # # Pending draft depreciation moves due today or earlier
+        # pending_depreciation = self.env['account.move'].sudo().search_count([
+        #     ('asset_id', 'in', assets.ids),
+        #     ('state',    '=', 'draft'),
+        #     ('date',     '<=', fields.Date.today()),
+        # ])
+
+        total_value       = sum(active_assets.mapped('original_value'))
+        net_book_value    = sum(active_assets.mapped('value_residual'))
         total_depreciated = total_value - net_book_value
 
-        # Pending draft depreciation moves due today or earlier
+        # Pending draft depreciation moves — also scope to active assets only
         pending_depreciation = self.env['account.move'].sudo().search_count([
-            ('asset_id', 'in', assets.ids),
+            ('asset_id', 'in', active_assets.ids),
             ('state',    '=', 'draft'),
             ('date',     '<=', fields.Date.today()),
         ])

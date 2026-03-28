@@ -15,17 +15,31 @@
 
                     <separator/>
 
+                    <!--
+                        Invisible computed helpers — MUST be present so the
+                        ORM can evaluate their values when the form loads and
+                        when onchange fires. Without them in the view the
+                        domain= on product_ids / lot_ids has nothing to read.
+                    -->
+                    <field name="available_product_ids" invisible="1"/>
+                    <field name="available_lot_domain_ids" invisible="1"/>
+
                     <!-- ── Filters ────────────────────────────────────── -->
                     <group string="Filters" name="filters_group">
-                        <group>
+                        <group name="filters_left">
                             <field name="company_id"
                                    groups="base.group_multi_company"/>
                             <field name="asset_state_filter"/>
+                            <!--
+                                category_ids is shared across all report types.
+                                For the movement report it also narrows Asset Name
+                                and Serial Number via the computed helpers.
+                            -->
                             <field name="category_ids"
                                    widget="many2many_tags"
                                    options="{'no_create': True}"/>
                         </group>
-                        <group>
+                        <group name="filters_right">
                             <field name="date_from"
                                    invisible="report_type == 'valuation'"/>
                             <field name="date_to"
@@ -37,6 +51,44 @@
                         </group>
                     </group>
 
+                    <!-- ── Movement-report cascade filters ───────────────
+                         Shown only when report_type == 'movement'.
+                         Each field's domain is driven by the computed helper
+                         above so the choices narrow as the user selects.
+                    ─────────────────────────────────────────────────────── -->
+                    <group string="Asset Filters"
+                           name="movement_asset_filters"
+                           invisible="report_type != 'movement'">
+                        <group name="movement_left">
+                            <!--
+                                Asset Name = product_id on account.asset.
+                                Domain is restricted to products that have at
+                                least one registered asset in the selected
+                                categories (via available_product_ids).
+                            -->
+                            <field name="product_ids"
+                                   string="Asset Name"
+                                   widget="many2many_tags"
+                                   domain="[('id', 'in', available_product_ids)]"
+                                   options="{'no_create': True}"
+                                   help="Only products registered as assets in the selected categories are shown."/>
+                        </group>
+                        <group name="movement_right">
+                            <!--
+                                Serial Number = lot_id on account.asset.
+                                Domain is restricted to lots that belong to
+                                assets matching the selected category + product
+                                (via available_lot_domain_ids).
+                            -->
+                            <field name="lot_ids"
+                                   string="Serial Number"
+                                   widget="many2many_tags"
+                                   domain="[('id', 'in', available_lot_domain_ids)]"
+                                   options="{'no_create': True}"
+                                   help="Only serial numbers belonging to the selected asset names are shown."/>
+                        </group>
+                    </group>
+
                     <!-- ── Context hints ──────────────────────────────── -->
                     <div class="alert alert-info" role="alert"
                          invisible="report_type != 'movement'">
@@ -44,6 +96,8 @@
                         Movement report shows all lifecycle events
                         (register, assign, return, scrap, dispose)
                         within the selected date range.
+                        Selecting a category narrows the Asset Name list;
+                        selecting an asset name narrows the Serial Number list.
                     </div>
 
                     <div class="alert alert-info" role="alert"
