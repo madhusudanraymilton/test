@@ -62,6 +62,7 @@ Asset Management System (AMS)
         'report/templates/report_depreciation_schedule.xml',
         'report/templates/report_asset_movement.xml',
         'report/templates/report_asset_valuation_full.xml',
+        'views/asset_status_dashboard_views.xml',
         'views/menu_views.xml',
     ],
     'assets': {
@@ -69,6 +70,9 @@ Asset Management System (AMS)
             'asset_management_bdcalling/static/src/xml/asset_dashboard.xml',
             'asset_management_bdcalling/static/src/js/asset_dashboard.js',
             'asset_management_bdcalling/static/src/css/asset_dashboard.css',
+            'asset_management_bdcalling/static/src/xml/asset_status_dashboard.xml',   # ← ADD
+            'asset_management_bdcalling/static/src/js/asset_status_dashboard.js',     # ← ADD
+            'asset_management_bdcalling/static/src/css/asset_status_dashboard.css',   # ← ADD
         ],
     },
     'installable': True,

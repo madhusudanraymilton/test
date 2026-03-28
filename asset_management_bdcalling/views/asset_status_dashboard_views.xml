@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         Asset Status Dashboard — ir.actions.client
+         Registered OWL component tag:
+           asset_management_bdcalling.AssetStatusDashboard
+         ═══════════════════════════════════════════════════════════════════ -->
+    <record id="action_asset_status_dashboard" model="ir.actions.client">
+        <field name="name">Asset Status Overview</field>
+        <field name="tag">asset_management_bdcalling.AssetStatusDashboard</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         Wizard form view — "Open in wizard" entry point
+         Users can select a product/asset before the dashboard loads.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <record id="view_asset_status_dashboard_wizard_form" model="ir.ui.view">
+        <field name="name">asset.status.dashboard.form</field>
+        <field name="model">asset.status.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Asset Status Dashboard">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle me-1"/>
+                        Select an <strong>Asset Product</strong> or a
+                        <strong>Specific Asset</strong> to filter the dashboard.
+                        Leave both empty to view all assets.
+                    </div>
+                    <group string="Filters">
+                        <group>
+                            <field name="product_id"
+                                   options="{'no_create': True}"
+                                   placeholder="All asset products"/>
+                            <field name="asset_id"
+                                   options="{'no_create': True}"
+                                   placeholder="All registered assets"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+
+                    <!-- Read-only KPI preview inside the wizard -->
+                    <group string="Quick Counts" col="5">
+                        <field name="count_draft"     string="Draft"     readonly="1"/>
+                        <field name="count_available" string="Available" readonly="1"/>
+                        <field name="count_assigned"  string="Assigned"  readonly="1"/>
+                        <field name="count_scrapped"  string="Scrapped"  readonly="1"/>
+                        <field name="count_disposed"  string="Disposed"  readonly="1"/>
+                    </group>
+
+                    <separator string="Jump directly to state"/>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button name="action_open_draft"
+                                type="object"
+                                string="Draft Assets"
+                                class="btn-secondary btn"/>
+                        <button name="action_open_available"
+                                type="object"
+                                string="Available Assets"
+                                class="btn-success btn"/>
+                        <button name="action_open_assigned"
+                                type="object"
+                                string="Assigned Assets"
+                                class="btn-primary btn"/>
+                        <button name="action_open_scrapped"
+                                type="object"
+                                string="Scrapped Assets"
+                                class="btn-danger btn"/>
+                        <button name="action_open_disposed"
+                                type="object"
+                                string="Disposed Assets"
+                                class="btn-warning btn"/>
+                        <button name="action_open_all"
+                                type="object"
+                                string="All Assets"
+                                class="btn-secondary btn"/>
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard window action (opens as a dialog from the menu) -->
+    <record id="action_asset_status_dashboard_wizard" model="ir.actions.act_window">
+        <field name="name">Asset Status Dashboard</field>
+        <field name="res_model">asset.status.dashboard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_asset_status_dashboard_wizard_form"/>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                View your asset lifecycle at a glance
+            </p>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         Menu placement — Reports submenu
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Full OWL Dashboard (client action) -->
+    
+
+    <!-- Wizard entry point (quick filter + jump-to-list) -->
+    
+
+</odoo>
