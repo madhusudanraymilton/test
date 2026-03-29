@@ -36,14 +36,14 @@
 
                     <field name="available_lot_ids" invisible="1"/>
 
-                    <label for="lot_ids" invisible="state == 'model'">
+                    <label for="lot_id" invisible="state == 'model'">
                         Serial Number
                     </label>
-                    <!-- <field name="lot_id"
+                    <field name="lot_id"
                         nolabel="1"
                         domain="[('id', 'in', available_lot_ids)]"
-                        invisible="state == 'model'"/> -->
-                    <field name="lot_ids" widget="many2many_tags" nolabel="1" domain="[('id', 'in', available_lot_ids)]" invisible="state == 'model'"/>
+                        invisible="state == 'model'"/>
+                    <!-- <field name="lot_ids" widget="many2many_tags" nolabel="1" domain="[('id', 'in', available_lot_ids)]" invisible="state == 'model'"/> -->
                 </group>
             </xpath>
 
