@@ -145,16 +145,16 @@ class AccountAssetExtended(models.Model):
     #         'Asset code must be globally unique.',
     #     ),
     # ]
-    @api.constrains('code')
-    def _check_code_unique(self):
-        for rec in self:
-            if rec.code:
-                existing = self.search([
-                    ('code', '=', rec.code),
-                    ('id', '!=', rec.id)
-                ], limit=1)
-                if existing:
-                    raise ValidationError("Asset code must be unique.")
+    # @api.constrains('code')
+    # def _check_code_unique(self):
+    #     for rec in self:
+    #         if rec.code:
+    #             existing = self.search([
+    #                 ('code', '=', rec.code),
+    #                 ('id', '!=', rec.id)
+    #             ], limit=1)
+    #             if existing:
+    #                 raise ValidationError("Asset code must be unique.")
     
     @api.constrains('lot_id')
     def _check_lot_unique(self):
@@ -186,61 +186,122 @@ class AccountAssetExtended(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        seq_model = self.env['ir.sequence']
+
         for vals in vals_list:
-            if not vals.get('code'):
-                vals['code'] = self.env['ir.sequence'].next_by_code('account.asset.code') or '/'
+            # Only generate code for real assets (must have product + lot)
+            if not vals.get('code') and vals.get('lot_id'):
+                code = seq_model.next_by_code('account.asset.code')
+
+                if not code:
+                    raise ValidationError(
+                        "Sequence 'account.asset.code' is not configured."
+                    )
+
+                vals['code'] = code
+
         return super().create(vals_list)
 
     
+    # def action_register(self):
+    #     self.ensure_one()
+
+    #     if self.asset_state != 'draft':
+    #         raise UserError(_("Only draft assets can be registered"))
+
+    #     if not self.product_id or not self.lot_id:
+    #         raise UserError(_("Product and Serial Number required"))
+
+    #     source_location = self.location_id or self.env.ref('stock.stock_location_stock')
+    #     self.original_location_id = source_location
+
+    #     scrap_location = self.env.ref(
+    #         'stock.stock_location_scrap',
+    #         raise_if_not_found=False
+    #     )
+
+    #     if not scrap_location:
+    #         scrap_location = self.env['stock.location'].search([
+    #             ('usage', '=', 'inventory')
+    #         ], limit=1)
+
+    #     if not scrap_location:
+    #         raise UserError(_("No scrap location found."))
+
+    #     move = self.env['stock.move'].create({
+    #         'product_id': self.product_id.id,
+    #         'product_uom_qty': 1,
+    #         'product_uom': self.product_id.uom_id.id,
+    #         'location_id': source_location.id,
+    #         'location_dest_id': scrap_location.id,
+    #         'description_picking': f'Asset Register: {self.name}',
+    #     })
+
+    #     move._action_confirm()
+    #     move._action_assign()
+
+    #     self.env['stock.move.line'].create({
+    #         'move_id': move.id,
+    #         'product_id': self.product_id.id,
+    #         'qty_done': 1,
+    #         'location_id': source_location.id,
+    #         'location_dest_id': scrap_location.id,
+    #         'lot_id': self.lot_id.id,
+    #     })
+
+    #     move._action_done()
+
+    #     self.asset_state = 'available'
+
     def action_register(self):
-        self.ensure_one()
+        for rec in self:
+            if rec.asset_state != 'draft':
+                raise UserError(_("Only draft assets can be registered"))
 
-        if self.asset_state != 'draft':
-            raise UserError(_("Only draft assets can be registered"))
+            if not rec.product_id or not rec.lot_id:
+                raise UserError(_("Product and Serial Number required"))
 
-        if not self.product_id or not self.lot_id:
-            raise UserError(_("Product and Serial Number required"))
+            source_location = rec.location_id or self.env.ref('stock.stock_location_stock')
+            rec.original_location_id = source_location
 
-        source_location = self.location_id or self.env.ref('stock.stock_location_stock')
-        self.original_location_id = source_location
+            scrap_location = self.env.ref(
+                'stock.stock_location_scrap',
+                raise_if_not_found=False
+            )
 
-        scrap_location = self.env.ref(
-            'stock.stock_location_scrap',
-            raise_if_not_found=False
-        )
+            if not scrap_location:
+                scrap_location = self.env['stock.location'].search([
+                    ('usage', '=', 'inventory')
+                ], limit=1)
 
-        if not scrap_location:
-            scrap_location = self.env['stock.location'].search([
-                ('usage', '=', 'inventory')
-            ], limit=1)
+            if not scrap_location:
+                raise UserError(_("No scrap location found."))
 
-        if not scrap_location:
-            raise UserError(_("No scrap location found."))
+            move = self.env['stock.move'].create({
+                'product_id': rec.product_id.id,
+                'product_uom_qty': 1,
+                'product_uom': rec.product_id.uom_id.id,
+                'location_id': source_location.id,
+                'location_dest_id': scrap_location.id,
+                'description_picking': f'Asset Register: {rec.name}',
+            })
 
-        move = self.env['stock.move'].create({
-            'product_id': self.product_id.id,
-            'product_uom_qty': 1,
-            'product_uom': self.product_id.uom_id.id,
-            'location_id': source_location.id,
-            'location_dest_id': scrap_location.id,
-            'description_picking': f'Asset Register: {self.name}',
-        })
+            move._action_confirm()
+            move._action_assign()
 
-        move._action_confirm()
-        move._action_assign()
+            self.env['stock.move.line'].create({
+                'move_id': move.id,
+                'product_id': rec.product_id.id,
+                'qty_done': 1,
+                'location_id': source_location.id,
+                'location_dest_id': scrap_location.id,
+                'lot_id': rec.lot_id.id,
+            })
 
-        self.env['stock.move.line'].create({
-            'move_id': move.id,
-            'product_id': self.product_id.id,
-            'qty_done': 1,
-            'location_id': source_location.id,
-            'location_dest_id': scrap_location.id,
-            'lot_id': self.lot_id.id,
-        })
+            move._action_done()
 
-        move._action_done()
+            rec.asset_state = 'available'
 
-        self.asset_state = 'available'
     def action_unregister(self):
         self.ensure_one()
         
@@ -294,7 +355,93 @@ class AccountAssetExtended(models.Model):
         
         # Clear the original location reference if desired
         # self.original_location_id = False
-    
+    def action_auto_create_from_product_serials(self):
+        """
+        Find every stock.lot for self.product_id that is not yet claimed by
+        any asset record and create one draft account.asset per lot.
+        The current record's category / accounting config is copied to each child.
+        """
+        self.ensure_one()
+
+        if not self.product_id:
+            raise UserError(_('Please select a Product first.'))
+
+        all_lots = self.env['stock.lot'].search([
+            ('product_id', '=', self.product_id.id),
+        ])
+        if not all_lots:
+            raise UserError(_(
+                'Product "%s" has no serial numbers recorded in inventory.'
+            ) % self.product_id.name)
+
+        # Lots already claimed by any other asset (draft or live)
+        taken_lot_ids = self.env['account.asset'].search([
+            ('lot_id',      '!=', False),
+            ('product_id',  '=',  self.product_id.id),
+            ('id',          '!=', self.id),
+        ]).mapped('lot_id').ids
+
+        free_lots = all_lots.filtered(lambda l: l.id not in taken_lot_ids)
+        if not free_lots:
+            raise UserError(_(
+                'All serial numbers for "%s" already have asset records.'
+            ) % self.product_id.name)
+
+        created = self.env['account.asset']
+
+        for lot in free_lots:
+            asset = self.env['account.asset'].create({
+                # Identity
+                'name':         f'{self.product_id.name} [{lot.name}]',
+                'product_id':   self.product_id.id,
+                'lot_id':       lot.id,
+                'company_id':   self.company_id.id,
+                'asset_state':  'draft',
+                # Category / accounting — copied from the current record if set
+                'model_id':      self.model_id.id if self.model_id else False,
+                'original_value': self.original_value or 0.0,
+                'acquisition_date': self.acquisition_date or fields.Date.today(),
+                'account_asset_id':
+                    self.account_asset_id.id
+                    if self.account_asset_id else False,
+                'account_depreciation_id':
+                    self.account_depreciation_id.id
+                    if self.account_depreciation_id else False,
+                'account_depreciation_expense_id':
+                    self.account_depreciation_expense_id.id
+                    if self.account_depreciation_expense_id else False,
+                'journal_id':
+                    self.journal_id.id if self.journal_id else False,
+                'method':        self.method        or False,
+                'method_number': self.method_number or 0,
+                'method_period': self.method_period or '1',
+            })
+            created |= asset
+
+        created.action_register()
+
+        _logger.info(
+            'AMS: Auto-created %d draft assets for product %s',
+            len(created), self.product_id.name,
+        )
+
+        if len(created) == 1:
+            return {
+                'type':      'ir.actions.act_window',
+                'name':      _('Draft Asset'),
+                'res_model': 'account.asset',
+                'res_id':    created.id,
+                'view_mode': 'form',
+                'target':    'current',
+            }
+        return {
+            'type':      'ir.actions.act_window',
+            'name':      _('%d Draft Assets Created') % len(created),
+            'res_model': 'account.asset',
+            'view_mode': 'list,form',
+            'domain':    [('id', 'in', created.ids)],
+            'target':    'current',
+        }
     def action_assign(self):
         """Open the assign wizard."""
         self.ensure_one()

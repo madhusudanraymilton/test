@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
     <record id="view_account_asset_form_inherit_custom" model="ir.ui.view">
         <field name="name">account.asset.form.inherit.custom</field>
         <field name="model">account.asset</field>
@@ -36,13 +35,13 @@
 
                     <field name="available_lot_ids" invisible="1"/>
 
-                    <label for="lot_id" invisible="state == 'model'">
+                    <!-- <label for="lot_id" invisible="state == 'model'">
                         Serial Number
-                    </label>
-                    <field name="lot_id"
+                    </label> -->
+                    <!-- <field name="lot_id"
                         nolabel="1"
                         domain="[('id', 'in', available_lot_ids)]"
-                        invisible="state == 'model'"/>
+                        invisible="state == 'model'"/> -->
                     <!-- <field name="lot_ids" widget="many2many_tags" nolabel="1" domain="[('id', 'in', available_lot_ids)]" invisible="state == 'model'"/> -->
                 </group>
             </xpath>
@@ -66,16 +65,23 @@
                  as-is by Odoo; we add our own AMS statusbar below it.       -->
             <xpath expr="//header/field[@name='state']" position="replace">
 
-                <button name="action_register"
+                <!-- <button name="action_register"
                         string="Register"
                         type="object"
                         class="btn-primary"
-                        invisible="asset_state != 'draft' or state == 'model'"/>
+                        invisible="asset_state != 'draft' or state == 'model'"/> -->
 
                 <button name="action_unregister"
                         string="Unregister"
                         type="object"
                         invisible="asset_state != 'available' or state == 'model'"/>
+                
+                <button name="action_auto_create_from_product_serials"
+                    string="Auto-Create from All Serials"
+                    type="object"
+                    class="btn-secondary"
+                    invisible="state == 'model' or not product_id or asset_state != 'draft'"
+                    confirm="Create one draft asset for every unregistered serial number of this product?"/>
 
                 <button name="action_assign"
                         string="Assign"
