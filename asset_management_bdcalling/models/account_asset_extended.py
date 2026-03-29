@@ -130,6 +130,18 @@ class AccountAssetExtended(models.Model):
 
     notes = fields.Text(string='Notes')
 
+    vendor_bill_line_id = fields.Many2one(
+        'account.move.line',
+        string='Vendor Bill Line',
+       
+    )
+
+    register_move_id = fields.Many2one(
+        'account.move',
+        string='Register Journal Entry',
+       
+    )
+
 
     # ─── SQL Constraints ─────────────────────────────────────────────────────
 
@@ -300,6 +312,8 @@ class AccountAssetExtended(models.Model):
 
             move._action_done()
 
+            rec._create_asset_account_move()
+
             rec.asset_state = 'available'
 
     def action_unregister(self):
@@ -349,6 +363,8 @@ class AccountAssetExtended(models.Model):
         })
         
         move._action_done()
+
+        self._create_asset_reverse_move()
         
         # Reset state to draft
         self.asset_state = 'draft'
@@ -365,10 +381,14 @@ class AccountAssetExtended(models.Model):
 
         if not self.product_id:
             raise UserError(_('Please select a Product first.'))
+        
+        # if not self.vendor_bill_line_id:
+        #     raise UserError(_('Please select a Vendor Bill Line.'))
 
         all_lots = self.env['stock.lot'].search([
             ('product_id', '=', self.product_id.id),
         ])
+
         if not all_lots:
             raise UserError(_(
                 'Product "%s" has no serial numbers recorded in inventory.'
@@ -387,6 +407,16 @@ class AccountAssetExtended(models.Model):
                 'All serial numbers for "%s" already have asset records.'
             ) % self.product_id.name)
 
+        # ✅ PRICE DISTRIBUTION
+        bill_line = self.vendor_bill_line_id
+        total_qty = bill_line.quantity
+        total_price = bill_line.price_subtotal
+
+        if total_qty <= 0:
+            raise UserError(_("Invalid quantity in bill line"))
+
+        unit_price = total_price / total_qty
+
         created = self.env['account.asset']
 
         for lot in free_lots:
@@ -397,9 +427,14 @@ class AccountAssetExtended(models.Model):
                 'lot_id':       lot.id,
                 'company_id':   self.company_id.id,
                 'asset_state':  'draft',
+                 # ✅ VALUE FROM BILL
+                'original_value': unit_price,
+                'purchase_price': unit_price,
+
+                'vendor_bill_line_id': bill_line.id,
                 # Category / accounting — copied from the current record if set
                 'model_id':      self.model_id.id if self.model_id else False,
-                'original_value': self.original_value or 0.0,
+                # 'original_value': self.original_value or 0.0,
                 'acquisition_date': self.acquisition_date or fields.Date.today(),
                 'account_asset_id':
                     self.account_asset_id.id
@@ -418,7 +453,7 @@ class AccountAssetExtended(models.Model):
             })
             created |= asset
 
-        created.action_register()
+            created.action_register()
 
         _logger.info(
             'AMS: Auto-created %d draft assets for product %s',
@@ -442,6 +477,68 @@ class AccountAssetExtended(models.Model):
             'domain':    [('id', 'in', created.ids)],
             'target':    'current',
         }
+    def _create_asset_account_move(self):
+        self.ensure_one()
+
+        if not self.account_asset_id:
+            raise UserError(_("Set Fixed Asset Account"))
+
+        valuation_account = self.product_id.categ_id.property_stock_valuation_account_id
+
+        if not valuation_account:
+            raise UserError(_("No Stock Valuation Account found"))
+
+        move = self.env['account.move'].create({
+            'journal_id': self.journal_id.id,
+            'date': fields.Date.today(),
+            'ref': f'Asset Register: {self.name}',
+            'line_ids': [
+                (0, 0, {
+                    'name': self.name,
+                    'account_id': self.account_asset_id.id,
+                    'debit': self.original_value,
+                    'credit': 0,
+                }),
+                (0, 0, {
+                    'name': self.name,
+                    'account_id': valuation_account.id,
+                    'credit': self.original_value,
+                    'debit': 0,
+                }),
+            ]
+        })
+
+        move.action_post()
+
+        self.register_move_id = move.id
+
+    def _create_asset_reverse_move(self):
+        self.ensure_one()
+
+        valuation_account = self.product_id.categ_id.property_stock_valuation_account_id
+
+        move = self.env['account.move'].create({
+            'journal_id': self.journal_id.id,
+            'date': fields.Date.today(),
+            'ref': f'Asset Unregister: {self.name}',
+            'line_ids': [
+                (0, 0, {
+                    'name': self.name,
+                    'account_id': valuation_account.id,
+                    'debit': self.original_value,
+                    'credit': 0,
+                }),
+                (0, 0, {
+                    'name': self.name,
+                    'account_id': self.account_asset_id.id,
+                    'credit': self.original_value,
+                    'debit': 0,
+                }),
+            ]
+        })
+
+        move.action_post()
+
     def action_assign(self):
         """Open the assign wizard."""
         self.ensure_one()
