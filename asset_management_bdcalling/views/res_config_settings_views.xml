@@ -1,10 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- <odoo>
+
+    <record id="res_config_settings_view_form_asset" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.asset.management</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+
+                <app data-string="Asset Management"
+                     string="Asset Management"
+                     name="asset_management_bdcalling"
+                     groups="base.group_system">
+
+                   
+                    <block title="Inventory &amp; Locations"
+                           name="asset_inventory_block">
+
+                        <setting string="Default Asset Location"
+                                 help="Stock location where serial numbers are moved when an asset is registered."
+                                 documentation="/documentation/asset-location">
+                            <field name="asset_location_id"
+                                   placeholder="e.g. WH/Asset Storage"/>
+                        </setting>
+
+                    </block>
+
+                    
+                    <block title="Lifecycle Automation"
+                           name="asset_lifecycle_block">
+
+                        <setting string="Auto-Return on Employee Archive"
+                                 help="Automatically return all assigned assets to Available when an employee is archived. A daily cron handles any that remain open.">
+                            <field name="auto_return_on_employee_archive"/>
+                        </setting>
+
+                        <setting string="Allow Future Assignment Dates"
+                                 help="Let users pick a future date when assigning an asset. By default only today or earlier is accepted.">
+                            <field name="asset_assign_date_future_allowed"/>
+                        </setting>
+
+                    </block>
+
+                    <block title="Assignment Defaults"
+                           name="asset_assignment_block">
+
+                        <setting string="Default Assignment Condition"
+                                 help="Pre-selected condition shown in the Assign wizard. Users can override it per assignment.">
+                            <field name="asset_default_assign_condition"/>
+                        </setting>
+
+                        <setting string="Require Notes on Return"
+                                 help="Make the Notes field mandatory when a user confirms the return of an asset.">
+                            <field name="asset_require_return_notes"/>
+                        </setting>
+
+                    </block>
+
+                   
+                    <block title="Notifications"
+                           name="asset_notifications_block">
+
+                        <setting string="Notify Employee on Assignment"
+                                 help="Send an automatic email to the employee's work address when an asset is assigned to them.">
+                            <field name="asset_notify_employee_on_assign"/>
+                        </setting>
+
+                    </block>
+
+                   
+                    <block title="Financials &amp; Reporting"
+                           name="asset_financials_block">
+
+                        <setting string="Low-Value Asset Threshold"
+                                 help="Assets purchased below this amount are highlighted as low-value in reports and the dashboard. Set to 0 to disable.">
+                            <field name="asset_low_value_threshold"/>
+                        </setting>
+
+                    </block>
+
+                </app>
+
+            </xpath>
+        </field>
+    </record>
+
+    
+    <record id="action_asset_settings" model="ir.actions.act_window">
+        <field name="name">Asset Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="res_config_settings_view_form_asset"/>
+        <field name="target">current</field>
+        <field name="context">
+            {'module': 'asset_management_bdcalling', 'bin_size': False}
+        </field>
+    </record>
+
+</odoo> -->
+
 <odoo>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          Asset Management — Settings Block
-         Inherits the global res.config.settings form and injects a dedicated
-         "Asset Management" app settings section following Odoo 19 conventions.
          ═══════════════════════════════════════════════════════════════════════ -->
     <record id="res_config_settings_view_form_asset" model="ir.ui.view">
         <field name="name">res.config.settings.view.form.inherit.asset.management</field>
@@ -22,11 +120,18 @@
                     <block title="Inventory &amp; Locations"
                            name="asset_inventory_block">
 
+                        <!--
+                            domain restricts to usage='inventory' (virtual).
+                            This ensures registering an asset removes the serial
+                            from stock on hand, and unregistering restores it.
+                            The module's built-in "Asset Location" already has
+                            the correct type and is pre-selected by default.
+                        -->
                         <setting string="Default Asset Location"
-                                 help="Stock location where serial numbers are moved when an asset is registered."
-                                 documentation="/documentation/asset-location">
+                                 help="Virtual location (usage=inventory) where serial numbers are moved when an asset is registered. Must be a Virtual/Inventory type — this is what causes the product's stock on hand to decrease on registration and increase on unregistration. The built-in 'Asset Location' created by this module is pre-configured correctly.">
                             <field name="asset_location_id"
-                                   placeholder="e.g. WH/Asset Storage"/>
+                                   placeholder="e.g. Virtual Locations / Asset Location"
+                                   domain="[('usage', '=', 'inventory')]"/>
                         </setting>
 
                     </block>
