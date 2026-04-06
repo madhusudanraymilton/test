@@ -63,7 +63,7 @@
 
                         <!-- ── Asset-level valuation table ────────────── -->
                         <table class="table table-sm table-bordered" style="font-size:11.5px;">
-                            <thead style="background:#1E293B;color:#fff;">
+                            <thead style="background:#fff;color:#fff;">
                                 <tr>
                                     <th>#</th>
                                     <th>Asset Code</th>

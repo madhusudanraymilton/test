@@ -38,7 +38,7 @@
                         <t t-set="grand_nbv"    t-value="sum(d['nbv']            for d in data)"/>
 
                         <table class="table table-sm table-bordered mb-4" style="font-size:12px;">
-                            <thead style="background:#1E293B;color:#fff;">
+                            <thead style="background:#fff;color:#fff;">
                                 <tr>
                                     <th>Asset Code</th>
                                     <th>Asset Name</th>
@@ -108,7 +108,7 @@
                         </table>
 
                         <!-- ── Per-asset depreciation move detail ──────── -->
-                        <t t-foreach="data" t-as="d">
+                        <!-- <t t-foreach="data" t-as="d">
                             <t t-if="d['period_moves']">
                                 <div style="page-break-inside: avoid; margin-bottom: 20px;">
                                     <h6 style="border-bottom:1.5px solid #CBD5E1;padding-bottom:3px;
@@ -145,7 +145,7 @@
                                     </table>
                                 </div>
                             </t>
-                        </t>
+                        </t> -->
                     </t>
 
                     <div class="row mt-4">

@@ -72,7 +72,7 @@
                         string="Register"
                         type="object"
                         class="btn-primary"
-                        invisible="asset_state != 'draft' or state == 'model'"/>
+                        invisible="asset_state != 'draft' or state == 'model' or not is_auto_created"/>
 
                 <button name="action_unregister"
                         string="Unregister"
@@ -83,7 +83,7 @@
                     string="Auto-Create from All Serials"
                     type="object"
                     class="btn-secondary"
-                    invisible="state == 'model' or not product_id or asset_state != 'draft'"
+                    invisible="state == 'model' or not product_id or asset_state != 'draft' or is_auto_created"
                     confirm="Create one draft asset for every unregistered serial number of this product?"/>
 
                 <button name="action_assign"
@@ -127,6 +127,8 @@
                        invisible="state == 'model'"/>
 
             </xpath>
+            <xpath expr="//button[@name='action_save_model']" position="replace"/>
+            <xpath expr="//button[@name='set_to_cancelled']" position="replace"/>
 
             <!-- ── 5. Remove native Validate / Confirm Asset button ──────── -->
             <xpath expr="//header//button[@name='validate']" position="replace"/>
@@ -142,7 +144,7 @@
                    position="replace"/>
 
             <!-- ── 8. AMS tabs (appended after the native related_items tab) -->
-            <xpath expr="//page[@name='related_items']" position="after">
+            <xpath expr="//page[@name='related_items']" position="replace">
 
                 <!-- ── Assignment Tab ──────────────────────────────────────── -->
                 <page string="Assignment" name="ams_assignment"
@@ -164,6 +166,7 @@
                         </list>
                     </field>
                 </page>
+                <!-- <xpath expr="//page[@name='related_items']" position="replace"/> -->
 
                 <!-- ── Lifecycle History Tab (immutable audit log) ──────────── -->
                 <page string="Lifecycle History" name="ams_history"
@@ -311,9 +314,11 @@
                 <filter string="State"
                         name="group_by_state"
                         context="{'group_by': 'asset_state'}"/>
+
                 <filter string="Serial Number"
                         name="group_by_lot"
                         context="{'group_by': 'lot_id'}"/>
+                
             </xpath>
 
         </field>
@@ -328,6 +333,15 @@
         <field name="name">Assets</field>
         <field name="view_mode">kanban,list,form</field>
         <!-- <field name="domain">[('lot_id', '!=', False)]</field> -->
+        <field name="domain">[
+           
+            ('state', '!=', 'model')
+        ]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No registered assets yet</p>
+            <p>Use the <strong>Register</strong> button on a draft asset to activate it.</p>
+        </field>
     </record>
 
     <!-- Asset Categories: unchanged (shows records where state='model') -->

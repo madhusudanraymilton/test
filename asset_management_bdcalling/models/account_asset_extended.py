@@ -1615,7 +1615,7 @@ class AccountAssetExtended(models.Model):
         store=True,
         readonly=False,
     )
-    code = fields.Char(string='Asset Code', readonly=True, copy=False, index=True)
+    code = fields.Char(string='Asset Code', readonly=True, copy=False, index=True, tracking=True)
     company_id = fields.Many2one(
         'res.company',
         string='Company',
@@ -1634,6 +1634,7 @@ class AccountAssetExtended(models.Model):
         tracking=True,
         domain="[('is_asset', 'in', [True])]",
     )
+
     lot_id = fields.Many2one(
         'stock.lot',
         string='Serial Number (Lot)',
@@ -1641,6 +1642,7 @@ class AccountAssetExtended(models.Model):
         tracking=True,
         domain="[('id', 'in', available_lot_ids)]",
     )
+
     available_lot_ids = fields.Many2many(
         'stock.lot',
         string='Available Serials',
@@ -1677,6 +1679,7 @@ class AccountAssetExtended(models.Model):
         tracking=True,
         groups='account.group_account_manager,custom_asset_management.group_asset_manager',
     )
+
     currency_id = fields.Many2one(
         'res.currency',
         string='Currency',
@@ -1694,12 +1697,18 @@ class AccountAssetExtended(models.Model):
         tracking=True,
         domain="[('company_id', '=', company_id)]",
     )
+    
     assignment_ids = fields.One2many('asset.assignment', 'asset_id', string='Assignment History')
     history_ids    = fields.One2many('asset.history',    'asset_id', string='Lifecycle History')
     notes          = fields.Text(string='Notes')
 
     vendor_bill_line_id = fields.Many2one('account.move.line', string='Vendor Bill Line')
     register_move_id    = fields.Many2one('account.move',      string='Register Journal Entry')
+    is_auto_created = fields.Boolean(
+        string="Auto Created",
+        default=False,
+        copy=False
+    )
 
     # ─── Constraints ─────────────────────────────────────────────────────────
 
@@ -1741,7 +1750,7 @@ class AccountAssetExtended(models.Model):
             rec.available_lot_ids = product_lots - locked_lots
 
     # ─── ORM ─────────────────────────────────────────────────────────────────
-
+    # code = fields.Char(string='Asset Code', readonly=True, copy=False, index=True, tracking=True, store=True)
     @api.model_create_multi
     def create(self, vals_list):
         seq_model = self.env['ir.sequence']
@@ -2052,6 +2061,7 @@ class AccountAssetExtended(models.Model):
                 'method':                          self.method        or False,
                 'method_number':                   self.method_number or 0,
                 'method_period':                   self.method_period or '1',
+                'is_auto_created': True,
             })
             # Register THIS asset only — not the accumulating recordset
             try:
@@ -2117,21 +2127,28 @@ class AccountAssetExtended(models.Model):
             )
 
         move = self.env['account.move'].create({
+            'move_type': 'entry',
             'journal_id': self.journal_id.id,
             'date':       fields.Date.today(),
             'ref':        f'Asset Register: {self.name}',
+            'company_id': self.company_id.id,
+            'currency_id': self.currency_id.id,
             'line_ids': [
                 (0, 0, {
                     'name':       self.name,
                     'account_id': self.account_asset_id.id,
                     'debit':      value,
                     'credit':     0.0,
+                    'currency_id': self.currency_id.id,
+                    'company_id': self.company_id.id,
                 }),
                 (0, 0, {
                     'name':       self.name,
                     'account_id': valuation_account.id,
                     'debit':      0.0,
                     'credit':     value,
+                    'currency_id': self.currency_id.id,
+                    'company_id': self.company_id.id,
                 }),
             ],
         })
@@ -2164,21 +2181,28 @@ class AccountAssetExtended(models.Model):
         value = self.original_value or self.purchase_price or 0.0
 
         move = self.env['account.move'].create({
+            'move_type': 'entry',
             'journal_id': self.journal_id.id,
             'date':       fields.Date.today(),
             'ref':        f'Asset Unregister: {self.name}',
+            'company_id': self.company_id.id,
+            'currency_id': self.currency_id.id,
             'line_ids': [
                 (0, 0, {
                     'name':       self.name,
                     'account_id': valuation_account.id,
                     'debit':      value,
                     'credit':     0.0,
+                    'currency_id': self.currency_id.id,
+                    'company_id': self.company_id.id,
                 }),
                 (0, 0, {
                     'name':       self.name,
                     'account_id': self.account_asset_id.id,
                     'debit':      0.0,
                     'credit':     value,
+                    'currency_id': self.currency_id.id,
+                    'company_id': self.company_id.id,
                 }),
             ],
         })

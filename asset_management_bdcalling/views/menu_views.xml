@@ -113,10 +113,10 @@
               action="asset_management_bdcalling.action_asset_report_wizard"
               sequence="10"/>
     
-    <menuitem id="menu_asset_status_dashboard_wizard"
+    <!-- <menuitem id="menu_asset_status_dashboard_wizard"
               name="Asset Status by Product"
               parent="menu_asset_reports"
               action="action_asset_status_dashboard_wizard"
-              sequence="20"/>
+              sequence="20"/> -->
 
 </odoo>
