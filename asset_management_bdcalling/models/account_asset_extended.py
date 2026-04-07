@@ -1768,28 +1768,188 @@ class AccountAssetExtended(models.Model):
     # action_register
     # ─────────────────────────────────────────────────────────────────────────
 
+    # def action_register(self):
+    #     """
+    #     Register each asset in self (model-level / auto-create path).
+
+    #     Stock on hand
+    #     ─────────────
+    #     Source      : quant with usage='internal' — this is where real on-hand
+    #                   stock lives.  Filtering to 'internal' prevents accidental
+    #                   reads from scrap, virtual, or transit locations.
+
+    #     Destination : asset_location with usage='inventory' (virtual).
+    #                   Moving to an inventory-type virtual location immediately
+    #                   removes the serial from all stock-on-hand reports.
+
+    #     Unregister reverses exactly: virtual → original internal location,
+    #     restoring the on-hand count to what it was before registration.
+
+    #     Accounting
+    #     ──────────
+    #     Dr  Fixed Asset Account     (account_asset_id)
+    #     Cr  Stock Valuation Account (product categ property)
+    #     """
+    #     for rec in self:
+    #         # ── 1. Guard ──────────────────────────────────────────────────────
+    #         if rec.asset_state != 'draft':
+    #             raise UserError(_("Only draft assets can be registered"))
+    #         if not rec.product_id or not rec.lot_id:
+    #             raise UserError(_("Product and Serial Number are required"))
+
+    #         # ── 2. Source: find the serial in real (internal) stock ───────────
+    #         #
+    #         # Restrict to usage='internal' so we never accidentally consume
+    #         # from a scrap or virtual location that doesn't represent real stock.
+    #         source_quant = self.env['stock.quant'].sudo().search([
+    #             ('product_id',        '=', rec.product_id.id),
+    #             ('lot_id',            '=', rec.lot_id.id),
+    #             ('quantity',          '>',  0),
+    #             ('location_id.usage', '=', 'internal'),
+    #         ], limit=1)
+
+    #         if not source_quant:
+    #             raise UserError(_(
+    #                 'Serial number "%s" is not available in any internal stock '
+    #                 'location.\nReceive it into inventory before registering it '
+    #                 'as an asset.'
+    #             ) % rec.lot_id.name)
+
+    #         source_location = source_quant.location_id
+    #         # Save the exact source location — unregister will move back here.
+    #         rec.original_location_id = source_location
+
+    #         # ── 3. Destination: asset virtual location ────────────────────────
+    #         #
+    #         # This location MUST have usage='inventory'.  The domain on
+    #         # res.company.asset_location_id enforces this in the Settings UI.
+    #         # We also check at runtime so a mis-configured server raises a
+    #         # clear error instead of silently leaving stock on hand unchanged.
+    #         asset_location = (
+    #             self.env.company.asset_location_id
+    #             or self.env.ref(
+    #                 'asset_management_bdcalling.asset_stock_location',
+    #                 raise_if_not_found=False,
+    #             )
+    #         )
+    #         if not asset_location:
+    #             raise UserError(_(
+    #                 'No Default Asset Location configured.\n'
+    #                 'Go to Asset Management → Configuration → Settings and set '
+    #                 'the "Default Asset Location" to a Virtual/Inventory location.'
+    #             ))
+    #         if asset_location.usage != 'inventory':
+    #             raise UserError(_(
+    #                 'Asset Location "%s" has usage "%s".\n'
+    #                 'It must be "Virtual Locations / Inventory" (usage=inventory) '
+    #                 'so that registering an asset decreases the product\'s stock '
+    #                 'on hand.  Please update the location or pick a different one '
+    #                 'in Asset Management → Configuration → Settings.'
+    #             ) % (asset_location.complete_name, asset_location.usage))
+
+    #         # ── 4. Stock move: internal → virtual ─────────────────────────────
+    #         #    Effect: decreases product stock on hand by 1 unit
+    #         # move = self.env['stock.move'].create({
+    #         #     'product_id':          rec.product_id.id,
+    #         #     'product_uom_qty':     1,
+    #         #     'product_uom':         rec.product_id.uom_id.id,
+    #         #     'location_id':         source_location.id,
+    #         #     'location_dest_id':    asset_location.id,
+    #         #     'description_picking': f'Asset Register: {rec.name}',
+    #         #     'company_id':          rec.company_id.id,
+    #         # })
+    #         # move._action_confirm()
+    #         # move._action_assign()
+    #         # self.env['stock.move.line'].create({
+    #         #     'move_id':          move.id,
+    #         #     'product_id':       rec.product_id.id,
+    #         #     'qty_done':         1,
+    #         #     'location_id':      source_location.id,
+    #         #     'location_dest_id': asset_location.id,
+    #         #     'lot_id':           rec.lot_id.id,
+    #         # })
+    #         # move._action_done()
+    #         # rec.location_id = asset_location
+    #         move = self.env['stock.move'].create({
+    #             'product_id':          rec.product_id.id,
+    #             'product_uom_qty':     1,
+    #             'product_uom':         rec.product_id.uom_id.id,
+    #             'location_id':         source_location.id,
+    #             'location_dest_id':    asset_location.id,
+    #             'description_picking': f'Asset Register: {rec.name}',
+    #             'company_id':          rec.company_id.id,
+    #         })
+    #         move._action_confirm()
+    #         move._action_assign()
+    #         # Odoo 17+: the done quantity field is 'quantity' (not 'qty_done').
+    #         # _action_assign() may already create move lines; update them rather
+    #         # than creating a duplicate line.
+    #         if move.move_line_ids:
+    #             move.move_line_ids.write({
+    #                 'quantity': 1,
+    #                 'lot_id':   rec.lot_id.id,
+    #             })
+    #         else:
+    #             self.env['stock.move.line'].create({
+    #                 'move_id':          move.id,
+    #                 'product_id':       rec.product_id.id,
+    #                 'quantity':         1,           # ← 'quantity', not 'qty_done'
+    #                 'location_id':      source_location.id,
+    #                 'location_dest_id': asset_location.id,
+    #                 'lot_id':           rec.lot_id.id,
+    #             })
+    #         # Flush all pending ORM writes before _action_done so stock_account's
+    #         # _set_value() can read standard_price without a cursor-state error.
+    #         self.env.flush_all()
+    #         move._action_done()
+    #         rec.location_id = asset_location
+
+    #         # ── 5. Accounting journal entry ───────────────────────────────────
+    #         rec._create_asset_account_move()
+
+    #         # ── 6. Depreciation schedule (validate) ───────────────────────────
+    #         if (rec.account_asset_id
+    #                 and rec.account_depreciation_id
+    #                 and rec.account_depreciation_expense_id
+    #                 and rec.journal_id
+    #                 and rec.method
+    #                 and rec.method_number):
+    #             try:
+    #                 rec.validate()
+    #             except UserError:
+    #                 raise
+    #             except Exception as exc:
+    #                 _logger.error(
+    #                     'AMS: validate() failed for asset %s: %s', rec.code, exc
+    #                 )
+    #                 raise UserError(_(
+    #                     'Depreciation schedule generation failed for "%s".\n%s\n\n'
+    #                     'Verify the accounting configuration on the asset category.'
+    #                 ) % (rec.name, exc))
+    #         else:
+    #             _logger.warning(
+    #                 'AMS: asset %s is missing accounting config; '
+    #                 'depreciation schedule was NOT generated.',
+    #                 rec.code,
+    #             )
+
+    #         # ── 7. Finalise ───────────────────────────────────────────────────
+    #         rec.write({
+    #             'asset_state':       'available',
+    #             'registration_date': fields.Date.today(),
+    #         })
+    #         rec._log_history(
+    #             event_type='register',
+    #             old_state='draft',
+    #             new_state='available',
+    #             description=_('Asset registered by %s') % self.env.user.name,
+    #             metadata={
+    #                 'source_location': source_location.complete_name,
+    #                 'asset_location':  asset_location.complete_name,
+    #             },
+    #         )
+
     def action_register(self):
-        """
-        Register each asset in self (model-level / auto-create path).
-
-        Stock on hand
-        ─────────────
-        Source      : quant with usage='internal' — this is where real on-hand
-                      stock lives.  Filtering to 'internal' prevents accidental
-                      reads from scrap, virtual, or transit locations.
-
-        Destination : asset_location with usage='inventory' (virtual).
-                      Moving to an inventory-type virtual location immediately
-                      removes the serial from all stock-on-hand reports.
-
-        Unregister reverses exactly: virtual → original internal location,
-        restoring the on-hand count to what it was before registration.
-
-        Accounting
-        ──────────
-        Dr  Fixed Asset Account     (account_asset_id)
-        Cr  Stock Valuation Account (product categ property)
-        """
         for rec in self:
             # ── 1. Guard ──────────────────────────────────────────────────────
             if rec.asset_state != 'draft':
@@ -1797,10 +1957,7 @@ class AccountAssetExtended(models.Model):
             if not rec.product_id or not rec.lot_id:
                 raise UserError(_("Product and Serial Number are required"))
 
-            # ── 2. Source: find the serial in real (internal) stock ───────────
-            #
-            # Restrict to usage='internal' so we never accidentally consume
-            # from a scrap or virtual location that doesn't represent real stock.
+            # ── 2. Source: find serial in real (internal) stock ───────────────
             source_quant = self.env['stock.quant'].sudo().search([
                 ('product_id',        '=', rec.product_id.id),
                 ('lot_id',            '=', rec.lot_id.id),
@@ -1811,20 +1968,13 @@ class AccountAssetExtended(models.Model):
             if not source_quant:
                 raise UserError(_(
                     'Serial number "%s" is not available in any internal stock '
-                    'location.\nReceive it into inventory before registering it '
-                    'as an asset.'
+                    'location.\nReceive it into inventory before registering.'
                 ) % rec.lot_id.name)
 
             source_location = source_quant.location_id
-            # Save the exact source location — unregister will move back here.
             rec.original_location_id = source_location
 
             # ── 3. Destination: asset virtual location ────────────────────────
-            #
-            # This location MUST have usage='inventory'.  The domain on
-            # res.company.asset_location_id enforces this in the Settings UI.
-            # We also check at runtime so a mis-configured server raises a
-            # clear error instead of silently leaving stock on hand unchanged.
             asset_location = (
                 self.env.company.asset_location_id
                 or self.env.ref(
@@ -1835,20 +1985,20 @@ class AccountAssetExtended(models.Model):
             if not asset_location:
                 raise UserError(_(
                     'No Default Asset Location configured.\n'
-                    'Go to Asset Management → Configuration → Settings and set '
-                    'the "Default Asset Location" to a Virtual/Inventory location.'
+                    'Go to Asset Management → Configuration → Settings.'
                 ))
             if asset_location.usage != 'inventory':
                 raise UserError(_(
-                    'Asset Location "%s" has usage "%s".\n'
-                    'It must be "Virtual Locations / Inventory" (usage=inventory) '
-                    'so that registering an asset decreases the product\'s stock '
-                    'on hand.  Please update the location or pick a different one '
-                    'in Asset Management → Configuration → Settings.'
-                ) % (asset_location.complete_name, asset_location.usage))
+                    'Asset Location "%s" must have usage "inventory" (Virtual/Inventory).'
+                ) % asset_location.complete_name)
 
-            # ── 4. Stock move: internal → virtual ─────────────────────────────
-            #    Effect: decreases product stock on hand by 1 unit
+            # ── 4. Stock move ─────────────────────────────────────────────────
+            # FIX 1: flush all pending ORM writes BEFORE _action_done() so that
+            # stock_account's internal savepoint(flush=True) finds nothing dirty
+            # to flush — eliminating the implicit-flush failure that corrupts the
+            # psycopg2 cursor state.
+            self.env.flush_all()
+
             move = self.env['stock.move'].create({
                 'product_id':          rec.product_id.id,
                 'product_uom_qty':     1,
@@ -1860,21 +2010,47 @@ class AccountAssetExtended(models.Model):
             })
             move._action_confirm()
             move._action_assign()
-            self.env['stock.move.line'].create({
-                'move_id':          move.id,
-                'product_id':       rec.product_id.id,
-                'qty_done':         1,
-                'location_id':      source_location.id,
-                'location_dest_id': asset_location.id,
-                'lot_id':           rec.lot_id.id,
-            })
+
+            # FIX 2: In Odoo 17+, the done-quantity field is 'quantity' (not
+            # 'qty_done'). Also, _action_assign() may already create the move
+            # line — update it instead of creating a duplicate.
+            if move.move_line_ids:
+                move.move_line_ids.write({
+                    'quantity': 1,
+                    'lot_id':   rec.lot_id.id,
+                })
+            else:
+                self.env['stock.move.line'].create({
+                    'move_id':          move.id,
+                    'product_id':       rec.product_id.id,
+                    'quantity':         1,          # ← 'quantity', NOT 'qty_done'
+                    'location_id':      source_location.id,
+                    'location_dest_id': asset_location.id,
+                    'lot_id':           rec.lot_id.id,
+                })
+
+            # FIX 3: flush again right before _action_done() so no pending
+            # writes remain when stock_account's savepoint(flush=True) fires.
+            self.env.flush_all()
             move._action_done()
+
+            # FIX 4: invalidate ORM cache after stock_account's internal
+            # savepoints complete — this resets any stale cursor state so
+            # subsequent operations (account.move creation, validate()) start
+            # with a clean connection to PostgreSQL.
+            self.env.invalidate_all()
+
             rec.location_id = asset_location
 
             # ── 5. Accounting journal entry ───────────────────────────────────
             rec._create_asset_account_move()
 
-            # ── 6. Depreciation schedule (validate) ───────────────────────────
+            # ── 6. Depreciation schedule ──────────────────────────────────────
+            # FIX 5: flush before validate() for the same reason — validate()
+            # calls _compute_depreciation_board() which creates many account.move
+            # records, each triggering savepoint(flush=True) internally.
+            self.env.flush_all()
+
             if (rec.account_asset_id
                     and rec.account_depreciation_id
                     and rec.account_depreciation_expense_id
@@ -1895,9 +2071,8 @@ class AccountAssetExtended(models.Model):
                     ) % (rec.name, exc))
             else:
                 _logger.warning(
-                    'AMS: asset %s is missing accounting config; '
-                    'depreciation schedule was NOT generated.',
-                    rec.code,
+                    'AMS: asset %s missing accounting config; '
+                    'depreciation schedule NOT generated.', rec.code,
                 )
 
             # ── 7. Finalise ───────────────────────────────────────────────────
@@ -1920,14 +2095,112 @@ class AccountAssetExtended(models.Model):
     # action_unregister
     # ─────────────────────────────────────────────────────────────────────────
 
-    def action_unregister(self):
-        """
-        Reverse a registration.
+    # def action_unregister(self):
+    #     """
+    #     Reverse a registration.
 
-        Stock move: wherever the serial currently is (the virtual asset location)
-                    → original_location_id (the internal location saved on register).
-        Effect: increases product stock on hand by 1 unit.
-        """
+    #     Stock move: wherever the serial currently is (the virtual asset location)
+    #                 → original_location_id (the internal location saved on register).
+    #     Effect: increases product stock on hand by 1 unit.
+    #     """
+    #     self.ensure_one()
+
+    #     if self.asset_state != 'available':
+    #         raise UserError(_("Only available assets can be unregistered"))
+    #     if not self.product_id or not self.lot_id:
+    #         raise UserError(_("Product and Serial Number required"))
+
+    #     # ── Locate the serial (expected to be in the virtual asset location) ──
+    #     source_quant = self.env['stock.quant'].sudo().search([
+    #         ('product_id', '=', self.product_id.id),
+    #         ('lot_id',     '=', self.lot_id.id),
+    #         ('quantity',   '>',  0),
+    #     ], limit=1)
+
+    #     if not source_quant:
+    #         raise UserError(_(
+    #             'Serial number "%s" could not be found in any stock location.\n'
+    #             'It may have been moved or deleted manually.'
+    #         ) % self.lot_id.name)
+
+    #     source_location = source_quant.location_id
+
+    #     # ── Restore to the original internal location ─────────────────────────
+    #     # original_location_id is always an internal location set during register.
+    #     destination_location = (
+    #         self.original_location_id
+    #         or self.env.ref('stock.stock_location_stock')
+    #     )
+
+    #     # ── Stock move: virtual → internal ────────────────────────────────────
+    #     #    Effect: increases product stock on hand by 1 unit
+    #     # move = self.env['stock.move'].create({
+    #     #     'product_id':          self.product_id.id,
+    #     #     'product_uom_qty':     1,
+    #     #     'product_uom':         self.product_id.uom_id.id,
+    #     #     'location_id':         source_location.id,
+    #     #     'location_dest_id':    destination_location.id,
+    #     #     'description_picking': f'Asset Unregister: {self.name}',
+    #     #     'company_id':          self.company_id.id,
+    #     # })
+    #     # move._action_confirm()
+    #     # move._action_assign()
+    #     # self.env['stock.move.line'].create({
+    #     #     'move_id':          move.id,
+    #     #     'product_id':       self.product_id.id,
+    #     #     'qty_done':         1,
+    #     #     'location_id':      source_location.id,
+    #     #     'location_dest_id': destination_location.id,
+    #     #     'lot_id':           self.lot_id.id,
+    #     # })
+    #     # move._action_done()
+    #     move = self.env['stock.move'].create({
+    #         'product_id':          self.product_id.id,
+    #         'product_uom_qty':     1,
+    #         'product_uom':         self.product_id.uom_id.id,
+    #         'location_id':         source_location.id,
+    #         'location_dest_id':    destination_location.id,
+    #         'description_picking': f'Asset Unregister: {self.name}',
+    #         'company_id':          self.company_id.id,
+    #     })
+    #     move._action_confirm()
+    #     move._action_assign()
+    #     if move.move_line_ids:
+    #         move.move_line_ids.write({
+    #             'quantity': 1,
+    #             'lot_id':   self.lot_id.id,
+    #         })
+    #     else:
+    #         self.env['stock.move.line'].create({
+    #             'move_id':          move.id,
+    #             'product_id':       self.product_id.id,
+    #             'quantity':         1,           # ← 'quantity', not 'qty_done'
+    #             'location_id':      source_location.id,
+    #             'location_dest_id': destination_location.id,
+    #             'lot_id':           self.lot_id.id,
+    #         })
+    #     self.env.flush_all()
+    #     move._action_done()
+
+    #     # ── Reverse journal entry ─────────────────────────────────────────────
+    #     self._create_asset_reverse_move()
+
+    #     old_state = self.asset_state
+    #     self.write({
+    #         'asset_state':          'draft',
+    #         'registration_date':    False,
+    #         'location_id':          False,
+    #         'original_location_id': False,
+    #     })
+    #     self._log_history(
+    #         event_type='unregister',
+    #         old_state=old_state,
+    #         new_state='draft',
+    #         description=_('Asset unregistered by %s') % self.env.user.name,
+    #         metadata={'restored_to': destination_location.complete_name},
+    #     )
+
+    def action_unregister(self):
         self.ensure_one()
 
         if self.asset_state != 'available':
@@ -1935,7 +2208,6 @@ class AccountAssetExtended(models.Model):
         if not self.product_id or not self.lot_id:
             raise UserError(_("Product and Serial Number required"))
 
-        # ── Locate the serial (expected to be in the virtual asset location) ──
         source_quant = self.env['stock.quant'].sudo().search([
             ('product_id', '=', self.product_id.id),
             ('lot_id',     '=', self.lot_id.id),
@@ -1944,21 +2216,17 @@ class AccountAssetExtended(models.Model):
 
         if not source_quant:
             raise UserError(_(
-                'Serial number "%s" could not be found in any stock location.\n'
-                'It may have been moved or deleted manually.'
+                'Serial number "%s" could not be found in any stock location.'
             ) % self.lot_id.name)
 
-        source_location = source_quant.location_id
-
-        # ── Restore to the original internal location ─────────────────────────
-        # original_location_id is always an internal location set during register.
+        source_location      = source_quant.location_id
         destination_location = (
             self.original_location_id
             or self.env.ref('stock.stock_location_stock')
         )
 
-        # ── Stock move: virtual → internal ────────────────────────────────────
-        #    Effect: increases product stock on hand by 1 unit
+        self.env.flush_all()   # ← flush before stock operations
+
         move = self.env['stock.move'].create({
             'product_id':          self.product_id.id,
             'product_uom_qty':     1,
@@ -1970,17 +2238,27 @@ class AccountAssetExtended(models.Model):
         })
         move._action_confirm()
         move._action_assign()
-        self.env['stock.move.line'].create({
-            'move_id':          move.id,
-            'product_id':       self.product_id.id,
-            'qty_done':         1,
-            'location_id':      source_location.id,
-            'location_dest_id': destination_location.id,
-            'lot_id':           self.lot_id.id,
-        })
-        move._action_done()
 
-        # ── Reverse journal entry ─────────────────────────────────────────────
+        # FIX: same pattern — update existing lines, use 'quantity' not 'qty_done'
+        if move.move_line_ids:
+            move.move_line_ids.write({
+                'quantity': 1,
+                'lot_id':   self.lot_id.id,
+            })
+        else:
+            self.env['stock.move.line'].create({
+                'move_id':          move.id,
+                'product_id':       self.product_id.id,
+                'quantity':         1,          # ← 'quantity', NOT 'qty_done'
+                'location_id':      source_location.id,
+                'location_dest_id': destination_location.id,
+                'lot_id':           self.lot_id.id,
+            })
+
+        self.env.flush_all()
+        move._action_done()
+        self.env.invalidate_all()   # ← reset cursor state after stock_account
+
         self._create_asset_reverse_move()
 
         old_state = self.asset_state
@@ -2107,6 +2385,7 @@ class AccountAssetExtended(models.Model):
                 'Asset "%s" has no journal configured. '
                 'Set it on the asset category before registering.'
             ) % (self.code or self.name))
+        
         if not self.account_asset_id:
             raise UserError(_(
                 'Asset "%s" has no Fixed Asset Account configured.'

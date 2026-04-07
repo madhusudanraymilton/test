@@ -118,7 +118,6 @@
                             &amp;nbsp;|&amp;nbsp; Status filter: <t t-esc="wizard.asset_state_filter"/>
                         </div>
                     </div>
-
                 </div>
             </t>
         </t>
