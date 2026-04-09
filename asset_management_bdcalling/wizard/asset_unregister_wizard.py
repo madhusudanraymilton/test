@@ -82,7 +82,7 @@ class AssetUnregisterWizard(models.TransientModel):
         self.env['stock.move.line'].create({
             'move_id':          move.id,
             'product_id':       asset.product_id.id,
-            'qty_done':         1.0,
+            'quantity':         1.0,
             'location_id':      source_location.id,
             'location_dest_id': self.destination_location_id.id,
             'lot_id':           asset.lot_id.id,

@@ -1630,7 +1630,6 @@ class AccountAssetExtended(models.Model):
     product_id = fields.Many2one(
         'product.product',
         string='Product',
-        required=True,
         tracking=True,
         domain="[('is_asset', 'in', [True])]",
     )
@@ -1638,7 +1637,6 @@ class AccountAssetExtended(models.Model):
     lot_id = fields.Many2one(
         'stock.lot',
         string='Serial Number (Lot)',
-        required=True,
         tracking=True,
         domain="[('id', 'in', available_lot_ids)]",
     )
@@ -1675,7 +1673,6 @@ class AccountAssetExtended(models.Model):
     purchase_price    = fields.Monetary(
         string='Purchase Price',
         currency_field='currency_id',
-        required=True,
         tracking=True,
         groups='account.group_account_manager,custom_asset_management.group_asset_manager',
     )
@@ -1982,6 +1979,7 @@ class AccountAssetExtended(models.Model):
                     raise_if_not_found=False,
                 )
             )
+            
             if not asset_location:
                 raise UserError(_(
                     'No Default Asset Location configured.\n'
@@ -1997,47 +1995,88 @@ class AccountAssetExtended(models.Model):
             # stock_account's internal savepoint(flush=True) finds nothing dirty
             # to flush — eliminating the implicit-flush failure that corrupts the
             # psycopg2 cursor state.
+            # self.env.flush_all()
+
+            # move = self.env['stock.move'].create({
+            #     'product_id':          rec.product_id.id,
+            #     'product_uom_qty':     1,
+            #     'product_uom':         rec.product_id.uom_id.id,
+            #     'location_id':         source_location.id,
+            #     'location_dest_id':    asset_location.id,
+            #     'description_picking': f'Asset Register: {rec.name}',
+            #     'company_id':          rec.company_id.id,
+            # })
+            # move._action_confirm()
+            # move._action_assign()
+
+            # # FIX 2: In Odoo 17+, the done-quantity field is 'quantity' (not
+            # # 'qty_done'). Also, _action_assign() may already create the move
+            # # line — update it instead of creating a duplicate.
+            # if move.move_line_ids:
+            #     move.move_line_ids.write({
+            #         'quantity': 1,
+            #         'lot_id':   rec.lot_id.id,
+            #     })
+            # else:
+            #     self.env['stock.move.line'].create({
+            #         'move_id':          move.id,
+            #         'product_id':       rec.product_id.id,
+            #         'quantity':         1,          # ← 'quantity', NOT 'qty_done'
+            #         'location_id':      source_location.id,
+            #         'location_dest_id': asset_location.id,
+            #         'lot_id':           rec.lot_id.id,
+            #     })
+
+            # # FIX 3: flush again right before _action_done() so no pending
+            # # writes remain when stock_account's savepoint(flush=True) fires.
+            # self.env.flush_all()
+            # move._action_done()
+
+            # # FIX 4: invalidate ORM cache after stock_account's internal
+            # # savepoints complete — this resets any stale cursor state so
+            # # subsequent operations (account.move creation, validate()) start
+            # # with a clean connection to PostgreSQL.
+            # self.env.invalidate_all()
+
+
             self.env.flush_all()
 
             move = self.env['stock.move'].create({
-                'product_id':          rec.product_id.id,
-                'product_uom_qty':     1,
-                'product_uom':         rec.product_id.uom_id.id,
-                'location_id':         source_location.id,
-                'location_dest_id':    asset_location.id,
-                'description_picking': f'Asset Register: {rec.name}',
-                'company_id':          rec.company_id.id,
+                # 'name':             _('Asset Registration: %s') % self.lot_id.name,
+                'product_id':       self.product_id.id,
+                'product_uom':      self.product_id.uom_id.id,
+                'product_uom_qty':  1.0,
+                'location_id':      source_location.id,
+                'location_dest_id': asset_location.id,
+                'origin':           _('Asset Registration'),
+                'company_id':       self.company_id.id,
             })
+
             move._action_confirm()
             move._action_assign()
 
-            # FIX 2: In Odoo 17+, the done-quantity field is 'quantity' (not
-            # 'qty_done'). Also, _action_assign() may already create the move
-            # line — update it instead of creating a duplicate.
+            # FIX: update lines created by _action_assign() — don't create duplicates
+            # FIX: use 'quantity' not 'qty_done'
             if move.move_line_ids:
                 move.move_line_ids.write({
-                    'quantity': 1,
-                    'lot_id':   rec.lot_id.id,
+                    'quantity': 1.0,
+                    'lot_id':   self.lot_id.id,
                 })
             else:
                 self.env['stock.move.line'].create({
                     'move_id':          move.id,
-                    'product_id':       rec.product_id.id,
-                    'quantity':         1,          # ← 'quantity', NOT 'qty_done'
-                    'location_id':      source_location.id,
+                    'product_id':       self.product_id.id,
+                    'lot_id':           self.lot_id.id,
+                    'quantity':         1.0,    # ← 'quantity', NOT 'qty_done'
+                    'location_id':      self.source_location_id.id,
                     'location_dest_id': asset_location.id,
-                    'lot_id':           rec.lot_id.id,
+                    'company_id':       self.company_id.id,
                 })
 
-            # FIX 3: flush again right before _action_done() so no pending
-            # writes remain when stock_account's savepoint(flush=True) fires.
+            # FIX: flush before _action_done
             self.env.flush_all()
             move._action_done()
-
-            # FIX 4: invalidate ORM cache after stock_account's internal
-            # savepoints complete — this resets any stale cursor state so
-            # subsequent operations (account.move creation, validate()) start
-            # with a clean connection to PostgreSQL.
+            # FIX: invalidate after stock_account completes
             self.env.invalidate_all()
 
             rec.location_id = asset_location

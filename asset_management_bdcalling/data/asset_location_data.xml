@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
+<!-- <odoo noupdate="1">
 
     <record id="asset_stock_location" model="stock.location">
         <field name="name">Asset Location</field>
@@ -8,4 +8,15 @@
         <field name="comment">Virtual location for assets registered in the Asset Management System.</field>
     </record>
 
+</odoo> -->
+<odoo noupdate="1">
+    <record id="asset_stock_location" model="stock.location">
+        <field name="name">Asset Location</field>
+        <field name="usage">inventory</field>  <!-- MUST be inventory, not internal -->
+        <field name="active">True</field>
+        <field name="comment">
+            Virtual location for assets registered in AMS.
+            usage=inventory removes the serial from all on-hand reports.
+        </field>
+    </record>
 </odoo>
