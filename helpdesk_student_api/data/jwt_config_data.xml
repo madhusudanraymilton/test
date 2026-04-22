@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ================================================================
+             JWT configuration defaults (ir.config_parameter)
+             These are only written on first install (noupdate="1").
+             Override via Settings → Technical → System Parameters.
+        ================================================================ -->
+
+        <!-- Access token TTL: 60 minutes -->
+        <record id="param_jwt_access_ttl" model="ir.config_parameter">
+            <field name="key">helpdesk_api.jwt_access_ttl_minutes</field>
+            <field name="value">60</field>
+        </record>
+
+        <!-- Refresh token TTL: 7 days -->
+        <record id="param_jwt_refresh_ttl" model="ir.config_parameter">
+            <field name="key">helpdesk_api.jwt_refresh_ttl_days</field>
+            <field name="value">7</field>
+        </record>
+
+        <!--
+            JWT Secret: intentionally left empty here.
+            jwt_utils._get_secret() will auto-generate a cryptographically
+            random 512-bit key on the first login request and persist it.
+        -->
+
+        <!-- ================================================================
+             Scheduled action — purge expired blacklist entries
+             Runs daily at 02:00 UTC to keep the table lean.
+        ================================================================ -->
+
+        <record id="ir_cron_purge_jwt_blacklist" model="ir.cron">
+            <field name="name">Helpdesk API: Purge expired JWT blacklist entries</field>
+            <field name="model_id" ref="helpdesk_student_api.model_helpdesk_api_token_blacklist"/>
+            <field name="state">code</field>
+            <field name="code">model.purge_expired()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">True</field>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+
+    </data>
+</odoo>
