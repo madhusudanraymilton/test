@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="acs_branch_view_form" model="ir.ui.view">
+        <field name="name">acs.branch.from</field>
+        <field name="model">acs.branch</field>
+        <field name="inherit_id" ref="acs_branch_base.acs_branch_view_form"/>
+        <field name="arch" type="xml">
+            <field name="email" position="after">
+                <field name="journal_id"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
