@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Top-level menu -->
+    <menuitem id="menu_dynamic_api_root"
+              name="Dynamic REST API"
+              sequence="90"
+              web_icon="dynamic_rest_api,static/description/icon.png"
+              groups="dynamic_rest_api.group_api_viewer"/>
+
+    <!-- Configuration sub-menu -->
+    <menuitem id="menu_dynamic_api_config"
+              name="Configuration"
+              parent="menu_dynamic_api_root"
+              sequence="10"
+              groups="dynamic_rest_api.group_api_manager"/>
+
+    <menuitem id="menu_dynamic_api_endpoints"
+              name="Endpoints"
+              parent="menu_dynamic_api_root"
+              action="action_dynamic_api_endpoint"
+              sequence="1"
+              groups="dynamic_rest_api.group_api_viewer"/>
+
+    <menuitem id="menu_dynamic_api_builder"
+              name="Endpoint Builder"
+              parent="menu_dynamic_api_root"
+              action="action_endpoint_builder_client"
+              sequence="2"
+              groups="dynamic_rest_api.group_api_manager"/>
+
+    <menuitem id="menu_dynamic_api_keys"
+              name="API Keys"
+              parent="menu_dynamic_api_root"
+              action="action_dynamic_api_key"
+              sequence="3"
+              groups="dynamic_rest_api.group_api_manager"/>
+
+    <menuitem id="menu_dynamic_api_logs"
+              name="Request Logs"
+              parent="menu_dynamic_api_root"
+              action="action_dynamic_api_log"
+              sequence="4"
+              groups="dynamic_rest_api.group_api_viewer"/>
+</odoo>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dynamic_api_key_form" model="ir.ui.view">
+        <field name="name">dynamic.api.key.form</field>
+        <field name="model">dynamic.api.key</field>
+        <field name="arch" type="xml">
+            <form string="API Key">
+                <header>
+                    <button name="action_create_and_reveal"
+                            string="Generate Secret Key"
+                            type="object" class="btn-primary"
+                            invisible="key_hash"/>
+                    <button name="action_generate_new_key"
+                            string="Regenerate Key"
+                            type="object" class="btn-warning"
+                            invisible="not key_hash"
+                            confirm="Regenerating will invalidate the current key immediately. Continue?"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Expired"
+                            bg_color="bg-danger"
+                            invisible="not expiry_date or expiry_date &gt;= context_today()"/>
+                    <group>
+                        <group string="Key Info">
+                            <field name="name"/>
+                            <field name="user_id"/>
+                            <field name="key_prefix" readonly="1"
+                                   placeholder="(not yet generated)"/>
+                            <field name="is_active"/>
+                        </group>
+                        <group string="Validity">
+                            <field name="expiry_date"/>
+                            <field name="last_used" readonly="1"/>
+                            <field name="request_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Endpoint Restrictions">
+                        <field name="endpoint_ids" widget="many2many_tags"
+                               nolabel="1"/>
+                        <p class="text-muted">
+                            Leave empty to allow this key on all endpoints
+                            that use API key authentication.
+                        </p>
+                    </group>
+                    <div class="alert alert-info" role="alert"
+                         invisible="key_hash">
+                        <strong>No secret generated yet.</strong>
+                        Click <em>Generate Secret Key</em> to create the key.
+                        You will see the secret only once.
+                    </div>
+                    <div class="alert alert-success" role="alert"
+                         invisible="not key_hash">
+                        <strong>Key is active.</strong>
+                        Prefix: <code><field name="key_prefix"
+                                             nolabel="1" readonly="1"/></code>…
+                        (The full secret was shown once at generation time.)
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dynamic_api_key_list" model="ir.ui.view">
+        <field name="name">dynamic.api.key.list</field>
+        <field name="model">dynamic.api.key</field>
+        <field name="arch" type="xml">
+            <list string="API Keys" decoration-muted="not is_active">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="key_prefix"/>
+                <field name="expiry_date"/>
+                <field name="last_used"/>
+                <field name="request_count"/>
+                <field name="is_active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dynamic_api_key" model="ir.actions.act_window">
+        <field name="name">API Keys</field>
+        <field name="res_model">dynamic.api.key</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

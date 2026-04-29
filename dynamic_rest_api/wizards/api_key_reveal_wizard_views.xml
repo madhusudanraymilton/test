@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_api_key_reveal_wizard_form" model="ir.ui.view">
+        <field name="name">dynamic.api.key.reveal.wizard.form</field>
+        <field name="model">dynamic.api.key.reveal.wizard</field>
+        <field name="arch" type="xml">
+            <form string="API Key Generated">
+                <sheet>
+                    <div class="alert alert-warning" role="alert">
+                        <strong>⚠ Copy your key now!</strong>
+                        This is the only time the secret will be displayed.
+                        It cannot be recovered — only regenerated.
+                    </div>
+                    <group>
+                        <field name="key_name" readonly="1"/>
+                        <field name="raw_key" readonly="1"
+                               widget="CopyClipboardChar"
+                               string="Secret Key"/>
+                    </group>
+                    <p class="text-muted">
+                        Use this key in the <code>X-API-Key</code> HTTP header:
+                        <br/>
+                        <code>X-API-Key: <t t-esc="record.raw_key.value"/></code>
+                    </p>
+                </sheet>
+                <footer>
+                    <button string="I have copied the key" class="btn-primary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

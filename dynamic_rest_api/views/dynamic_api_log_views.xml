@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dynamic_api_log_list" model="ir.ui.view">
+        <field name="name">dynamic.api.log.list</field>
+        <field name="model">dynamic.api.log</field>
+        <field name="arch" type="xml">
+            <list string="API Logs" create="false" edit="false" delete="false"
+                  decoration-danger="response_code &gt;= 500"
+                  decoration-warning="response_code &gt;= 400 and response_code &lt; 500"
+                  decoration-success="response_code &gt;= 200 and response_code &lt; 300">
+                <field name="timestamp"/>
+                <field name="endpoint_path"/>
+                <field name="method" widget="badge"/>
+                <field name="response_code" widget="badge"
+                       decoration-danger="response_code &gt;= 500"
+                       decoration-warning="response_code &gt;= 400"
+                       decoration-success="response_code &lt; 400"/>
+                <field name="response_time_ms" string="Time (ms)"/>
+                <field name="request_ip"/>
+                <field name="user_id"/>
+                <field name="api_key_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dynamic_api_log_form" model="ir.ui.view">
+        <field name="name">dynamic.api.log.form</field>
+        <field name="model">dynamic.api.log</field>
+        <field name="arch" type="xml">
+            <form string="Request Log" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group string="Request">
+                            <field name="timestamp" readonly="1"/>
+                            <field name="endpoint_id" readonly="1"/>
+                            <field name="endpoint_path" readonly="1"/>
+                            <field name="method" readonly="1"/>
+                            <field name="request_ip" readonly="1"/>
+                            <field name="query_params" readonly="1"/>
+                        </group>
+                        <group string="Response">
+                            <field name="response_code" readonly="1"/>
+                            <field name="response_time_ms" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="api_key_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Request Body">
+                        <field name="request_payload" nolabel="1"
+                               widget="code" readonly="1"
+                               options="{'mode': 'json'}"/>
+                    </group>
+                    <group string="Error" invisible="not error_message">
+                        <field name="error_message" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dynamic_api_log_search" model="ir.ui.view">
+        <field name="name">dynamic.api.log.search</field>
+        <field name="model">dynamic.api.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Logs">
+                <field name="endpoint_path"/>
+                <field name="request_ip"/>
+                <field name="user_id"/>
+                <filter string="Errors (5xx)" name="errors"
+                        domain="[('response_code', '&gt;=', 500)]"/>
+                <filter string="Client Errors (4xx)" name="client_errors"
+                        domain="[('response_code', '&gt;=', 400),
+                                  ('response_code', '&lt;', 500)]"/>
+                <filter string="Success (2xx)" name="success"
+                        domain="[('response_code', '&gt;=', 200),
+                                  ('response_code', '&lt;', 300)]"/>
+                <separator/>
+                <filter string="Today" name="today"
+                        domain="[('timestamp', '&gt;=', datetime.datetime.combine(
+                                    context_today(), datetime.time(0,0,0)))]"/>
+               
+                <filter string="Endpoint" name="group_endpoint"
+                        context="{'group_by': 'endpoint_path'}"/>
+                <filter string="Method" name="group_method"
+                        context="{'group_by': 'method'}"/>
+                <filter string="Status Code" name="group_code"
+                        context="{'group_by': 'response_code'}"/>
+                <filter string="Date" name="group_date"
+                        context="{'group_by': 'timestamp:day'}"/>
+               
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dynamic_api_log" model="ir.actions.act_window">
+        <field name="name">API Request Logs</field>
+        <field name="res_model">dynamic.api.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_dynamic_api_log_search"/>
+    </record>
+</odoo>

@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dynamic_api_endpoint_viewer,dynamic.api.endpoint viewer,model_dynamic_api_endpoint,dynamic_rest_api.group_api_viewer,1,0,0,0
+access_dynamic_api_endpoint_manager,dynamic.api.endpoint manager,model_dynamic_api_endpoint,dynamic_rest_api.group_api_manager,1,1,1,1
+access_dynamic_api_field_viewer,dynamic.api.field viewer,model_dynamic_api_field,dynamic_rest_api.group_api_viewer,1,0,0,0
+access_dynamic_api_field_manager,dynamic.api.field manager,model_dynamic_api_field,dynamic_rest_api.group_api_manager,1,1,1,1
+access_dynamic_api_key_viewer,dynamic.api.key viewer,model_dynamic_api_key,dynamic_rest_api.group_api_viewer,1,0,0,0
+access_dynamic_api_key_manager,dynamic.api.key manager,model_dynamic_api_key,dynamic_rest_api.group_api_manager,1,1,1,1
+access_dynamic_api_log_viewer,dynamic.api.log viewer,model_dynamic_api_log,dynamic_rest_api.group_api_viewer,1,0,0,0
+access_dynamic_api_log_manager,dynamic.api.log manager,model_dynamic_api_log,dynamic_rest_api.group_api_manager,1,1,1,1
+access_api_key_reveal_wizard_manager,dynamic.api.key.reveal.wizard manager,model_dynamic_api_key_reveal_wizard,dynamic_rest_api.group_api_manager,1,1,1,1
