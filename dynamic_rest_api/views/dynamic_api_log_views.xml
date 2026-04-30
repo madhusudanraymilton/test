@@ -78,7 +78,7 @@
                 <filter string="Today" name="today"
                         domain="[('timestamp', '&gt;=', datetime.datetime.combine(
                                     context_today(), datetime.time(0,0,0)))]"/>
-               
+            
                 <filter string="Endpoint" name="group_endpoint"
                         context="{'group_by': 'endpoint_path'}"/>
                 <filter string="Method" name="group_method"
@@ -87,7 +87,7 @@
                         context="{'group_by': 'response_code'}"/>
                 <filter string="Date" name="group_date"
                         context="{'group_by': 'timestamp:day'}"/>
-               
+              
             </search>
         </field>
     </record>

@@ -27,26 +27,26 @@ Allows non-technical users to:
         'views/dynamic_api_key_views.xml',
         'views/dynamic_api_log_views.xml',
         'views/menu.xml',
-        'data/cron.xml',
+        # 'data/cron.xml',
     ],
     'assets': {
         'web.assets_backend': [
-            # # SCSS first
-            # 'dynamic_rest_api/static/src/components/EndpointBuilder/EndpointBuilder.scss',
-            # 'dynamic_rest_api/static/src/components/FieldSelector/FieldSelector.scss',
-            # 'dynamic_rest_api/static/src/components/AddFieldDialog/AddFieldDialog.scss',
-            # 'dynamic_rest_api/static/src/components/EndpointPreview/EndpointPreview.scss',
-            # # JS registry helper
-            # 'dynamic_rest_api/static/src/js/dynamic_api_registry.js',
-            # # OWL components (JS + XML together)
-            # 'dynamic_rest_api/static/src/components/FieldSelector/FieldSelector.xml',
-            # 'dynamic_rest_api/static/src/components/FieldSelector/FieldSelector.js',
-            # 'dynamic_rest_api/static/src/components/AddFieldDialog/AddFieldDialog.xml',
-            # 'dynamic_rest_api/static/src/components/AddFieldDialog/AddFieldDialog.js',
-            # 'dynamic_rest_api/static/src/components/EndpointPreview/EndpointPreview.xml',
-            # 'dynamic_rest_api/static/src/components/EndpointPreview/EndpointPreview.js',
-            # 'dynamic_rest_api/static/src/components/EndpointBuilder/EndpointBuilder.xml',
-            # 'dynamic_rest_api/static/src/components/EndpointBuilder/EndpointBuilder.js',
+            # SCSS first
+            'dynamic_rest_api/static/src/components/EndpointBuilder/EndpointBuilder.scss',
+            'dynamic_rest_api/static/src/components/FieldSelector/FieldSelector.scss',
+            'dynamic_rest_api/static/src/components/AddFieldDialog/AddFieldDialog.scss',
+            'dynamic_rest_api/static/src/components/EndpointPreview/EndpointPreview.scss',
+            # JS registry helper
+            'dynamic_rest_api/static/src/js/dynamic_api_registry.js',
+            # OWL components (JS + XML together)
+            'dynamic_rest_api/static/src/components/FieldSelector/FieldSelector.xml',
+            'dynamic_rest_api/static/src/components/FieldSelector/FieldSelector.js',
+            'dynamic_rest_api/static/src/components/AddFieldDialog/AddFieldDialog.xml',
+            'dynamic_rest_api/static/src/components/AddFieldDialog/AddFieldDialog.js',
+            'dynamic_rest_api/static/src/components/EndpointPreview/EndpointPreview.xml',
+            'dynamic_rest_api/static/src/components/EndpointPreview/EndpointPreview.js',
+            'dynamic_rest_api/static/src/components/EndpointBuilder/EndpointBuilder.xml',
+            'dynamic_rest_api/static/src/components/EndpointBuilder/EndpointBuilder.js',
         ],
     },
     'installable': True,

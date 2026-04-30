@@ -1,0 +1,207 @@
+// AddFieldDialog and shared dialog/form styles
+
+// ── Modal overlay ──────────────────────────────────────────────────────────
+
+.dra-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: dra-fade-in 0.15s ease;
+}
+
+@keyframes dra-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+// ── Dialog shell ────────────────────────────────────────────────────────────
+
+.dra-dialog {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: dra-slide-up 0.2s ease;
+    width: 100%;
+
+    &.dra-add-field-dialog { max-width: 520px; }
+}
+
+@keyframes dra-slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.dra-dialog-header {
+    padding: 20px 24px 12px;
+    border-bottom: 1px solid #e9ecef;
+
+    h5 {
+        margin: 0 0 4px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #212529;
+    }
+}
+
+.dra-dialog-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dra-dialog-footer {
+    padding: 12px 24px 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+// ── Shared form controls ────────────────────────────────────────────────────
+
+.dra-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin: 0;
+    }
+
+    &--inline label {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        flex: unset;
+        cursor: pointer;
+    }
+}
+
+.dra-input {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    color: #212529;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+
+    &:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    }
+
+    &--error {
+        border-color: #ef4444;
+        &:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+    }
+
+    &--mono { font-family: 'SFMono-Regular', 'Consolas', monospace; }
+
+    &:disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
+}
+
+select.dra-input { cursor: pointer; }
+
+.dra-input-prefix-group {
+    display: flex;
+    align-items: stretch;
+
+    .dra-input-prefix {
+        padding: 8px 10px;
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-right: none;
+        border-radius: 6px 0 0 6px;
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-family: monospace;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .dra-input {
+        border-radius: 0 6px 6px 0;
+    }
+}
+
+.dra-form-error {
+    font-size: 0.78rem;
+    color: #ef4444;
+}
+
+.dra-form-hint {
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+
+// ── Shared button styles ─────────────────────────────────────────────────────
+
+.dra-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, transform 0.1s;
+    text-decoration: none;
+
+    &:active { transform: scale(0.97); }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    &--primary {
+        background: #7c3aed;
+        color: #fff;
+        border-color: #7c3aed;
+        &:hover { background: #6d28d9; }
+    }
+
+    &--secondary {
+        background: #fff;
+        color: #374151;
+        border-color: #d1d5db;
+        &:hover { background: #f9fafb; }
+    }
+
+    &--success {
+        background: #059669;
+        color: #fff;
+        border-color: #059669;
+        &:hover { background: #047857; }
+    }
+
+    &--danger {
+        background: #ef4444;
+        color: #fff;
+        border-color: #ef4444;
+        &:hover { background: #dc2626; }
+    }
+
+    &--sm {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+    }
+}

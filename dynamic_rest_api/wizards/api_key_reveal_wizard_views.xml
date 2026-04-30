@@ -20,7 +20,7 @@
                     <p class="text-muted">
                         Use this key in the <code>X-API-Key</code> HTTP header:
                         <br/>
-                        <code>X-API-Key: <t t-esc="record.raw_key.value"/></code>
+                        <code>X-API-Key: &lt;paste-your-key-here&gt;</code>
                     </p>
                 </sheet>
                 <footer>

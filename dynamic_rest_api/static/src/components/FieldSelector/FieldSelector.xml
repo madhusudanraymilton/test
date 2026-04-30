@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="dynamic_rest_api.FieldSelector">
+        <div class="dra-field-selector">
+            <!-- Toolbar -->
+            <div class="dra-fs-toolbar">
+                <div class="dra-fs-search">
+                    <i class="fa fa-search"/>
+                    <input type="text"
+                           placeholder="Search fields…"
+                           t-on-input="onFilterInput"
+                           t-att-value="state.filter"/>
+                </div>
+                <div class="dra-fs-group-by">
+                    <label>Group by</label>
+                    <select t-on-change="onGroupByChange">
+                        <option value="none">None</option>
+                        <option value="ttype">Field Type</option>
+                    </select>
+                </div>
+                <span class="dra-fs-count">
+                    <t t-esc="selectedCount"/> / <t t-esc="totalCount"/> selected
+                </span>
+            </div>
+
+            <!-- Field list -->
+            <div class="dra-fs-list">
+                <t t-if="filteredFields.length === 0">
+                    <div class="dra-fs-empty">No fields match your search.</div>
+                </t>
+
+                <t t-foreach="groupedFields" t-as="group" t-key="group.label || 'all'">
+                    <!-- Group header -->
+                    <t t-if="group.label">
+                        <div class="dra-fs-group-header">
+                            <span class="badge dra-type-badge"><t t-esc="group.label"/></span>
+                        </div>
+                    </t>
+
+                    <t t-foreach="group.fields" t-as="field" t-key="field.id">
+                        <div t-attf-class="dra-fs-row {{isSelected(field.id) ? 'dra-fs-row--selected' : ''}}">
+                            <!-- Checkbox -->
+                            <input type="checkbox"
+                                   t-att-id="'field-' + field.id"
+                                   t-att-checked="isSelected(field.id)"
+                                   t-att-disabled="props.readonly"
+                                   t-on-change="() => this.onToggle(field)"/>
+
+                            <!-- Field info -->
+                            <label t-att-for="'field-' + field.id" class="dra-fs-label">
+                                <span class="dra-fs-field-desc">
+                                    <t t-esc="field.field_description"/>
+                                </span>
+                                <span class="dra-fs-field-name text-muted">
+                                    <t t-esc="field.name"/>
+                                </span>
+                            </label>
+
+                            <!-- Type badge -->
+                            <span t-attf-class="badge dra-type-badge dra-type-{{field.ttype}}">
+                                <t t-esc="field.ttype"/>
+                            </span>
+
+                            <!-- Alias input (visible only when selected) -->
+                            <t t-if="isSelected(field.id)">
+                                <input type="text"
+                                       class="dra-fs-alias"
+                                       placeholder="JSON alias…"
+                                       t-att-value="getAlias(field.id)"
+                                       t-att-disabled="props.readonly"
+                                       t-on-input="(ev) => this.onAliasInput(field, ev)"/>
+
+                                <!-- Read-only toggle -->
+                                <label class="dra-fs-readonly-label" t-att-title="'Exclude from POST/PUT'">
+                                    <input type="checkbox"
+                                           t-att-checked="getIsReadonly(field.id)"
+                                           t-att-disabled="props.readonly"
+                                           t-on-change="(ev) => this.onReadonlyToggle(field, ev)"/>
+                                    <span>R/O</span>
+                                </label>
+                            </t>
+                        </div>
+                    </t>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

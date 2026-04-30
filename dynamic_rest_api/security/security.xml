@@ -2,21 +2,19 @@
 <odoo>
     <!-- ── Security Groups ───────────────────────────────────────────── -->
 
-    <record id="module_category_dynamic_api" model="ir.module.category">
+    <record id="module_category_dynamic_api" model="res.groups.privilege">
         <field name="name">Dynamic REST API</field>
-        <field name="description">Manage dynamic REST API endpoints</field>
-        <field name="sequence">100</field>
     </record>
 
     <record id="group_api_viewer" model="res.groups">
         <field name="name">API Viewer</field>
-        <field name="category_id" ref="module_category_dynamic_api"/>
+        <field name="privilege_id" ref="module_category_dynamic_api"/>
         <field name="comment">Can view endpoint configurations and logs (read-only).</field>
     </record>
 
     <record id="group_api_manager" model="res.groups">
         <field name="name">API Manager</field>
-        <field name="category_id" ref="module_category_dynamic_api"/>
+        <field name="privilege_id" ref="module_category_dynamic_api"/>
         <field name="implied_ids" eval="[(4, ref('group_api_viewer'))]"/>
         <field name="comment">Can create, edit, and delete endpoints and API keys.</field>
     </record>
@@ -29,8 +27,7 @@
     -->
     <record id="rule_endpoint_viewer_own" model="ir.rule">
         <field name="name">Dynamic API Endpoint: viewer sees own records</field>
-        <field name="model_id" ref="base.model_res_users"
-               eval="ref('model_dynamic_api_endpoint')"/>
+        <field name="model_id" ref="model_dynamic_api_endpoint"/>
         <field name="domain_force">[('create_uid', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('group_api_viewer'))]"/>
         <field name="perm_read" eval="True"/>
@@ -42,8 +39,7 @@
     <!-- Managers see all endpoints -->
     <record id="rule_endpoint_manager_all" model="ir.rule">
         <field name="name">Dynamic API Endpoint: manager sees all</field>
-        <field name="model_id" ref="base.model_res_users"
-               eval="ref('model_dynamic_api_endpoint')"/>
+        <field name="model_id" ref="model_dynamic_api_endpoint"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('group_api_manager'))]"/>
         <field name="perm_read" eval="True"/>
@@ -55,8 +51,7 @@
     <!-- API Keys: owners can see their own keys only; managers see all -->
     <record id="rule_api_key_owner" model="ir.rule">
         <field name="name">Dynamic API Key: owner access</field>
-        <field name="model_id" ref="base.model_res_users"
-               eval="ref('model_dynamic_api_key')"/>
+        <field name="model_id" ref="model_dynamic_api_key"/>
         <field name="domain_force">[('user_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('group_api_viewer'))]"/>
         <field name="perm_read" eval="True"/>
@@ -67,8 +62,7 @@
 
     <record id="rule_api_key_manager_all" model="ir.rule">
         <field name="name">Dynamic API Key: manager sees all</field>
-        <field name="model_id" ref="base.model_res_users"
-               eval="ref('model_dynamic_api_key')"/>
+        <field name="model_id" ref="model_dynamic_api_key"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('group_api_manager'))]"/>
         <field name="perm_read" eval="True"/>

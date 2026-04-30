@@ -1,0 +1,197 @@
+// EndpointBuilder — master layout and shared design tokens
+// All component SCSS imports live in __manifest__.py; this file owns layout.
+
+// ── Design tokens ───────────────────────────────────────────────────────────
+
+:root {
+    --dra-purple:       #7c3aed;
+    --dra-purple-dark:  #6d28d9;
+    --dra-purple-light: #ede9fe;
+    --dra-border:       #e5e7eb;
+    --dra-bg:           #f9fafb;
+    --dra-surface:      #ffffff;
+    --dra-text:         #111827;
+    --dra-muted:        #6b7280;
+    --dra-radius:       8px;
+    --dra-shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
+    --dra-shadow-md:    0 4px 16px rgba(0,0,0,0.10);
+}
+
+// ── Builder shell ────────────────────────────────────────────────────────────
+
+.dra-builder {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--dra-bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--dra-text);
+}
+
+// ── Top bar ──────────────────────────────────────────────────────────────────
+
+.dra-builder-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: var(--dra-surface);
+    border-bottom: 1px solid var(--dra-border);
+    box-shadow: var(--dra-shadow-sm);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .dra-builder-topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .dra-builder-topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dra-builder-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--dra-text);
+
+        .dra-builder-title-name {
+            color: var(--dra-purple);
+        }
+    }
+
+    .dra-unsaved-badge {
+        font-size: 0.78rem;
+        color: #d97706;
+        font-weight: 500;
+        animation: dra-pulse 2s infinite;
+    }
+}
+
+@keyframes dra-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
+}
+
+// ── Body: two-column layout ──────────────────────────────────────────────────
+
+.dra-builder-body {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+}
+
+.dra-builder-config {
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dra-builder-preview {
+    border-left: 1px solid var(--dra-border);
+    background: var(--dra-surface);
+    overflow-y: auto;
+    padding: 20px;
+}
+
+// ── Sections ─────────────────────────────────────────────────────────────────
+
+.dra-section {
+    background: var(--dra-surface);
+    border: 1px solid var(--dra-border);
+    border-radius: var(--dra-radius);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &--sticky {
+        position: sticky;
+        top: 0;
+    }
+}
+
+.dra-section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--dra-muted);
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--dra-border);
+}
+
+.dra-section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--dra-border);
+}
+
+// ── HTTP method toggles ───────────────────────────────────────────────────────
+
+.dra-method-toggles {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dra-method-toggle {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: #f3f4f6;
+    color: #9ca3af;
+
+    &--success.active  { background: #d1fae5; color: #065f46; border-color: #34d399; }
+    &--primary.active  { background: #dbeafe; color: #1e40af; border-color: #60a5fa; }
+    &--warning.active  { background: #fef3c7; color: #92400e; border-color: #fbbf24; }
+    &--danger.active   { background: #fee2e2; color: #991b1b; border-color: #f87171; }
+
+    &:hover { opacity: 0.85; transform: translateY(-1px); }
+    &:active { transform: translateY(0); }
+}
+
+// ── Model badge ───────────────────────────────────────────────────────────────
+
+.dra-model-badge {
+    padding: 8px 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #166534;
+}
+
+// ── Loading state ─────────────────────────────────────────────────────────────
+
+.dra-loading {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    color: var(--dra-muted);
+    font-size: 0.875rem;
+    justify-content: center;
+}

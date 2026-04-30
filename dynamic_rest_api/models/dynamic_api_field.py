@@ -29,25 +29,37 @@ class DynamicApiField(models.Model):
         required=True, ondelete='cascade',
         domain="[('model_id', '=', parent.model_id)]",
     )
+    # NOTE: Intentionally computed (not `related=`) because Odoo 19 enforces
+    # strict type matching on related fields.  ir.model.fields.ttype is a
+    # Selection field; declaring fields.Char(related='field_id.ttype') raises:
+    #   TypeError: Type of related field … is inconsistent with ir.model.fields.ttype
+    # A compute that stores a Char avoids the mismatch while keeping the
+    # column stored and queryable.
+
     field_name = fields.Char(
-        related='field_id.name', store=True, string='Technical Name',
+        string='Technical Name', store=True,
+        compute='_compute_field_meta',
     )
     field_string = fields.Char(
-        related='field_id.field_description', store=True, string='Field Label',
+        string='Field Label', store=True,
+        compute='_compute_field_meta',
     )
-    # field_type = fields.Char(
-    #     related='field_id.ttype', store=True, string='Field Type',
-    # )
     field_type = fields.Char(
-        compute='_compute_field_type',
-        store=True,
-        string='Field Type',
+        string='Field Type', store=True,
+        compute='_compute_field_meta',
     )
 
-    def _compute_field_type(self):
+    @api.depends('field_id', 'field_id.name', 'field_id.field_description', 'field_id.ttype')
+    def _compute_field_meta(self):
         for rec in self:
-            rec.field_type = rec.field_id.ttype
-            
+            if rec.field_id:
+                rec.field_name   = rec.field_id.name
+                rec.field_string = rec.field_id.field_description
+                rec.field_type   = rec.field_id.ttype  # Selection value stored as Char
+            else:
+                rec.field_name   = False
+                rec.field_string = False
+                rec.field_type   = False
     is_custom = fields.Boolean(
         string='Custom Field',
         help='True if this field was created by the Dynamic API Builder module.',

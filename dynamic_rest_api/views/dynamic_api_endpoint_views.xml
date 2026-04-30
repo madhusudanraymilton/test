@@ -75,7 +75,7 @@
                                     <field name="field_id"
                                            domain="[('model_id', '=', parent.model_id)]"/>
                                     <field name="field_name" readonly="1"/>
-                                    <!-- <field name="field_type" readonly="1"/> -->
+                                    <field name="field_type" readonly="1"/>
                                     <field name="alias"/>
                                     <field name="is_readonly"/>
                                     <field name="is_custom" readonly="1"/>
@@ -144,7 +144,7 @@
                         domain="[('auth_type', '=', 'public')]"/>
                 <filter string="API Key Auth" name="api_key"
                         domain="[('auth_type', '=', 'api_key')]"/>
-              
+            
                 <filter string="Auth Type" name="group_auth"
                         context="{'group_by': 'auth_type'}"/>
                 <filter string="Model" name="group_model"

@@ -1,0 +1,196 @@
+// EndpointPreview component styles
+
+.dra-endpoint-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .dra-preview-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: #9ca3af;
+        text-align: center;
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+
+        p { margin: 0; font-size: 0.9rem; }
+    }
+
+    // ── URL bar ───────────────────────────────────────────────────────
+
+    .dra-preview-url-bar {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 14px;
+
+        .dra-preview-url-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .dra-preview-url-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .dra-preview-url {
+                flex: 1;
+                font-size: 0.875rem;
+                word-break: break-all;
+                color: #7c3aed;
+                background: transparent;
+                border: none;
+                padding: 0;
+            }
+        }
+    }
+
+    // ── Meta row ──────────────────────────────────────────────────────
+
+    .dra-preview-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        .dra-preview-methods {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .dra-preview-auth {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.82rem;
+            color: #6b7280;
+        }
+    }
+
+    // ── Method badges ─────────────────────────────────────────────────
+
+    .dra-method-badge {
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        font-family: monospace;
+
+        &.dra-method-GET    { background: #d1fae5; color: #065f46; }
+        &.dra-method-POST   { background: #dbeafe; color: #1e40af; }
+        &.dra-method-PUT    { background: #fef3c7; color: #92400e; }
+        &.dra-method-DELETE { background: #fee2e2; color: #991b1b; }
+    }
+
+    // ── Code section ──────────────────────────────────────────────────
+
+    .dra-preview-code-section {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .dra-preview-tabs {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        background: #f3f4f6;
+        padding: 6px 10px;
+        border-bottom: 1px solid #e5e7eb;
+        flex-wrap: wrap;
+
+        .dra-tab-btn {
+            background: none;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #6b7280;
+            transition: background 0.15s, color 0.15s;
+
+            &:hover { background: #e5e7eb; color: #374151; }
+
+            &.active {
+                background: #fff;
+                color: #7c3aed;
+                font-weight: 600;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            }
+        }
+    }
+
+    .dra-preview-code {
+        margin: 0;
+        padding: 16px;
+        background: #1e1e2e;
+        color: #cdd6f4;
+        font-family: 'SFMono-Regular', 'Consolas', 'Courier New', monospace;
+        font-size: 0.8rem;
+        line-height: 1.6;
+        overflow-x: auto;
+        max-height: 260px;
+
+        code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+        }
+    }
+
+    // ── Parameter table ───────────────────────────────────────────────
+
+    .dra-preview-params {
+        h6 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+    }
+
+    .dra-param-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+
+        th {
+            background: #f3f4f6;
+            padding: 7px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 7px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+
+            code {
+                font-size: 0.8rem;
+                background: #f3f4f6;
+                padding: 2px 5px;
+                border-radius: 3px;
+                color: #7c3aed;
+            }
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafafa; }
+    }
+}

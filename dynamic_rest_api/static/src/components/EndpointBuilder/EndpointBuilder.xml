@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="dynamic_rest_api.EndpointBuilder">
+        <div class="dra-builder">
+
+            <!-- ── Top bar ─────────────────────────────────────────── -->
+            <div class="dra-builder-topbar">
+                <div class="dra-builder-topbar-left">
+                    <button class="dra-btn dra-btn--secondary dra-btn--sm"
+                            t-on-click="onBack">
+                        <i class="fa fa-arrow-left me-1"/> Endpoints
+                    </button>
+                    <h4 class="dra-builder-title">
+                        <i class="fa fa-magic me-2"/>
+                        <t t-if="state.endpointId">Edit Endpoint</t>
+                        <t t-else="">New Endpoint</t>
+                        <t t-if="state.name">
+                            — <span class="dra-builder-title-name"><t t-esc="state.name"/></span>
+                        </t>
+                    </h4>
+                    <t t-if="state.dirty">
+                        <span class="dra-unsaved-badge">● Unsaved changes</span>
+                    </t>
+                </div>
+                <div class="dra-builder-topbar-right">
+                    <t t-if="state.endpointId">
+                        <button class="dra-btn dra-btn--secondary dra-btn--sm"
+                                t-on-click="openEndpointForm">
+                            <i class="fa fa-cog me-1"/> Advanced Settings
+                        </button>
+                    </t>
+                    <button class="dra-btn dra-btn--primary"
+                            t-on-click="onSave"
+                            t-att-disabled="state.saving">
+                        <t t-if="state.saving">
+                            <i class="fa fa-spinner fa-spin me-1"/> Saving…
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-save me-1"/> Save Endpoint
+                        </t>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Main layout: left panel + right preview ────────── -->
+            <div class="dra-builder-body">
+
+                <!-- LEFT: configuration form -->
+                <div class="dra-builder-config">
+
+                    <!-- Section: Basics -->
+                    <div class="dra-section">
+                        <h6 class="dra-section-title">
+                            <i class="fa fa-info-circle me-1"/> Basic Information
+                        </h6>
+                        <div class="dra-form-group">
+                            <label for="ep-name">Endpoint Name <span class="text-danger">*</span></label>
+                            <input id="ep-name" type="text" class="dra-input"
+                                   placeholder="e.g. Sales Orders API"
+                                   t-att-value="state.name"
+                                   t-on-input="onNameInput"/>
+                        </div>
+                        <div class="dra-form-group">
+                            <label for="ep-description">Description</label>
+                            <textarea id="ep-description" class="dra-input" rows="2"
+                                      placeholder="Optional description…"
+                                      t-on-input="onDescriptionInput">
+                                <t t-esc="state.description"/>
+                            </textarea>
+                        </div>
+                    </div>
+
+                    <!-- Section: Model selector -->
+                    <div class="dra-section">
+                        <h6 class="dra-section-title">
+                            <i class="fa fa-database me-1"/> Target Model <span class="text-danger">*</span>
+                        </h6>
+                        <t t-if="state.loadingModels">
+                            <div class="dra-loading">
+                                <i class="fa fa-spinner fa-spin me-2"/> Loading models…
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="dra-form-group">
+                                <input type="text" class="dra-input mb-2"
+                                       placeholder="Filter models…"
+                                       t-att-value="state.modelSearchQuery"
+                                       t-on-input="onModelSearch"/>
+                                <select class="dra-input" t-on-change="onModelSelect"
+                                        size="6">
+                                    <option value="">— Select a model —</option>
+                                    <t t-foreach="filteredModels" t-as="m" t-key="m.id">
+                                        <option t-att-value="m.id"
+                                                t-att-selected="state.modelId === m.id">
+                                            <t t-esc="m.name"/> (<t t-esc="m.model"/>)
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <t t-if="state.modelName">
+                                <div class="dra-model-badge">
+                                    <i class="fa fa-check-circle text-success me-1"/>
+                                    Selected: <strong><t t-esc="state.modelLabel"/></strong>
+                                    <code class="ms-1"><t t-esc="state.modelName"/></code>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+
+                    <!-- Section: HTTP Methods -->
+                    <div class="dra-section">
+                        <h6 class="dra-section-title">
+                            <i class="fa fa-exchange me-1"/> HTTP Methods
+                        </h6>
+                        <div class="dra-method-toggles">
+                            <t t-foreach="[['GET','success'],['POST','primary'],['PUT','warning'],['DELETE','danger']]"
+                               t-as="mt" t-key="mt[0]">
+                                <button t-attf-class="dra-method-toggle dra-method-toggle--{{mt[1]}} {{state['allow_' + mt[0].toLowerCase()] ? 'active' : ''}}"
+                                        t-on-click="() => this.onMethodToggle(mt[0])">
+                                    <t t-esc="mt[0]"/>
+                                </button>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Section: Authentication -->
+                    <div class="dra-section">
+                        <h6 class="dra-section-title">
+                            <i class="fa fa-lock me-1"/> Authentication
+                        </h6>
+                        <div class="dra-form-group">
+                            <select class="dra-input" t-on-change="onAuthTypeChange">
+                                <option value="api_key"
+                                        t-att-selected="state.authType === 'api_key'">
+                                    API Key (X-API-Key header)
+                                </option>
+                                <option value="session"
+                                        t-att-selected="state.authType === 'session'">
+                                    Odoo Session Cookie
+                                </option>
+                                <option value="public"
+                                        t-att-selected="state.authType === 'public'">
+                                    Public (No Authentication)
+                                </option>
+                            </select>
+                        </div>
+                        <div class="dra-form-group">
+                            <label for="ep-rate-limit">Rate Limit (req/min, 0=unlimited)</label>
+                            <input id="ep-rate-limit" type="number" class="dra-input"
+                                   min="0" max="10000"
+                                   t-att-value="state.rateLimit"
+                                   t-on-input="onRateLimitInput"/>
+                        </div>
+                        <div class="dra-form-group">
+                            <label for="ep-cors">CORS Origins</label>
+                            <input id="ep-cors" type="text" class="dra-input"
+                                   placeholder="* or https://myapp.com"
+                                   t-att-value="state.corsOrigins"
+                                   t-on-input="onCorsInput"/>
+                        </div>
+                    </div>
+
+                    <!-- Section: Fields -->
+                    <div class="dra-section" t-if="state.modelId">
+                        <div class="dra-section-title-row">
+                            <h6 class="dra-section-title mb-0">
+                                <i class="fa fa-list-ul me-1"/> Exposed Fields
+                            </h6>
+                            <t t-if="state.allowCreateField">
+                                <button class="dra-btn dra-btn--sm dra-btn--primary"
+                                        t-on-click="openAddFieldDialog">
+                                    <i class="fa fa-plus me-1"/> Add Custom Field
+                                </button>
+                            </t>
+                        </div>
+
+                        <label class="dra-form-group--inline mt-2">
+                            <input type="checkbox"
+                                   t-att-checked="state.allowCreateField"
+                                   t-on-change="onAllowCreateFieldToggle"/>
+                            Allow adding custom fields to this model
+                        </label>
+
+                        <t t-if="state.loadingFields">
+                            <div class="dra-loading">
+                                <i class="fa fa-spinner fa-spin me-2"/> Loading fields…
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <FieldSelector
+                                availableFields="state.availableFields"
+                                selectedLines="state.selectedLines"
+                                onFieldToggled.bind="onFieldToggled"
+                                onAliasChanged.bind="onAliasChanged"
+                                onReadonlyChanged.bind="onReadonlyChanged"
+                            />
+                        </t>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT: live preview -->
+                <div class="dra-builder-preview">
+                    <div class="dra-section dra-section--sticky">
+                        <h6 class="dra-section-title">
+                            <i class="fa fa-eye me-1"/> Live Preview
+                        </h6>
+                        <EndpointPreview
+                            endpointPath="state.endpointPath"
+                            authType="state.authType"
+                            methods="previewMethods"
+                            selectedFields="previewSelectedFields"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── AddFieldDialog modal ─────────────────────────── -->
+            <t t-if="state.showAddFieldDialog and state.modelId">
+                <AddFieldDialog
+                    endpointId="state.endpointId"
+                    modelId="state.modelId"
+                    modelName="state.modelName"
+                    onFieldCreated.bind="onFieldCreated"
+                    onClose.bind="closeAddFieldDialog"
+                />
+            </t>
+
+        </div>
+    </t>
+</templates>

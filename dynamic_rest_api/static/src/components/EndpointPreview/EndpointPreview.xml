@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="dynamic_rest_api.EndpointPreview">
+        <div class="dra-endpoint-preview">
+
+            <!-- Empty state -->
+            <t t-if="!props.endpointPath">
+                <div class="dra-preview-empty">
+                    <i class="fa fa-plug fa-2x mb-2"/>
+                    <p>Select a model to see the endpoint preview.</p>
+                </div>
+            </t>
+
+            <t t-else="">
+                <!-- URL bar -->
+                <div class="dra-preview-url-bar">
+                    <span class="dra-preview-url-label">Endpoint URL</span>
+                    <div class="dra-preview-url-row">
+                        <code class="dra-preview-url"><t t-esc="fullUrl"/></code>
+                        <button class="dra-btn dra-btn--sm dra-btn--secondary"
+                                t-on-click="copyUrl"
+                                title="Copy URL">
+                            <i class="fa fa-copy"/>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Method badges + auth indicator -->
+                <div class="dra-preview-meta">
+                    <div class="dra-preview-methods">
+                        <t t-foreach="activeMethods" t-as="m" t-key="m">
+                            <span t-attf-class="dra-method-badge dra-method-{{m}}">
+                                <t t-esc="m"/>
+                            </span>
+                        </t>
+                    </div>
+                    <div class="dra-preview-auth">
+                        <t t-if="props.authType === 'api_key'">
+                            <i class="fa fa-key me-1 text-warning"/>
+                            <span>X-API-Key required</span>
+                        </t>
+                        <t t-elif="props.authType === 'session'">
+                            <i class="fa fa-user-circle me-1 text-info"/>
+                            <span>Odoo session required</span>
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-globe me-1 text-success"/>
+                            <span>Public (no auth)</span>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Code tabs -->
+                <div class="dra-preview-code-section">
+                    <div class="dra-preview-tabs">
+                        <button t-attf-class="dra-tab-btn {{state.activeTab === 'curl' ? 'active' : ''}}"
+                                t-on-click="() => this.setTab('curl')">curl GET</button>
+                        <button t-attf-class="dra-tab-btn {{state.activeTab === 'post' ? 'active' : ''}}"
+                                t-on-click="() => this.setTab('post')">curl POST</button>
+                        <button t-attf-class="dra-tab-btn {{state.activeTab === 'fetch' ? 'active' : ''}}"
+                                t-on-click="() => this.setTab('fetch')">fetch</button>
+                        <button t-attf-class="dra-tab-btn {{state.activeTab === 'python' ? 'active' : ''}}"
+                                t-on-click="() => this.setTab('python')">Python</button>
+                        <button t-attf-class="dra-tab-btn {{state.activeTab === 'axios' ? 'active' : ''}}"
+                                t-on-click="() => this.setTab('axios')">Axios</button>
+
+                        <button class="dra-btn dra-btn--sm dra-btn--secondary ms-auto"
+                                t-on-click="copyCode"
+                                title="Copy code snippet">
+                            <i class="fa fa-copy me-1"/> Copy
+                        </button>
+                    </div>
+
+                    <pre class="dra-preview-code"><code><t t-esc="activeCode"/></code></pre>
+                </div>
+
+                <!-- Parameter table -->
+                <t t-if="paramTable.length">
+                    <div class="dra-preview-params">
+                        <h6>Exposed Fields</h6>
+                        <table class="dra-param-table">
+                            <thead>
+                                <tr>
+                                    <th>JSON Key</th>
+                                    <th>Type</th>
+                                    <th>In POST/PUT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="paramTable" t-as="param" t-key="param.key">
+                                    <tr>
+                                        <td><code><t t-esc="param.key"/></code></td>
+                                        <td>
+                                            <span t-attf-class="badge dra-type-badge dra-type-{{param.type}}">
+                                                <t t-esc="param.type"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <t t-if="param.readonly">
+                                                <span class="badge bg-secondary">Read-Only</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge bg-success">Writable</span>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </div>
+    </t>
+</templates>

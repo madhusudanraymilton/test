@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="dynamic_rest_api.AddFieldDialog">
+        <!-- Modal overlay -->
+        <div class="dra-dialog-overlay" t-on-click.self="onCancel">
+            <div class="dra-dialog dra-add-field-dialog" role="dialog"
+                 aria-modal="true" aria-labelledby="dra-add-field-title">
+
+                <!-- Header -->
+                <div class="dra-dialog-header">
+                    <h5 id="dra-add-field-title">
+                        <i class="fa fa-plus-circle me-2"/>
+                        Add Custom Field
+                    </h5>
+                    <p class="text-muted mb-0">
+                        Creates a new column on <code><t t-esc="props.modelName"/></code>.
+                        The field name will be prefixed with <code>x_</code> automatically.
+                    </p>
+                </div>
+
+                <!-- Body -->
+                <div class="dra-dialog-body">
+                    <!-- Field Label -->
+                    <div class="dra-form-group">
+                        <label for="dra-field-label">Field Label <span class="text-danger">*</span></label>
+                        <input id="dra-field-label"
+                               type="text"
+                               class="dra-input"
+                               t-att-class="{'dra-input--error': state.errors.fieldLabel}"
+                               placeholder="e.g. Customer Reference"
+                               t-att-value="state.fieldLabel"
+                               t-on-input="onLabelInput"
+                               t-att-disabled="state.saving"/>
+                        <t t-if="state.errors.fieldLabel">
+                            <span class="dra-form-error"><t t-esc="state.errors.fieldLabel"/></span>
+                        </t>
+                    </div>
+
+                    <!-- Technical Name -->
+                    <div class="dra-form-group">
+                        <label for="dra-field-name">
+                            Technical Name <span class="text-danger">*</span>
+                        </label>
+                        <div class="dra-input-prefix-group">
+                            <span class="dra-input-prefix">x_</span>
+                            <input id="dra-field-name"
+                                   type="text"
+                                   class="dra-input dra-input--mono"
+                                   t-att-class="{'dra-input--error': state.errors.fieldName}"
+                                   placeholder="customer_ref"
+                                   t-att-value="state.fieldName"
+                                   t-on-input="onFieldNameInput"
+                                   t-att-disabled="state.saving"/>
+                        </div>
+                        <t t-if="state.errors.fieldName">
+                            <span class="dra-form-error"><t t-esc="state.errors.fieldName"/></span>
+                        </t>
+                        <span class="dra-form-hint">
+                            Will be stored as: <code><t t-esc="previewName"/></code>
+                        </span>
+                    </div>
+
+                    <!-- Field Type -->
+                    <div class="dra-form-group">
+                        <label for="dra-field-type">Field Type</label>
+                        <select id="dra-field-type"
+                                class="dra-input"
+                                t-on-change="onFieldTypeChange"
+                                t-att-disabled="state.saving">
+                            <t t-foreach="fieldTypes" t-as="ft" t-key="ft.value">
+                                <option t-att-value="ft.value"
+                                        t-att-selected="state.fieldType === ft.value">
+                                    <t t-esc="ft.label"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
+                    <!-- Default Value (only for char) -->
+                    <t t-if="state.fieldType === 'char'">
+                        <div class="dra-form-group">
+                            <label for="dra-default-value">Default Value</label>
+                            <input id="dra-default-value"
+                                   type="text"
+                                   class="dra-input"
+                                   placeholder="Optional default…"
+                                   t-att-value="state.defaultValue"
+                                   t-on-input="onDefaultValueInput"
+                                   t-att-disabled="state.saving"/>
+                        </div>
+                    </t>
+
+                    <!-- Required -->
+                    <div class="dra-form-group dra-form-group--inline">
+                        <label>
+                            <input type="checkbox"
+                                   t-att-checked="state.required"
+                                   t-on-change="onRequiredToggle"
+                                   t-att-disabled="state.saving"/>
+                            Required field
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="dra-dialog-footer">
+                    <button class="dra-btn dra-btn--secondary"
+                            t-on-click="onCancel"
+                            t-att-disabled="state.saving">
+                        Cancel
+                    </button>
+                    <button class="dra-btn dra-btn--primary"
+                            t-on-click="onConfirm"
+                            t-att-disabled="state.saving or hasErrors or not state.fieldLabel">
+                        <t t-if="state.saving">
+                            <i class="fa fa-spinner fa-spin me-1"/> Creating…
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-plus me-1"/> Create Field
+                        </t>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
