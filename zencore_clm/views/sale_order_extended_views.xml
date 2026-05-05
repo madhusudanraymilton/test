@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_clm_statusbar" model="ir.ui.view">
+        <field name="name">sale.order.form.clm.statusbar</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='state'][@widget='statusbar']" position="replace">
+                <field name="state" invisible="1"/>
+                <field name="clm_state" widget="statusbar" statusbar_visible="pi,bucket1,bucket2,bucket3,bucket4,paid"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

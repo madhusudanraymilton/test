@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_clm_statusbar" model="ir.ui.view">
+        <field name="name">res.partner.form.clm</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <group>
+                    <group string="Exposure Limit">
+                        <field name="clm_bucket_1_l"/>
+                        <field name="clm_bucket_2_l"/>
+                        <field name="clm_bucket_3_l"/>
+                        <field name="clm_bucket_4_l"/>
+                    </group>
+                    <group string="Exposure Balance">
+                        <field name="clm_bucket_1_b"/>
+                        <field name="clm_bucket_2_b"/>
+                        <field name="clm_bucket_3_b"/>
+                        <field name="clm_bucket_4_b"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
