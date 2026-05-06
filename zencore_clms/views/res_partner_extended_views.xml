@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_clm" model="ir.ui.view">
+        <field name="name">res.partner.form.clm</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='sales_purchases']" position="after">
+                <page string="CLM">
+                    <group>
+                        <group string="Exposure Limit">
+                            <field name="clm_bucket_1_limit"/>
+                            <field name="clm_bucket_2_limit"/>
+                            <field name="clm_bucket_3_limit"/>
+                            <field name="clm_bucket_4_limit"/>
+                        </group>
+                        <group string="Exposure Balance">
+                            <field name="clm_bucket_1_balance"/>
+                            <field name="clm_bucket_2_balance"/>
+                            <field name="clm_bucket_3_balance"/>
+                            <field name="clm_bucket_4_balance"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

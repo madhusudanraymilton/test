@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Security Groups ───────────────────────────────────────────── -->
+
+    <!-- Main Privilege -->
+    <record id="module_zencore_clm" model="res.groups.privilege">
+        <field name="name">Zencore CLM</field>
+    </record>
+
+    <!-- Salesperson -->
+    <record id="group_zencore_clm_salesperson" model="res.groups">
+        <field name="name">Zencore CLM Salesperson</field>
+        <field name="privilege_id" ref="module_zencore_clm"/>
+    </record>
+
+    <!-- Sales Manager -->
+    <record id="group_zencore_clm_sales_manager" model="res.groups">
+        <field name="name">Zencore CLM Sales Manager</field>
+        <field name="privilege_id" ref="module_zencore_clm"/>
+    </record>
+
+    <!-- CCM (Customer Credit Manager or Contract Control Manager) -->
+    <record id="group_zencore_clm_ccm" model="res.groups">
+        <field name="name">Zencore CLM CCM</field>
+        <field name="privilege_id" ref="module_zencore_clm"/>
+    </record>
+
+    <!-- Warehouse -->
+    <record id="group_zencore_clm_warehouse" model="res.groups">
+        <field name="name">Zencore CLM Warehouse</field>
+        <field name="privilege_id" ref="module_zencore_clm"/>
+    </record>
+
+    <!-- TDO (Territory Development Officer / Technical Delivery Officer) -->
+    <record id="group_zencore_clm_tdo" model="res.groups">
+        <field name="name">Zencore CLM TDO</field>
+        <field name="privilege_id" ref="module_zencore_clm"/>
+    </record>
+
+    <!-- Finance -->
+    <record id="group_zencore_clm_finance" model="res.groups">
+        <field name="name">Zencore CLM Finance</field>
+        <field name="privilege_id" ref="module_zencore_clm"/>
+    </record>
+
+</odoo>
