@@ -1,20 +1,13 @@
-# from odoo import models, fields
-
-# class ResPartnerExtended(models.Model):
-#     _inherit = 'res.partner'
-
-#     clm_bucket_1_limit = fields.Char(string='Bucket 1 limit') 
-#     clm_bucket_2_limit = fields.Char(string='Bucket 2 limit') 
-#     clm_bucket_3_limit = fields.Char(string='Bucket 3 limit') 
-#     clm_bucket_4_limit = fields.Char(string='Bucket 4 limit')
-
-#     clm_bucket_1_balance = fields.Float(string='Bucket 1 balance')
-#     clm_bucket_2_balance = fields.Float(string='Bucket 2 balance')
-#     clm_bucket_3_balance = fields.Float(string='Bucket 3 balance')
-#     clm_bucket_4_balance = fields.Float(string='Bucket 4 balance')
-
 from odoo import models, fields, api
+from odoo.exceptions import AccessError, UserError
 
+_CLM_LIMIT_FIELDS = frozenset({
+        'clm_proforma_limit',
+        'clm_bucket_1_limit',
+        'clm_bucket_2_limit',
+        'clm_bucket_3_limit',
+        'clm_bucket_4_limit',
+    })
 
 class ResPartnerExtended(models.Model):
     """
@@ -35,29 +28,34 @@ class ResPartnerExtended(models.Model):
     # ─────────────────────────────────────────────────────────────────────────
 
     clm_proforma_limit = fields.Monetary(
-        string='Proforma Exposure Limit',
+        string='Proforma Invoice Limit',
         currency_field='currency_id',
         default=0.0,
+        tracking=True,
     )
     clm_bucket_1_limit = fields.Monetary(
         string='Bucket 1 Limit',
         currency_field='currency_id',
         default=0.0,
+        tracking=True,
     )
     clm_bucket_2_limit = fields.Monetary(
         string='Bucket 2 Limit',
         currency_field='currency_id',
         default=0.0,
+        tracking=True,  
     )
     clm_bucket_3_limit = fields.Monetary(
         string='Bucket 3 Limit',
         currency_field='currency_id',
         default=0.0,
+        tracking=True,
     )
     clm_bucket_4_limit = fields.Monetary(
         string='Bucket 4 Limit',
         currency_field='currency_id',
         default=0.0,
+        tracking=True,
     )
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -70,26 +68,31 @@ class ResPartnerExtended(models.Model):
         string='Proforma Balance',
         compute='_compute_clm_balances',
         currency_field='currency_id',
+        tracking=True,
     )
     clm_bucket_1_balance = fields.Monetary(
         string='Bucket 1 Balance',
         compute='_compute_clm_balances',
         currency_field='currency_id',
+        tracking=True,
     )
     clm_bucket_2_balance = fields.Monetary(
         string='Bucket 2 Balance',
         compute='_compute_clm_balances',
         currency_field='currency_id',
+        tracking=True,
     )
     clm_bucket_3_balance = fields.Monetary(
         string='Bucket 3 Balance',
         compute='_compute_clm_balances',
         currency_field='currency_id',
+        tracking=True,
     )
     clm_bucket_4_balance = fields.Monetary(
         string='Bucket 4 Balance',
         compute='_compute_clm_balances',
         currency_field='currency_id',
+        tracking=True,
     )
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -165,9 +168,50 @@ class ResPartnerExtended(models.Model):
         compute='_compute_clm_aggregated',
     )
 
+    #new fields
+    
+
+    def write(self, vals):
+        protected = _CLM_LIMIT_FIELDS & set(vals.keys())
+        if protected and not self.env.su:
+            ctx = self.env.context
+            if not ctx.get('clm_bypass_limit_protection'):
+                raise AccessError(
+                    "Direct editing of credit limits is not permitted.\n"
+                    "Submit a Limit Change Request through the approval workflow."
+                )
+        return super().write(vals)
+
     # ─────────────────────────────────────────────────────────────────────────
     # COMPUTE METHODS
     # ─────────────────────────────────────────────────────────────────────────
+
+    # @api.depends(
+    #     'sale_order_ids.clm_state',
+    #     'sale_order_ids.amount_total',
+    #     'sale_order_ids.state',
+    # )
+    # def _compute_clm_balances(self):
+    #     """
+    #     Sum sale order amounts grouped by CLM stage for this partner.
+    #     Only active (non-cancelled) orders are considered.
+    #     """
+    #     for partner in self:
+    #         active_orders = self.env['sale.order'].search([
+    #             ('partner_id', '=', partner.id),
+    #             ('state', 'not in', ['cancel']),
+    #         ])
+
+    #         def _sum(stage):
+    #             return sum(
+    #                 active_orders.filtered(lambda o: o.clm_state == stage).mapped('amount_total')
+    #             )
+
+    #         partner.clm_proforma_balance = _sum('pi')
+    #         partner.clm_bucket_1_balance = _sum('bucket1')
+    #         partner.clm_bucket_2_balance = _sum('bucket2')
+    #         partner.clm_bucket_3_balance = _sum('bucket3')
+    #         partner.clm_bucket_4_balance = _sum('bucket4')
 
     @api.depends(
         'sale_order_ids.clm_state',
@@ -175,26 +219,44 @@ class ResPartnerExtended(models.Model):
         'sale_order_ids.state',
     )
     def _compute_clm_balances(self):
-        """
-        Sum sale order amounts grouped by CLM stage for this partner.
-        Only active (non-cancelled) orders are considered.
-        """
+        if not self.ids:
+            for partner in self:
+                partner.clm_proforma_balance = 0.0
+                partner.clm_bucket_1_balance = 0.0
+                partner.clm_bucket_2_balance = 0.0
+                partner.clm_bucket_3_balance = 0.0
+                partner.clm_bucket_4_balance = 0.0
+            return
+
+        groups = self.env['sale.order'].read_group(
+            domain=[
+                ('partner_id', 'in', self.ids),
+                ('state', '!=', 'cancel'),
+            ],
+            fields=['partner_id', 'clm_state', 'amount_total:sum'],
+            groupby=['partner_id', 'clm_state'],
+            lazy=False,
+        )
+
+        stage_to_field = {
+            'pi': 'clm_proforma_balance',
+            'bucket1': 'clm_bucket_1_balance',
+            'bucket2': 'clm_bucket_2_balance',
+            'bucket3': 'clm_bucket_3_balance',
+            'bucket4': 'clm_bucket_4_balance',
+        }
+
+        data = {}
+        for g in groups:
+            pid = g['partner_id'][0]
+            stage = g['clm_state']
+            if stage in stage_to_field:
+                data.setdefault(pid, {})[stage] = g['amount_total'] or 0.0
+
         for partner in self:
-            active_orders = self.env['sale.order'].search([
-                ('partner_id', '=', partner.id),
-                ('state', 'not in', ['cancel']),
-            ])
-
-            def _sum(stage):
-                return sum(
-                    active_orders.filtered(lambda o: o.clm_state == stage).mapped('amount_total')
-                )
-
-            partner.clm_proforma_balance = _sum('pi')
-            partner.clm_bucket_1_balance = _sum('bucket1')
-            partner.clm_bucket_2_balance = _sum('bucket2')
-            partner.clm_bucket_3_balance = _sum('bucket3')
-            partner.clm_bucket_4_balance = _sum('bucket4')
+            pdata = data.get(partner.id, {})
+            for stage, field in stage_to_field.items():
+                partner[field] = pdata.get(stage, 0.0)
 
     @api.depends(
         'clm_proforma_balance', 'clm_proforma_limit',
@@ -269,10 +331,10 @@ class ResPartnerExtended(models.Model):
         self.ensure_one()
         BUCKET_MAP = [
             ('Proforma Invoice', self.clm_proforma_limit, self.clm_proforma_balance),
-            ('Bucket 1 — Delivered, Not Invoiced', self.clm_bucket_1_limit, self.clm_bucket_1_balance),
-            ('Bucket 2 — Invoiced, Awaiting Customer Acceptance', self.clm_bucket_2_limit, self.clm_bucket_2_balance),
-            ('Bucket 3 — Customer Accepted, Awaiting Bank Acceptance', self.clm_bucket_3_limit, self.clm_bucket_3_balance),
-            ('Bucket 4 — Bank Accepted, Payment Pending', self.clm_bucket_4_limit, self.clm_bucket_4_balance),
+            ('Bucket 1', self.clm_bucket_1_limit, self.clm_bucket_1_balance),
+            ('Bucket 2', self.clm_bucket_2_limit, self.clm_bucket_2_balance),
+            ('Bucket 3', self.clm_bucket_3_limit, self.clm_bucket_3_balance),
+            ('Bucket 4', self.clm_bucket_4_limit, self.clm_bucket_4_balance),
         ]
         for bucket_name, limit, balance in BUCKET_MAP:
             if limit > 0.0 and balance > limit:

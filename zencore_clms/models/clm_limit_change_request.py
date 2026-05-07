@@ -251,6 +251,10 @@ class ClmLimitChangeRequest(models.Model):
             # Apply the new limit
             rec.partner_id.write({limit_field: rec.proposed_limit})
 
+            rec.partner_id.with_context(
+                clm_bypass_limit_protection=True
+            ).write({limit_field: rec.proposed_limit})
+
             rec.write({
                 'state': 'approved',
                 'previous_limit': prev_limit,
