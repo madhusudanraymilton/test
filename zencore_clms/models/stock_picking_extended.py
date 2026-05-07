@@ -42,6 +42,7 @@
 
 # models/stock_picking_extended.py
 from odoo import models
+from odoo.exceptions import UserError,AccessError
 
 
 class StockPickingExtended(models.Model):
@@ -49,6 +50,9 @@ class StockPickingExtended(models.Model):
 
     def button_validate(self):
         """Freeze check before user can proceed. Stage move happens in _action_done."""
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_warehouse'):
+            raise AccessError("Only warehouse staff can validate deliveries.")
+        
         for picking in self.filtered(
             lambda p: p.picking_type_code == 'outgoing' and p.sale_id
         ):
@@ -60,6 +64,9 @@ class StockPickingExtended(models.Model):
         Fires after all backorder wizard confirmations. State is definitively 'done'.
         Safe and reliable hook for PI → Bucket 1 transition.
         """
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_warehouse'):
+            raise AccessError("Only warehouse staff can validate deliveries.")
+        
         result = super()._action_done()
         for picking in self.filtered(
             lambda p: p.picking_type_code == 'outgoing'

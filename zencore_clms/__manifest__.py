@@ -29,7 +29,7 @@
         'security/security.xml',
         'security/ir.model.access.csv',
         # Sequence data
-        #'data/ir_sequence_data.xml',
+        'data/ir_sequence_data.xml',
         # Views
         'views/res_partner_extended_views.xml',
         'views/sale_order_extended_views.xml',

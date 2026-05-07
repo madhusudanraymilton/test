@@ -166,6 +166,7 @@ class ResPartnerExtended(models.Model):
     clm_group_is_frozen = fields.Boolean(
         string='Group Frozen',
         compute='_compute_clm_aggregated',
+        store=True,
     )
 
     #new fields

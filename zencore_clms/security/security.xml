@@ -43,4 +43,148 @@
         <field name="privilege_id" ref="module_zencore_clm"/>
     </record>
 
+
+    <!-- CCM can only see requests they initiated -->
+    <record id="rule_clm_request_ccm" model="ir.rule">
+        <field name="name">CLM Request: CCM sees own requests only</field>
+        <field name="model_id" ref="model_clm_limit_change_request"/>
+        <field name="domain_force">[('initiated_by', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_ccm'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Finance sees all requests in pending state -->
+    <record id="rule_clm_request_finance" model="ir.rule">
+        <field name="name">CLM Request: Finance sees all</field>
+        <field name="model_id" ref="model_clm_limit_change_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_finance'))]"/>
+    </record>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         RECORD RULES — Row-level security
+    ═══════════════════════════════════════════════════════════ -->
+
+    <!-- SALE ORDER RULES -->
+
+    <!-- Salesperson: sees only their own quotations -->
+    <record id="rule_so_salesperson_own" model="ir.rule">
+        <field name="name">SO: Salesperson sees own orders only</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">
+            [('user_id', '=', user.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_salesperson'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Sales Manager: sees all orders in their company -->
+    <record id="rule_so_sales_manager_company" model="ir.rule">
+        <field name="name">SO: Sales Manager sees company orders</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">
+            [('company_id', '=', user.company_id.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_sales_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- STOCK PICKING RULES -->
+
+    <!-- Warehouse: only outgoing pickings -->
+    <record id="rule_picking_warehouse_outgoing" model="ir.rule">
+        <field name="name">Picking: Warehouse sees outgoing transfers only</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="domain_force">
+            [('picking_type_code', '=', 'outgoing'),
+             ('company_id', '=', user.company_id.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_warehouse'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ACCOUNT MOVE RULES -->
+
+    <!-- TDO: only customer invoices (out_invoice) -->
+    <record id="rule_invoice_tdo_out_invoice" model="ir.rule">
+        <field name="name">Invoice: TDO sees customer invoices only</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="domain_force">
+            [('move_type', '=', 'out_invoice'),
+             ('company_id', '=', user.company_id.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_tdo'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Finance: all moves in company (for payment and reconciliation) -->
+    <record id="rule_invoice_finance_company" model="ir.rule">
+        <field name="name">Invoice: Finance sees all company moves</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="domain_force">
+            [('company_id', '=', user.company_id.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_finance'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- CLM LIMIT CHANGE REQUEST RULES -->
+
+    <!-- CCM: sees only own requests -->
+    <record id="rule_clm_request_ccm_own" model="ir.rule">
+        <field name="name">CLM Request: CCM sees own requests</field>
+        <field name="model_id" ref="zencore_clms.model_clm_limit_change_request"/>
+        <field name="domain_force">
+            [('initiated_by', '=', user.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_ccm'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Finance: sees all requests for approval -->
+    <record id="rule_clm_request_finance_all" model="ir.rule">
+        <field name="name">CLM Request: Finance sees all requests</field>
+        <field name="model_id" ref="zencore_clms.model_clm_limit_change_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_finance'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Sales Manager: read-only on all requests -->
+    <record id="rule_clm_request_sales_manager_readonly" model="ir.rule">
+        <field name="name">CLM Request: Sales Manager read-only</field>
+        <field name="model_id" ref="zencore_clms.model_clm_limit_change_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_zencore_clm_sales_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
 </odoo>

@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.exceptions import UserError, AccessError
+from odoo.exceptions import UserError, AccessError, ValidationError
 
 
 class ClmLimitChangeRequest(models.Model):
@@ -196,6 +196,24 @@ class ClmLimitChangeRequest(models.Model):
                 else 'standard_increase'
             )
 
+
+    #check unique pending request per bucket per partner
+    @api.constrains('partner_id', 'bucket', 'state')
+    def _check_unique_pending(self):
+        for rec in self:
+            if rec.state == 'pending_fm':
+                duplicate = self.search([
+                    ('partner_id', '=', rec.partner_id.id),
+                    ('bucket', '=', rec.bucket),
+                    ('state', '=', 'pending_fm'),
+                    ('id', '!=', rec.id),
+                ], limit=1)
+                if duplicate:
+                    raise ValidationError( 
+                        f"A pending request ({duplicate.name}) already exists "
+                        f"for {rec.partner_id.name} — {rec.bucket}."
+                    )
+
     # ─────────────────────────────────────────────────────────────────────────
     # ORM OVERRIDES
     # ─────────────────────────────────────────────────────────────────────────
@@ -249,7 +267,7 @@ class ClmLimitChangeRequest(models.Model):
             prev_limit = getattr(rec.partner_id, limit_field, 0.0)
 
             # Apply the new limit
-            rec.partner_id.write({limit_field: rec.proposed_limit})
+            # rec.partner_id.write({limit_field: rec.proposed_limit})
 
             rec.partner_id.with_context(
                 clm_bypass_limit_protection=True
@@ -270,24 +288,40 @@ class ClmLimitChangeRequest(models.Model):
                 subtype_xmlid='mail.mt_note',
             )
 
+    # def action_reject(self):
+    #     """
+    #     Finance Manager rejects the request.
+    #     Rejected requests are permanently closed — cannot be reused.
+    #     """
+    #     self._assert_group('zencore_clms.group_zencore_clm_finance', 'reject limit change requests')
+    #     for rec in self:
+    #         if rec.state != 'pending_fm':
+    #             raise UserError(f"Only pending requests can be rejected. ({rec.name})")
+    #         rec.write({
+    #             'state': 'rejected',
+    #             'reviewed_by': self.env.uid,
+    #             'reviewed_date': fields.Datetime.now(),
+    #         })
+    #         rec.message_post(
+    #             body=f"❌ Rejected by {self.env.user.name}. Comment: {rec.fm_comment or 'None'}",
+    #             subtype_xmlid='mail.mt_note',
+    #         )
+
     def action_reject(self):
-        """
-        Finance Manager rejects the request.
-        Rejected requests are permanently closed — cannot be reused.
-        """
-        self._assert_group('zencore_clms.group_zencore_clm_finance', 'reject limit change requests')
+        self._assert_group('zencore_clms.group_zencore_clm_finance', 'reject')
         for rec in self:
             if rec.state != 'pending_fm':
-                raise UserError(f"Only pending requests can be rejected. ({rec.name})")
+                raise UserError(...)
+            if not rec.fm_comment or not rec.fm_comment.strip():
+                raise UserError(
+                    "Rejection requires a Finance Manager comment.\n"
+                    "Please explain the reason for rejection in the FM Comment field."
+                )
             rec.write({
                 'state': 'rejected',
                 'reviewed_by': self.env.uid,
                 'reviewed_date': fields.Datetime.now(),
             })
-            rec.message_post(
-                body=f"❌ Rejected by {self.env.user.name}. Comment: {rec.fm_comment or 'None'}",
-                subtype_xmlid='mail.mt_note',
-            )
 
     # ─────────────────────────────────────────────────────────────────────────
     # PRIVATE HELPERS

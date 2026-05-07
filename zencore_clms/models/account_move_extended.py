@@ -1,5 +1,5 @@
 from odoo import models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError,AccessError
 
 class AccountMoveExtended(models.Model):
     """
@@ -24,6 +24,9 @@ class AccountMoveExtended(models.Model):
         Uses sale_line_ids (Many2many on account.move.line → sale.order.line)
         which is set up by Odoo's sale module.
         """
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+            raise AccessError("Only Finance can create payments")
+        
         result = super().action_post()
 
         for move in self.filtered(lambda m: m.move_type == 'out_invoice' and m.state == 'posted'):
@@ -35,6 +38,24 @@ class AccountMoveExtended(models.Model):
             if sale_orders:
                 sale_orders._clm_move_to_bucket2()
 
+        return result
+
+    def _post_reconcile_hook(self):
+        """Called by Odoo after reconciliation is complete."""
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+            raise AccessError("Only Finance can reconcile payments.")
+        result = super()._post_reconcile_hook()
+        for move in self.filtered(
+            lambda m: m.move_type == 'out_invoice' 
+            and m.payment_state in ('paid', 'in_payment')
+        ):
+            sale_orders = (
+                move.invoice_line_ids
+                .mapped('sale_line_ids')
+                .mapped('order_id')
+                .filtered(lambda o: o.clm_state == 'bucket4' and o.clm_bank_acceptance)
+            )
+            sale_orders._clm_move_to_paid()
         return result
 
 
@@ -86,6 +107,8 @@ class AccountMoveLineExtended(models.Model):
         SRS §6.2: Payment allowed even during freeze.
         """
         # Find payment lines being reconciled against customer invoices
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+            raise AccessError("Only Finance can reconcile payments.")
         for line in self:
             if line.account_id.account_type != 'asset_receivable':
                 continue
@@ -118,4 +141,4 @@ class AccountMoveLineExtended(models.Model):
                 
                 sale_orders._clm_move_to_paid()
 
-        return super().reconcile()
+         

@@ -222,7 +222,7 @@
 #         self.filtered(lambda o: o.clm_state == 'bucket4').write({'clm_state': 'paid'})
 
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError,AccessError
 
 
 class SaleOrderExtended(models.Model):
@@ -378,6 +378,11 @@ class SaleOrderExtended(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         """Block new quotation creation if customer group is frozen."""
+        if not (
+            self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson') 
+            or self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager') 
+        ):
+            raise AccessError("Only sales person or sales manager can create quations")
         orders = super().create(vals_list)
         for order in orders:
             if order.partner_id:
@@ -386,9 +391,23 @@ class SaleOrderExtended(models.Model):
 
     def action_confirm(self):
         """Block sales order confirmation if customer group is frozen."""
+        if not (self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager')):
+            raise AccessError("Only sales manager can confirm Sales Order.")
         for order in self:
             order._clm_check_group_freeze('Sales Order Confirmation')
         return super().action_confirm()
+    
+    def _create_invoices(self, grouped=False, final=False, date=None):
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_tdo'):
+            raise AccessError("Only TDO can create invoices.")
+        
+        invoices = super()._create_invoices(
+            grouped=grouped,
+            final=final,
+            date=date
+        )
+        
+        return invoices
 
     # ─────────────────────────────────────────────────────────────────────────
     # ACCEPTANCE ACTION METHODS — Called by buttons in view
@@ -399,6 +418,12 @@ class SaleOrderExtended(models.Model):
         Records customer acceptance and moves stage: bucket2 → bucket3.
         Allowed even when group is frozen (SRS §6.2 — allowed operations).
         """
+        if not (
+            self.env.user.has_group('zencore_clms.group_zencore_clm_ccm')
+            or self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson')
+        ):
+            raise AccessError("Only CCM or Salesperson can record customer acceptance.")
+        
         for order in self:
             if order.clm_state != 'bucket2':
                 raise UserError(
@@ -421,6 +446,12 @@ class SaleOrderExtended(models.Model):
         Records bank acceptance and moves stage: bucket3 → bucket4.
         Allowed even when group is frozen (SRS §6.2 — allowed operations).
         """
+        if not (
+            self.env.user.has_group('zencore_clms.group_zencore_clm_ccm')
+            or self.env.user.has_group('zencore_clms.group_zencore_clm_finance')
+        ):
+            raise AccessError("Only CCM or Finance can record bank acceptance.")
+        
         for order in self:
             if order.clm_state != 'bucket3':
                 raise UserError(
