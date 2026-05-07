@@ -1,1 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_clm_lcr_ccm,clm limit change request ccm,model_clm_limit_change_request,zencore_clms.group_zencore_clm_ccm,1,1,1,0
+access_clm_lcr_finance,clm limit change request finance,model_clm_limit_change_request,zencore_clms.group_zencore_clm_finance,1,1,0,0
+access_clm_lcr_sales,clm limit change request sales,model_clm_limit_change_request,zencore_clms.group_zencore_clm_salesperson,1,0,0,0
+access_clm_lcr_sales_manager,clm limit change request sales manager,model_clm_limit_change_request,zencore_clms.group_zencore_clm_sales_manager,1,0,0,0
