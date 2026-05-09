@@ -1,77 +1,66 @@
-# from odoo import models
-
-
-# class StockPickingExtended(models.Model):
-#     """
-#     Delivery Validation Hook.
-
-#     On button_validate() for outgoing pickings:
-#       1. Check if customer group is frozen → block if yes
-#       2. After successful validation → move CLM stage: PI → Bucket 1
-#     """
-
-#     _inherit = 'stock.picking'
-
-#     def button_validate(self):
-#         """
-#         Override delivery validation.
-#         Freeze check runs BEFORE super() so the action is stopped early.
-#         Stage transition runs AFTER super() so we only move on success.
-#         """
-#         # Pre-validation: freeze check on outgoing (delivery) transfers
-#         for picking in self:
-#             if picking.picking_type_code == 'outgoing':
-#                 sale = picking.sale_id if hasattr(picking, 'sale_id') else False
-#                 if sale:
-#                     sale._clm_check_group_freeze('Delivery Validation')
-
-#         # Execute standard Odoo validation
-#         result = super().button_validate()
-
-#         # Post-validation: move CLM stage for all successfully validated pickings
-#         for picking in self:
-#             if (
-#                 picking.picking_type_code == 'outgoing'
-#                 and picking.state == 'done'
-#             ):
-#                 sale = picking.sale_id if hasattr(picking, 'sale_id') else False
-#                 if sale:
-#                     sale._clm_move_to_bucket1()
-
-#         return result
-
-# models/stock_picking_extended.py
 from odoo import models
-from odoo.exceptions import UserError,AccessError
+from odoo.exceptions import AccessError
 
 
 class StockPickingExtended(models.Model):
+    """
+    Delivery Validation Hook — stock.picking extension.
+
+    SRS §3.2: Delivery validation → stage PI → Bucket 1.
+    SRS §6.2: Delivery validation is BLOCKED when group is frozen.
+    SRS §10 (SoD): Only Warehouse staff may validate deliveries.
+
+    Design:
+    ────────
+    - Freeze check in button_validate() — user-facing gate, raises before wizard opens.
+    - Stage transition in _action_done() — reliable post-validation hook.
+    - SoD group check ONLY in button_validate() — _action_done() is also called
+      programmatically by Odoo internals (backorder wizard, scheduled auto-validate).
+      Putting the group check in _action_done() would break those automated flows.
+    """
+
     _inherit = 'stock.picking'
 
     def button_validate(self):
-        """Freeze check before user can proceed. Stage move happens in _action_done."""
+        """
+        User-facing validation button.
+        Gate 1: SoD — Only Warehouse staff.
+        Gate 2: Freeze — Block if customer group is frozen.
+
+        NOTE: _action_done() is intentionally NOT protected by SoD group check.
+        It is an internal ORM method called by Odoo's own backorder and scheduling
+        logic. Protecting it would break automated flows.
+        """
         if not self.env.user.has_group('zencore_clms.group_zencore_clm_warehouse'):
-            raise AccessError("Only warehouse staff can validate deliveries.")
-        
+            raise AccessError(
+                "Only Warehouse staff can validate deliveries."
+            )
+
+        # Freeze check only on outgoing (customer delivery) transfers with a linked SO
         for picking in self.filtered(
             lambda p: p.picking_type_code == 'outgoing' and p.sale_id
         ):
             picking.sale_id._clm_check_group_freeze('Delivery Validation')
+
         return super().button_validate()
 
     def _action_done(self):
         """
-        Fires after all backorder wizard confirmations. State is definitively 'done'.
-        Safe and reliable hook for PI → Bucket 1 transition.
+        Internal post-validation hook. Fires after all backorder wizard interactions.
+        At this point picking.state == 'done' is guaranteed.
+
+        No SoD group check here — this method is called by Odoo internals
+        (backorder wizard, scheduler). Only the stage transition logic runs.
         """
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_warehouse'):
-            raise AccessError("Only warehouse staff can validate deliveries.")
-        
         result = super()._action_done()
+
         for picking in self.filtered(
-            lambda p: p.picking_type_code == 'outgoing'
-                      and p.state == 'done'
-                      and p.sale_id
+            lambda p: (
+                p.picking_type_code == 'outgoing'
+                and p.state == 'done'
+                and p.sale_id
+            )
         ):
             picking.sale_id._clm_move_to_bucket1()
+
         return result

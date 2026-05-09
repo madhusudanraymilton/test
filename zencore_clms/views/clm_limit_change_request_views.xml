@@ -10,7 +10,8 @@
         <field name="arch" type="xml">
             <form string="Limit Change Request">
                 <header>
-                    <!-- CCM submits -->
+
+                    <!-- CCM submits draft → pending_fm -->
                     <button
                         name="action_submit_to_fm"
                         type="object"
@@ -19,7 +20,8 @@
                         invisible="state != 'draft'"
                         groups="zencore_clms.group_zencore_clm_ccm"
                     />
-                    <!-- FM approves -->
+
+                    <!-- FM approves pending_fm → approved -->
                     <button
                         name="action_approve"
                         type="object"
@@ -29,7 +31,8 @@
                         groups="zencore_clms.group_zencore_clm_finance"
                         confirm="This will immediately update the customer's credit limit. Proceed?"
                     />
-                    <!-- FM rejects -->
+
+                    <!-- FM rejects pending_fm → rejected -->
                     <button
                         name="action_reject"
                         type="object"
@@ -37,9 +40,14 @@
                         class="btn-danger"
                         invisible="state != 'pending_fm'"
                         groups="zencore_clms.group_zencore_clm_finance"
-                        confirm="Reject this request? This action cannot be undone."
+                        confirm="Reject this request? This action is permanent and cannot be undone."
                     />
-                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_fm,approved,rejected"/>
+
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,pending_fm,approved,rejected"
+                    />
                 </header>
 
                 <sheet>
@@ -47,55 +55,69 @@
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
 
-                    <!-- Auto-classification banner -->
+                    <!-- Classification banners -->
                     <div
                         class="alert alert-danger"
                         invisible="request_type != 'freeze_resolution'"
                         role="alert"
                     >
-                        <strong>⚠ Freeze Resolution Request:</strong> Current exposure exceeds the limit.
-                        Approval will immediately unfreeze this customer if exposure is within the new limit.
+                        <strong>⚠ Freeze Resolution Request:</strong>
+                        Current exposure exceeds the limit. Approval will resolve the freeze if
+                        the new limit covers the current exposure.
                     </div>
                     <div
                         class="alert alert-info"
                         invisible="request_type != 'standard_increase'"
                         role="alert"
                     >
-                        <strong>ℹ Standard Limit Increase:</strong> No active breach on this bucket.
+                        <strong>ℹ Standard Limit Increase:</strong>
+                        No active breach on this bucket.
                     </div>
 
                     <group>
                         <group string="Request Details">
-                            <field name="partner_id" readonly="state != 'draft'"/>
-                            <field name="bucket" readonly="state != 'draft'"/>
-                            <field name="request_type" readonly="1"/>
-                            <field name="currency_id" invisible="1"/>
+                            <field name="partner_id"    readonly="state != 'draft'"/>
+                            <field name="bucket"        readonly="state != 'draft'"/>
+                            <field name="request_type"  readonly="1"/>
+                            <field name="currency_id"   invisible="1"/>
                         </group>
                         <group string="Limit Values">
-                            <field name="current_limit" readonly="1"/>
+                            <field name="current_limit"    readonly="1"/>
                             <field name="current_exposure" readonly="1"/>
-                            <field name="proposed_limit" readonly="state != 'draft'"/>
+                            <field name="proposed_limit"   readonly="state != 'draft'"/>
                         </group>
                     </group>
 
                     <group string="Justification">
-                        <field name="justification" nolabel="1" readonly="state != 'draft'"/>
+                        <field
+                            name="justification"
+                            nolabel="1"
+                            readonly="state != 'draft'"
+                            placeholder="Provide business justification for this limit change..."
+                        />
                     </group>
 
-                    <!-- FM comment field — visible in review state -->
-                    <group string="Finance Manager Comment" invisible="state == 'draft'">
+                    <!-- FM comment — visible from pending_fm onward -->
+                    <group
+                        string="Finance Manager Comment"
+                        invisible="state == 'draft'"
+                    >
                         <field
                             name="fm_comment"
                             nolabel="1"
                             readonly="state not in ('pending_fm',)"
+                            placeholder="Required for rejection. Optional for approval."
                         />
                     </group>
 
-                    <!-- Audit trail — shown after action taken -->
-                    <group string="Audit Trail" invisible="state in ('draft', 'pending_fm')">
-                        <field name="initiated_by" readonly="1"/>
-                        <field name="reviewed_by" readonly="1"/>
-                        <field name="reviewed_date" readonly="1"/>
+                    <!-- Audit trail — shown after FM action -->
+                    <group
+                        string="Audit Trail"
+                        invisible="state in ('draft', 'pending_fm')"
+                    >
+                        <field name="initiated_by"   readonly="1"/>
+                        <field name="reviewed_by"    readonly="1"/>
+                        <field name="reviewed_date"  readonly="1"/>
                         <field name="previous_limit" readonly="1"/>
                     </group>
                 </sheet>
@@ -112,7 +134,12 @@
         <field name="name">clm.limit.change.request.list</field>
         <field name="model">clm.limit.change.request</field>
         <field name="arch" type="xml">
-            <list string="Limit Change Requests" decoration-danger="state == 'rejected'" decoration-success="state == 'approved'" decoration-warning="state == 'pending_fm'">
+            <list
+                string="Limit Change Requests"
+                decoration-danger="state == 'rejected'"
+                decoration-success="state == 'approved'"
+                decoration-warning="state == 'pending_fm'"
+            >
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="bucket"/>
@@ -122,6 +149,7 @@
                 <field name="initiated_by"/>
                 <field name="state" widget="badge"/>
                 <field name="reviewed_date"/>
+                <field name="currency_id" invisible="1"/>
             </list>
         </field>
     </record>
@@ -134,27 +162,29 @@
         <field name="model">clm.limit.change.request</field>
         <field name="arch" type="xml">
             <search string="Limit Change Requests">
-                <field name="name" string="Reference"/>
+                <field name="name"       string="Reference"/>
                 <field name="partner_id" string="Customer"/>
-                <filter string="My Requests" name="my_requests" domain="[('initiated_by', '=', uid)]"/>
+                <filter string="My Requests"    name="my_requests"       domain="[('initiated_by', '=', uid)]"/>
                 <separator/>
-                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Pending FM" name="pending_fm" domain="[('state', '=', 'pending_fm')]"/>
-                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
-                <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]"/>
+                <filter string="Draft"          name="draft"             domain="[('state', '=', 'draft')]"/>
+                <filter string="Pending FM"     name="pending_fm"        domain="[('state', '=', 'pending_fm')]"/>
+                <filter string="Approved"       name="approved"          domain="[('state', '=', 'approved')]"/>
+                <filter string="Rejected"       name="rejected"          domain="[('state', '=', 'rejected')]"/>
                 <separator/>
-                <filter string="Freeze Resolution" name="freeze_resolution" domain="[('request_type', '=', 'freeze_resolution')]"/>
-            
+                <filter
+                    string="Freeze Resolution"
+                    name="freeze_resolution"
+                    domain="[('request_type', '=', 'freeze_resolution')]"
+                />
                 <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
-                <filter string="Bucket" name="group_bucket" context="{'group_by': 'bucket'}"/>
-                <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-            
+                <filter string="Bucket"   name="group_bucket"  context="{'group_by': 'bucket'}"/>
+                <filter string="Status"   name="group_state"   context="{'group_by': 'state'}"/>
             </search>
         </field>
     </record>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         ACTION
+         WINDOW ACTION
     ══════════════════════════════════════════════════════════════════════ -->
     <record id="action_clm_limit_change_request" model="ir.actions.act_window">
         <field name="name">Limit Change Requests</field>
@@ -169,12 +199,13 @@
             <p>
                 Create a request to propose a credit limit change for a customer bucket.
                 Requests require Finance Manager approval before taking effect.
+                Only CCM may submit requests. Finance Manager approves or rejects.
             </p>
         </field>
     </record>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         MENU ITEMS — Under Sales
+         MENU ITEMS
     ══════════════════════════════════════════════════════════════════════ -->
     <menuitem
         id="menu_clm_credit_management"
@@ -191,5 +222,25 @@
         sequence="10"
         groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
     />
+
+    <!-- <menuitem
+        id="menu_clm_credit_management" 
+        name="Credit Management" 
+        parent="sale.sale_menu_root" 
+        sequence="60" 
+        groups="zencore_clms.group_zencore_clm_ccm,
+                zencore_clms.group_zencore_clm_finance,
+                zencore_clms.group_zencore_clm_sales_manager"
+    /> -->
+    <!-- <menuitem 
+        id="menu_clm_limit_requests" 
+        name="Limit Change Requests" 
+        parent="menu_clm_credit_management" 
+        action="action_clm_limit_change_request" 
+        sequence="10" 
+        groups="zencore_clms.group_zencore_clm_ccm,
+                zencore_clms.group_zencore_clm_finance,
+                zencore_clms.group_zencore_clm_sales_manager"
+    /> -->
 
 </odoo>

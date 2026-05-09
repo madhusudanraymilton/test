@@ -5,30 +5,44 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+
+            <!-- ── 1. Replace default Odoo status bar with CLM stage bar ── -->
             <xpath expr="//header/field[@name='state'][@widget='statusbar']" position="replace">
                 <field name="state" invisible="1"/>
-                <field name="clm_state" widget="statusbar" statusbar_visible="pi,bucket1,bucket2,bucket3,bucket4,paid"/>
+                <field
+                    name="clm_state"
+                    widget="statusbar"
+                    statusbar_visible="pi,bucket1,bucket2,bucket3,bucket4,paid"
+                />
             </xpath>
 
-            <!-- ── 2. Add acceptance buttons in header ── -->
+            <!-- ── 2. Acceptance buttons in header ── -->
             <xpath expr="//header/button[@name='action_confirm']" position="after">
 
-                <!-- Customer Acceptance Button: visible only in Bucket 2 -->
+                <!--
+                    Customer Acceptance — visible only in Bucket 2
+                    Allowed even when frozen (SRS §6.2)
+                    SoD: CCM or Salesperson
+                -->
                 <button
                     name="action_clm_customer_acceptance"
                     type="object"
-                    string="✔ Mark Customer Acceptance"
+                    string="✔ Customer Acceptance"
                     class="btn-primary"
                     invisible="not clm_show_customer_acceptance_btn"
                     confirm="Confirm that the customer has accepted the documents? This will move the order to Bucket 3."
                     groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_salesperson"
                 />
 
-                <!-- Bank Acceptance Button: visible only in Bucket 3 -->
+                <!--
+                    Bank Acceptance — visible only in Bucket 3
+                    Allowed even when frozen (SRS §6.2)
+                    SoD: CCM or Finance
+                -->
                 <button
                     name="action_clm_bank_acceptance"
                     type="object"
-                    string="🏦 Mark Bank Acceptance"
+                    string="🏦 Bank Acceptance"
                     class="btn-primary"
                     invisible="not clm_show_bank_acceptance_btn"
                     confirm="Confirm that the bank has accepted the documents? This will move the order to Bucket 4."
@@ -37,46 +51,50 @@
 
             </xpath>
 
+            <!-- ── 3. CLM Credit Control tab ── -->
             <xpath expr="//page[@name='order_lines']" position="before">
                 <page string="Credit Control" name="clm_info">
                     <group>
-                        <group string="Stage Information">
+                        <group string="CLM Stage Information">
                             <field name="clm_state" readonly="1"/>
                             <field name="clm_customer_acceptance" readonly="1"/>
                             <field name="clm_bank_acceptance" readonly="1"/>
                         </group>
-                        <group string="Customer Credit Status">
-                            <field
-                                name="partner_id"
-                                widget="res_partner_many2one"
-                                readonly="1"
-                                string="Customer"
-                            />
-                        </group>
                     </group>
 
-                    <!-- Payment availability notice -->
+                    <!-- Payment ready: bank acceptance confirmed, order in Bucket 4 -->
                     <div
-                        class="alert alert-info"
+                        class="alert alert-success"
                         invisible="not clm_show_payment_action"
                         role="alert"
                     >
-                        <strong>Payment Ready:</strong> Bank acceptance has been confirmed.
-                        You may now register payment on the related invoice.
+                        <strong>✅ Payment Ready:</strong>
+                        Bank acceptance is confirmed. Finance may now register payment on the related invoice.
                     </div>
 
+                    <!-- Payment locked: waiting for bank acceptance -->
                     <div
                         class="alert alert-warning"
-                        invisible="clm_show_payment_action or clm_state == 'paid'"
+                        invisible="clm_show_payment_action or clm_state in ('paid', 'pi', 'bucket1')"
                         role="alert"
                     >
-                        <strong>Payment Locked:</strong> Payment registration is available
-                        only after bank acceptance is recorded.
+                        <strong>🔒 Payment Locked:</strong>
+                        Payment registration is available only after bank acceptance is recorded (SRS §4.3).
+                    </div>
+
+                    <!-- Paid confirmation -->
+                    <div
+                        class="alert alert-info"
+                        invisible="clm_state != 'paid'"
+                        role="alert"
+                    >
+                        <strong>💰 Paid:</strong>
+                        This order has been fully settled. Exposure cleared from all buckets.
                     </div>
 
                 </page>
             </xpath>
+
         </field>
     </record>
 </odoo>
-

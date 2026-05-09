@@ -1,262 +1,53 @@
-# from odoo import models, fields, api
-# from odoo.exceptions import UserError
-
-
-# class SaleOrderExtended(models.Model):
-#     """
-#     Stage Machine — sale.order extension.
-
-#     Stage flow (automatic, driven by business events):
-#       pi → bucket1 (delivery validated)
-#       bucket1 → bucket2 (invoice posted)
-#       bucket2 → bucket3 (customer acceptance)
-#       bucket3 → bucket4 (bank acceptance)
-#       bucket4 → paid (full payment received)
-
-#     Users CANNOT manually change clm_state (readonly=True on field).
-#     Freeze check runs on: create, action_confirm, delivery validation.
-#     Acceptance buttons trigger stage moves on: bucket2 and bucket3.
-#     """
-
-#     _inherit = 'sale.order'
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # CLM STAGE FIELD
-#     # readonly=True prevents direct UI/RPC editing.
-#     # Python methods (super-class or internal) can still write to it.
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     clm_state = fields.Selection(
-#         selection=[
-#             ('pi', 'Proforma Invoice'),
-#             ('bucket1', 'Bucket 1'),
-#             ('bucket2', 'Bucket 2'),
-#             ('bucket3', 'Bucket 3'),
-#             ('bucket4', 'Bucket 4'),
-#             ('paid', 'Paid'),
-#         ],
-#         string='CLM Stage',
-#         default='pi',
-#         readonly=True,
-#         tracking=True,
-#         copy=False,
-#         index=True,
-#     )
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # ACCEPTANCE CONTROL FIELDS
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     clm_customer_acceptance = fields.Boolean(
-#         string='Customer Acceptance',
-#         readonly=True,
-#         tracking=True,
-#         copy=False,
-#         help='Set when customer has accepted documents. Triggers move to Bucket 3.',
-#     )
-#     clm_bank_acceptance = fields.Boolean(
-#         string='Bank Acceptance',
-#         readonly=True,
-#         tracking=True,
-#         copy=False,
-#         help='Set when bank has accepted documents. Triggers move to Bucket 4.',
-#     )
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # VISIBILITY FLAGS — Computed, drive show/hide in views
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     clm_show_customer_acceptance_btn = fields.Boolean(
-#         compute='_compute_clm_visibility',
-#         string='Show Customer Acceptance Button',
-#     )
-#     clm_show_bank_acceptance_btn = fields.Boolean(
-#         compute='_compute_clm_visibility',
-#         string='Show Bank Acceptance Button',
-#     )
-#     clm_show_payment_action = fields.Boolean(
-#         compute='_compute_clm_visibility',
-#         string='Payment Available',
-#     )
-
-#     @api.depends('clm_state', 'clm_customer_acceptance', 'clm_bank_acceptance')
-#     def _compute_clm_visibility(self):
-#         for order in self:
-#             # Customer acceptance button: only shown in bucket2 stage
-#             order.clm_show_customer_acceptance_btn = order.clm_state == 'bucket2'
-
-#             # Bank acceptance button: only shown after customer acceptance (bucket3 stage)
-#             order.clm_show_bank_acceptance_btn = order.clm_state == 'bucket3'
-
-#             # Payment is available only after bank acceptance (bucket4)
-#             order.clm_show_payment_action = order.clm_bank_acceptance and order.clm_state == 'bucket4'
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # FREEZE CHECK — Core enforcement method
-#     # Called before every blocked operation.
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     def _clm_check_group_freeze(self, operation_label):
-#         """
-#         Validates the entire customer group for freeze.
-#         If any member (parent or child) is frozen → raises UserError.
-
-#         Group resolution logic:
-#           - If partner has a parent_id → group_head = parent_id
-#           - If partner has no parent_id → group_head = partner itself
-#           - Check: group_head + all its child_ids
-#         """
-#         partner = self.partner_id
-#         if not partner:
-#             return
-
-#         # Resolve group head
-#         group_head = partner.parent_id if partner.parent_id else partner
-
-#         # Collect all members: head + children
-#         all_members = group_head | group_head.child_ids.filtered(lambda c: c.active)
-
-#         # Find any frozen member
-#         frozen_member = all_members.filtered(lambda p: p.clm_is_frozen)
-#         if not frozen_member:
-#             return
-
-#         # Build detailed error from first frozen member
-#         breached = frozen_member[0]
-#         breach = breached.clm_get_first_breach()
-
-#         if not breach:
-#             # Freeze flag is True but no breach found (edge case) — still block
-#             raise UserError(
-#                 f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
-#                 f"Group: {group_head.name}\n"
-#                 f"Frozen Customer: {breached.name}\n"
-#                 f"Please contact the Credit & Collections Manager."
-#             )
-
-#         currency = breached.currency_id
-#         fmt = lambda amt: f"{currency.symbol} {amt:,.2f}"
-
-#         raise UserError(
-#             f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
-#             f"Group          : {group_head.name}\n"
-#             f"Frozen Customer: {breached.name}\n"
-#             f"Bucket         : {breach['bucket']}\n"
-#             f"Defined Limit  : {fmt(breach['limit'])}\n"
-#             f"Current Exposure: {fmt(breach['exposure'])}\n"
-#             f"Excess Amount  : {fmt(breach['excess'])}\n\n"
-#             f"Resolve by reducing exposure or submitting a limit increase request."
-#         )
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # BLOCKED OPERATION OVERRIDES
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     @api.model_create_multi
-#     def create(self, vals_list):
-#         """Block new quotation creation if customer group is frozen."""
-#         orders = super().create(vals_list)
-#         for order in orders:
-#             if order.partner_id:
-#                 order._clm_check_group_freeze('Proforma Invoice Creation')
-#         return orders
-
-#     def action_confirm(self):
-#         """Block sales order confirmation if customer group is frozen."""
-#         for order in self:
-#             order._clm_check_group_freeze('Sales Order Confirmation')
-#         return super().action_confirm()
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # ACCEPTANCE ACTION METHODS — Called by buttons in view
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     def action_clm_customer_acceptance(self):
-#         """
-#         Records customer acceptance and moves stage: bucket2 → bucket3.
-#         Allowed even when group is frozen (SRS §6.2 — allowed operations).
-#         """
-#         for order in self:
-#             if order.clm_state != 'bucket2':
-#                 raise UserError(
-#                     f"Customer Acceptance can only be recorded when the order is in "
-#                     f"'Bucket 2 — Invoiced, Awaiting Customer Acceptance'.\n"
-#                     f"Current stage: {dict(order._fields['clm_state'].selection).get(order.clm_state)}"
-#                 )
-#             order.write({
-#                 'clm_customer_acceptance': True,
-#                 'clm_state': 'bucket3',
-#             })
-
-#     def action_clm_bank_acceptance(self):
-#         """
-#         Records bank acceptance and moves stage: bucket3 → bucket4.
-#         Allowed even when group is frozen (SRS §6.2 — allowed operations).
-#         """
-#         for order in self:
-#             if order.clm_state != 'bucket3':
-#                 raise UserError(
-#                     f"Bank Acceptance can only be recorded when the order is in "
-#                     f"'Bucket 3 — Customer Accepted, Awaiting Bank Acceptance'.\n"
-#                     f"Current stage: {dict(order._fields['clm_state'].selection).get(order.clm_state)}"
-#                 )
-#             order.write({
-#                 'clm_bank_acceptance': True,
-#                 'clm_state': 'bucket4',
-#             })
-
-#     # ─────────────────────────────────────────────────────────────────────────
-#     # INTERNAL STAGE SETTERS — Called by event hooks (not directly by users)
-#     # ─────────────────────────────────────────────────────────────────────────
-
-#     def _clm_move_to_bucket1(self):
-#         """Called after delivery validation. PI → Bucket 1."""
-#         self.filtered(lambda o: o.clm_state == 'pi').write({'clm_state': 'bucket1'})
-
-#     def _clm_move_to_bucket2(self):
-#         """Called after invoice posting. Bucket 1 → Bucket 2."""
-#         self.filtered(lambda o: o.clm_state == 'bucket1').write({'clm_state': 'bucket2'})
-
-#     def _clm_move_to_paid(self):
-#         """Called after full payment. Bucket 4 → Paid."""
-#         self.filtered(lambda o: o.clm_state == 'bucket4').write({'clm_state': 'paid'})
-
 from odoo import models, fields, api
-from odoo.exceptions import UserError,AccessError
+from odoo.exceptions import UserError, AccessError
+
+# Fields that must NEVER be written directly by users.
+# Stage machine controls these exclusively.
+_CLM_PROTECTED_FIELDS = frozenset({
+    'clm_state',
+    'clm_customer_acceptance',
+    'clm_bank_acceptance',
+})
 
 
 class SaleOrderExtended(models.Model):
     """
-    Stage Machine — sale.order extension.
+    CLM Stage Machine — sale.order extension.
 
-    Stage flow (automatic, driven by business events):
-      pi → bucket1 (delivery validated)
-      bucket1 → bucket2 (invoice posted)
-      bucket2 → bucket3 (customer acceptance)
-      bucket3 → bucket4 (bank acceptance)
-      bucket4 → paid (full payment received)
+    Stage flow (automatic, driven by business events only):
+      pi → bucket1      : delivery validated         (stock_picking_extended)
+      bucket1 → bucket2 : invoice posted             (account_move_extended)
+      bucket2 → bucket3 : customer acceptance button (action_clm_customer_acceptance)
+      bucket3 → bucket4 : bank acceptance button     (action_clm_bank_acceptance)
+      bucket4 → paid    : full payment received      (account_move_extended)
 
-    Users CANNOT manually change clm_state (readonly=True on field).
-    Freeze check runs on: create, action_confirm, delivery validation.
-    Acceptance buttons trigger stage moves on: bucket2 and bucket3.
+    Freeze enforcement (SRS §6.2):
+      BLOCKED: create, action_confirm, delivery validation
+      ALLOWED: invoice posting, customer acceptance, bank acceptance, payment
+
+    SoD enforcement (SRS §10):
+      create         → Salesperson OR Sales Manager
+      action_confirm → Sales Manager only
+      delivery       → Warehouse only (in stock_picking_extended)
+      invoice create → TDO only (in _create_invoices)
+      invoice post   → TDO only (in account_move_extended)
+      payment        → Finance only (in account_move_extended)
     """
 
     _inherit = 'sale.order'
 
     # ─────────────────────────────────────────────────────────────────────────
     # CLM STAGE FIELD
-    # readonly=True prevents direct UI/RPC editing.
-    # Python methods (super-class or internal) can still write to it.
     # ─────────────────────────────────────────────────────────────────────────
 
     clm_state = fields.Selection(
         selection=[
-            ('pi', 'Proforma Invoice'),
+            ('pi',      'Proforma Invoice'),
             ('bucket1', 'Bucket 1'),
             ('bucket2', 'Bucket 2'),
             ('bucket3', 'Bucket 3'),
             ('bucket4', 'Bucket 4'),
-            ('paid', 'Paid'),
+            ('paid',    'Paid'),
         ],
         string='CLM Stage',
         default='pi',
@@ -268,6 +59,8 @@ class SaleOrderExtended(models.Model):
 
     # ─────────────────────────────────────────────────────────────────────────
     # ACCEPTANCE CONTROL FIELDS
+    # readonly=True on field definition; only internal methods write these.
+    # write() override below provides a second enforcement layer against RPC.
     # ─────────────────────────────────────────────────────────────────────────
 
     clm_customer_acceptance = fields.Boolean(
@@ -286,7 +79,7 @@ class SaleOrderExtended(models.Model):
     )
 
     # ─────────────────────────────────────────────────────────────────────────
-    # VISIBILITY FLAGS — Computed, drive show/hide in views
+    # VISIBILITY FLAGS — Drive show/hide in views
     # ─────────────────────────────────────────────────────────────────────────
 
     clm_show_customer_acceptance_btn = fields.Boolean(
@@ -305,84 +98,113 @@ class SaleOrderExtended(models.Model):
     @api.depends('clm_state', 'clm_customer_acceptance', 'clm_bank_acceptance')
     def _compute_clm_visibility(self):
         for order in self:
-            # Customer acceptance button: only shown in bucket2 stage
-            order.clm_show_customer_acceptance_btn = order.clm_state == 'bucket2'
-
-            # Bank acceptance button: only shown after customer acceptance (bucket3 stage)
-            order.clm_show_bank_acceptance_btn = order.clm_state == 'bucket3'
-
-            # Payment is available only after bank acceptance (bucket4)
-            order.clm_show_payment_action = order.clm_bank_acceptance and order.clm_state == 'bucket4'
+            order.clm_show_customer_acceptance_btn = (
+                order.clm_state == 'bucket2' and not order.clm_customer_acceptance
+            )
+            order.clm_show_bank_acceptance_btn = (
+                order.clm_state == 'bucket3' and not order.clm_bank_acceptance
+            )
+            order.clm_show_payment_action = (
+                order.clm_bank_acceptance and order.clm_state == 'bucket4'
+            )
 
     # ─────────────────────────────────────────────────────────────────────────
-    # FREEZE CHECK — Core enforcement method
-    # Called before every blocked operation.
+    # WRITE PROTECTION — Prevent RPC bypass of stage machine
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def write(self, vals):
+        """
+        Block direct writes to CLM stage/acceptance fields from external callers.
+        Internal methods use with_context(clm_internal_write=True).
+        This prevents JSON-RPC bypass of the stage machine.
+        """
+        protected = _CLM_PROTECTED_FIELDS & set(vals.keys())
+        if protected and not self.env.context.get('clm_internal_write'):
+            raise AccessError(
+                "CLM stage fields cannot be modified directly.\n"
+                "Stage transitions are controlled by business events only.\n"
+                "Fields blocked: %s" % ', '.join(sorted(protected))
+            )
+        return super().write(vals)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # FREEZE CHECK — Core group-level enforcement
     # ─────────────────────────────────────────────────────────────────────────
 
     def _clm_check_group_freeze(self, operation_label):
         """
-        Validates the entire customer group for freeze.
-        If any member (parent or child) is frozen → raises UserError.
+        Validates the entire customer group for freeze before any blocked operation.
+        SRS §7 — group-wide enforcement: if ANY child is frozen, ALL are blocked.
 
-        Group resolution logic:
-          - If partner has a parent_id → group_head = parent_id
-          - If partner has no parent_id → group_head = partner itself
-          - Check: group_head + all its child_ids
+        Group resolution:
+          child partner → group_head = partner.parent_id
+          standalone    → group_head = partner itself
+          All children of group_head are checked.
+
+        Raises UserError with full breach details (SRS §6.4 / §7.10).
         """
         partner = self.partner_id
         if not partner:
             return
 
-        # Resolve group head
+        # Resolve group head (one level — Odoo contacts are typically 2-level)
         group_head = partner.parent_id if partner.parent_id else partner
 
-        # Collect all members: head + children
+        # Collect all group members: head + all active children
         all_members = group_head | group_head.child_ids.filtered(lambda c: c.active)
 
-        # Find any frozen member
-        frozen_member = all_members.filtered(lambda p: p.clm_is_frozen)
-        if not frozen_member:
+        # Find first frozen member
+        frozen_members = all_members.filtered(lambda p: p.clm_is_frozen)
+        if not frozen_members:
             return
 
-        # Build detailed error from first frozen member
-        breached = frozen_member[0]
+        breached = frozen_members[0]
         breach = breached.clm_get_first_breach()
-
-        if not breach:
-            # Freeze flag is True but no breach found (edge case) — still block
-            raise UserError(
-                f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
-                f"Group: {group_head.name}\n"
-                f"Frozen Customer: {breached.name}\n"
-                f"Please contact the Credit & Collections Manager."
-            )
 
         currency = breached.currency_id
         fmt = lambda amt: f"{currency.symbol} {amt:,.2f}"
 
+        if not breach:
+            raise UserError(
+                f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
+                f"Group           : {group_head.name}\n"
+                f"Frozen Customer : {breached.name}\n\n"
+                f"Contact the Credit & Collections Manager to resolve."
+            )
+
         raise UserError(
             f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
-            f"Group          : {group_head.name}\n"
-            f"Frozen Customer: {breached.name}\n"
-            f"Bucket         : {breach['bucket']}\n"
-            f"Defined Limit  : {fmt(breach['limit'])}\n"
+            f"Group           : {group_head.name}\n"
+            f"Frozen Customer : {breached.name}\n"
+            f"Bucket          : {breach['bucket']}\n"
+            f"Defined Limit   : {fmt(breach['limit'])}\n"
             f"Current Exposure: {fmt(breach['exposure'])}\n"
-            f"Excess Amount  : {fmt(breach['excess'])}\n\n"
-            f"Resolve by reducing exposure or submitting a limit increase request."
+            f"Excess Amount   : {fmt(breach['excess'])}\n\n"
+            f"Resolution: reduce exposure or submit a Limit Increase Request (CCM → FM)."
         )
 
     # ─────────────────────────────────────────────────────────────────────────
-    # BLOCKED OPERATION OVERRIDES
+    # BLOCKED OPERATION OVERRIDES (SRS §6.2)
     # ─────────────────────────────────────────────────────────────────────────
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Block new quotation creation if customer group is frozen."""
+        """
+        SoD: Only Salesperson or Sales Manager can create quotations.
+        Freeze: Block creation if customer group is frozen (SRS §6.2).
+        """
         if not (
-            self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson') 
-            or self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager') 
+            self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson')
+            or self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager')
         ):
-            raise AccessError("Only sales person or sales manager can create quations")
+            raise AccessError(
+                "Only Salesperson or Sales Manager can create quotations."
+            )
+
+        # Force clm_state = 'pi' on all new records (prevent external injection)
+        for vals in vals_list:
+            vals['clm_state'] = 'pi'
+
         orders = super().create(vals_list)
         for order in orders:
             if order.partner_id:
@@ -390,135 +212,151 @@ class SaleOrderExtended(models.Model):
         return orders
 
     def action_confirm(self):
-        """Block sales order confirmation if customer group is frozen."""
-        if not (self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager')):
-            raise AccessError("Only sales manager can confirm Sales Order.")
+        """
+        SoD: Only Sales Manager can confirm a Sales Order.
+        Freeze: Block confirmation if customer group is frozen (SRS §6.2).
+        """
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager'):
+            raise AccessError("Only Sales Manager can confirm a Sales Order.")
         for order in self:
             order._clm_check_group_freeze('Sales Order Confirmation')
         return super().action_confirm()
-    
+
     def _create_invoices(self, grouped=False, final=False, date=None):
+        """
+        SoD: Only TDO can create invoices (SRS §10).
+        No freeze check — invoice creation is ALLOWED even when frozen (SRS §6.2).
+        """
         if not self.env.user.has_group('zencore_clms.group_zencore_clm_tdo'):
-            raise AccessError("Only TDO can create invoices.")
-        
-        invoices = super()._create_invoices(
-            grouped=grouped,
-            final=final,
-            date=date
-        )
-        
-        return invoices
+            raise AccessError(
+                "Only TDO (Territory/Technical Delivery Officer) can create invoices."
+            )
+        return super()._create_invoices(grouped=grouped, final=final, date=date)
 
     # ─────────────────────────────────────────────────────────────────────────
-    # ACCEPTANCE ACTION METHODS — Called by buttons in view
+    # ACCEPTANCE ACTIONS — Called by buttons, not by users directly
     # ─────────────────────────────────────────────────────────────────────────
 
     def action_clm_customer_acceptance(self):
         """
-        Records customer acceptance and moves stage: bucket2 → bucket3.
-        Allowed even when group is frozen (SRS §6.2 — allowed operations).
+        Records customer acceptance → moves stage: Bucket 2 → Bucket 3.
+        SRS §4.1: Allowed even when frozen (SRS §6.2).
+        SoD: CCM or Salesperson may record.
         """
         if not (
             self.env.user.has_group('zencore_clms.group_zencore_clm_ccm')
             or self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson')
         ):
-            raise AccessError("Only CCM or Salesperson can record customer acceptance.")
-        
+            raise AccessError(
+                "Only CCM or Salesperson can record Customer Acceptance."
+            )
         for order in self:
             if order.clm_state != 'bucket2':
+                stage_label = dict(order._fields['clm_state'].selection).get(order.clm_state)
                 raise UserError(
-                    f"Customer Acceptance can only be recorded when the order is in "
-                    f"'Bucket 2'.\n"
-                    f"Current stage: {dict(order._fields['clm_state'].selection).get(order.clm_state)}"
+                    f"Customer Acceptance requires order to be in Bucket 2.\n"
+                    f"Current stage: {stage_label}"
                 )
-            order.write({
+            order.with_context(clm_internal_write=True).write({
                 'clm_customer_acceptance': True,
                 'clm_state': 'bucket3',
             })
-            # order._clm_log_stage_change(
-            #     from_stage='Bucket 2',
-            #     to_stage='Bucket 3',
-            #     trigger='Customer Acceptance Recorded',
-            # )
+            order._clm_log_stage_change(
+                from_stage='Bucket 2',
+                to_stage='Bucket 3',
+                trigger='Customer Acceptance Recorded',
+            )
 
     def action_clm_bank_acceptance(self):
         """
-        Records bank acceptance and moves stage: bucket3 → bucket4.
-        Allowed even when group is frozen (SRS §6.2 — allowed operations).
+        Records bank acceptance → moves stage: Bucket 3 → Bucket 4.
+        SRS §4.2: Allowed even when frozen (SRS §6.2).
+        SoD: CCM or Finance may record.
         """
         if not (
             self.env.user.has_group('zencore_clms.group_zencore_clm_ccm')
             or self.env.user.has_group('zencore_clms.group_zencore_clm_finance')
         ):
-            raise AccessError("Only CCM or Finance can record bank acceptance.")
-        
+            raise AccessError(
+                "Only CCM or Finance can record Bank Acceptance."
+            )
         for order in self:
             if order.clm_state != 'bucket3':
+                stage_label = dict(order._fields['clm_state'].selection).get(order.clm_state)
                 raise UserError(
-                    f"Bank Acceptance can only be recorded when the order is in "
-                    f"'Bucket 3 — Customer Accepted, Awaiting Bank Acceptance'.\n"
-                    f"Current stage: {dict(order._fields['clm_state'].selection).get(order.clm_state)}"
+                    f"Bank Acceptance requires order to be in Bucket 3.\n"
+                    f"Current stage: {stage_label}"
                 )
-            order.write({
+            order.with_context(clm_internal_write=True).write({
                 'clm_bank_acceptance': True,
                 'clm_state': 'bucket4',
             })
-            # order._clm_log_stage_change(
-            #     from_stage='Bucket 3',
-            #     to_stage='Bucket 4',
-            #     trigger='Bank Acceptance Recorded',
-            # )
+            order._clm_log_stage_change(
+                from_stage='Bucket 3',
+                to_stage='Bucket 4',
+                trigger='Bank Acceptance Recorded',
+            )
 
     # ─────────────────────────────────────────────────────────────────────────
-    # INTERNAL STAGE SETTERS — Called by event hooks (not directly by users)
+    # INTERNAL STAGE SETTERS — Called by event hooks only
+    # All use clm_internal_write=True to bypass the write() guard.
     # ─────────────────────────────────────────────────────────────────────────
 
     def _clm_move_to_bucket1(self):
-        """Called after delivery validated. PI → Bucket 1."""
+        """Delivery validated → PI → Bucket 1 (SRS §3.2)."""
         orders = self.filtered(lambda o: o.clm_state == 'pi')
-        orders.write({'clm_state': 'bucket1'})
-        # for order in orders:
-        #     order._clm_log_stage_change(
-        #         from_stage='Proforma Invoice',
-        #         to_stage='Bucket 1',
-        #         trigger='Delivery Validated',
-        #     )
+        if orders:
+            orders.with_context(clm_internal_write=True).write({'clm_state': 'bucket1'})
+            for order in orders:
+                order._clm_log_stage_change(
+                    from_stage='Proforma Invoice',
+                    to_stage='Bucket 1',
+                    trigger='Delivery Validated',
+                )
 
     def _clm_move_to_bucket2(self):
-        """Called after invoice posting. Bucket 1 → Bucket 2."""
+        """Invoice posted → Bucket 1 → Bucket 2 (SRS §3.3)."""
         orders = self.filtered(lambda o: o.clm_state == 'bucket1')
-        orders.write({'clm_state': 'bucket2'})
-        # for order in orders:
-        #     order._clm_log_stage_change(
-        #         from_stage='Bucket 1',
-        #         to_stage='Bucket 2',
-        #         trigger='Invoice Posted',
-        #     )
+        if orders:
+            orders.with_context(clm_internal_write=True).write({'clm_state': 'bucket2'})
+            for order in orders:
+                order._clm_log_stage_change(
+                    from_stage='Bucket 1',
+                    to_stage='Bucket 2',
+                    trigger='Invoice Posted',
+                )
 
     def _clm_move_to_paid(self):
-        """Called after full payment. Bucket 4 → Paid."""
-        orders = self.filtered(lambda o: o.clm_state == 'bucket4')
-        orders.write({'clm_state': 'paid'})
-        # for order in orders:
-        #     order._clm_log_stage_change(
-        #         from_stage='Bucket 4',
-        #         to_stage='Paid',
-        #         trigger='Full Payment Received',
-        #     )
+        """Full payment received → Bucket 4 → Paid (SRS §3.6)."""
+        orders = self.filtered(
+            lambda o: o.clm_state == 'bucket4' and o.clm_bank_acceptance
+        )
+        if orders:
+            orders.with_context(clm_internal_write=True).write({'clm_state': 'paid'})
+            for order in orders:
+                order._clm_log_stage_change(
+                    from_stage='Bucket 4',
+                    to_stage='Paid',
+                    trigger='Full Payment Received',
+                )
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # AUDIT LOGGING — Chatter note on every stage transition
+    # ─────────────────────────────────────────────────────────────────────────
 
     def _clm_log_stage_change(self, from_stage, to_stage, trigger):
         """
-        Posts a structured chatter note on every stage transition.
-        Uses mt_note subtype — internal audit log, no email to followers.
+        Posts a structured chatter note on every CLM stage transition.
+        Uses mt_note subtype — internal audit only, no email to followers.
         """
         self.ensure_one()
         self.message_post(
             body=(
-                f"CLM Stage Changed"
-                f"From: {from_stage}"
-                f"To: {to_stage}"
-                f"Trigger: {trigger}"
-                f"By: {self.env.user.name}"
+                f"<b>CLM Stage Transition</b><br/>"
+                f"From  : <b>{from_stage}</b><br/>"
+                f"To    : <b>{to_stage}</b><br/>"
+                f"Trigger: {trigger}<br/>"
+                f"By    : {self.env.user.name}"
             ),
             subtype_xmlid='mail.mt_note',
         )

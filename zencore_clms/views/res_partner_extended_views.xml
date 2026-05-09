@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-        CLM Tab on res.partner form.
+        CLM Credit Management Tab on res.partner form.
 
         Logic:
-          - Parent (group head, no parent_id): shows aggregated limits/balances + group freeze
-          - Child customer (has parent_id): shows individual limits + balances + freeze status
+          - Parent (group head, has child_ids): shows aggregated totals + group freeze
+          - Child / Standalone (no child_ids): shows individual limits + balances + freeze
 
-        All limit fields are readonly — changes go through the approval workflow only.
-        All balance fields are computed and readonly by nature.
+        All limit fields are READONLY in the view.
+        Limits are changed exclusively via clm.limit.change.request workflow.
+        Balance fields are computed/readonly by nature.
+
+        Groups access:
+          - CCM: can view and navigate to limit change requests
+          - Finance / Sales Manager: read-only view of credit status
     -->
     <record id="view_partner_form_clm" model="ir.ui.view">
         <field name="name">res.partner.form.clm</field>
@@ -17,22 +22,22 @@
         <field name="arch" type="xml">
 
             <xpath expr="//notebook/page[@name='sales_purchases']" position="after">
-                <page string="Credit Management" name="clm_credit">
+                <page string="Credit Management" name="clm_credit"
+                      groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager">
 
                     <!-- ══════════════════════════════════════════════
-                         CHILD CUSTOMER VIEW
-                         Visible when: this contact has a parent (is a child in the group)
-                         OR when partner has no children (standalone customer)
+                         INDIVIDUAL CUSTOMER VIEW
+                         Shown when: partner has NO children (is a leaf/standalone)
                     ══════════════════════════════════════════════ -->
                     <group string="Individual Credit Limits" invisible="child_ids">
-                        <group string="Exposure Limits (set via approval workflow)">
+                        <group string="Exposure Limits (via Approval Workflow Only)">
                             <field name="clm_proforma_limit" readonly="1"/>
                             <field name="clm_bucket_1_limit" readonly="1"/>
                             <field name="clm_bucket_2_limit" readonly="1"/>
                             <field name="clm_bucket_3_limit" readonly="1"/>
                             <field name="clm_bucket_4_limit" readonly="1"/>
                         </group>
-                        <group string="Current Exposure Balances">
+                        <group string="Current Exposure Balances (Real-Time)">
                             <field name="clm_proforma_balance" readonly="1"/>
                             <field name="clm_bucket_1_balance" readonly="1"/>
                             <field name="clm_bucket_2_balance" readonly="1"/>
@@ -41,24 +46,28 @@
                         </group>
                     </group>
 
-                    <!-- Freeze Status for individual customer -->
                     <group invisible="child_ids">
-                        <field name="clm_is_frozen" readonly="1" widget="boolean_toggle"/>
+                        <field
+                            name="clm_is_frozen"
+                            readonly="1"
+                            widget="boolean_toggle"
+                            string="Credit Frozen"
+                        />
                     </group>
 
                     <!-- ══════════════════════════════════════════════
                          PARENT / GROUP HEAD VIEW
-                         Visible when: this partner has child contacts (is a group head)
+                         Shown when: partner HAS children (is a group head)
                     ══════════════════════════════════════════════ -->
                     <group string="Group Aggregated Credit (Read-Only)" invisible="not child_ids">
-                        <group string="Aggregated Limits">
+                        <group string="Aggregated Limits (Sum of All Children)">
                             <field name="clm_agg_proforma_limit" readonly="1"/>
                             <field name="clm_agg_bucket_1_limit" readonly="1"/>
                             <field name="clm_agg_bucket_2_limit" readonly="1"/>
                             <field name="clm_agg_bucket_3_limit" readonly="1"/>
                             <field name="clm_agg_bucket_4_limit" readonly="1"/>
                         </group>
-                        <group string="Aggregated Balances">
+                        <group string="Aggregated Balances (Sum of All Children)">
                             <field name="clm_agg_proforma_balance" readonly="1"/>
                             <field name="clm_agg_bucket_1_balance" readonly="1"/>
                             <field name="clm_agg_bucket_2_balance" readonly="1"/>
@@ -67,13 +76,12 @@
                         </group>
                     </group>
 
-                    <!-- Group Freeze Status for group head -->
                     <group invisible="not child_ids">
                         <field
                             name="clm_group_is_frozen"
                             readonly="1"
                             widget="boolean_toggle"
-                            string="Group Frozen (any child breached)"
+                            string="Group Frozen (any child has breached limit)"
                         />
                     </group>
 
