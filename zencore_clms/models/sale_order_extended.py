@@ -352,10 +352,10 @@ class SaleOrderExtended(models.Model):
         self.ensure_one()
         self.message_post(
             body=(
-                f"<b>CLM Stage Transition</b><br/>"
-                f"From  : <b>{from_stage}</b><br/>"
-                f"To    : <b>{to_stage}</b><br/>"
-                f"Trigger: {trigger}<br/>"
+                f"Stage Transition"
+                f"From  : {from_stage}"
+                f"To    : {to_stage}"
+                f"Trigger: {trigger}"
                 f"By    : {self.env.user.name}"
             ),
             subtype_xmlid='mail.mt_note',
