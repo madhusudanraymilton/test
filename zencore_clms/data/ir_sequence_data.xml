@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Individual bucket limit change request sequence -->
     <record id="seq_clm_limit_change_request" model="ir.sequence">
         <field name="name">CLM Limit Change Request</field>
         <field name="code">clm.limit.change.request</field>
         <field name="prefix">CLM/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Bulk (all-bucket) limit change request sequence -->
+    <record id="seq_clm_bulk_limit_change_request" model="ir.sequence">
+        <field name="name">CLM Bulk Limit Change Request</field>
+        <field name="code">clm.bulk.limit.change.request</field>
+        <field name="prefix">BCLM/%(year)s/</field>
         <field name="padding">4</field>
         <field name="company_id" eval="False"/>
     </record>

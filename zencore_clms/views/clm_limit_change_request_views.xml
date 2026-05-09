@@ -2,16 +2,24 @@
 <odoo>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         FORM VIEW
+         FORM VIEW — clm.limit.change.request
+         ─────────────────────────────────────
+         Layout:
+           Header  : workflow buttons + statusbar
+           Sheet   : partner, classification banners, justification, FM comment, audit
+           Notebook: Bucket Limit Lines (auto-populated, create=0, delete=0)
+           Chatter : full audit trail
     ══════════════════════════════════════════════════════════════════════ -->
     <record id="view_clm_limit_change_request_form" model="ir.ui.view">
         <field name="name">clm.limit.change.request.form</field>
         <field name="model">clm.limit.change.request</field>
         <field name="arch" type="xml">
             <form string="Limit Change Request">
+
+                <!-- ── HEADER ─────────────────────────────────────────── -->
                 <header>
 
-                    <!-- CCM submits draft → pending_fm -->
+                    <!-- CCM: draft → pending_fm -->
                     <button
                         name="action_submit_to_fm"
                         type="object"
@@ -21,7 +29,7 @@
                         groups="zencore_clms.group_zencore_clm_ccm"
                     />
 
-                    <!-- FM approves pending_fm → approved -->
+                    <!-- Finance Manager: pending_fm → approved -->
                     <button
                         name="action_approve"
                         type="object"
@@ -29,10 +37,10 @@
                         class="btn-success"
                         invisible="state != 'pending_fm'"
                         groups="zencore_clms.group_zencore_clm_finance"
-                        confirm="This will immediately update the customer's credit limit. Proceed?"
+                        confirm="This will immediately update all bucket limits on the customer. Proceed?"
                     />
 
-                    <!-- FM rejects pending_fm → rejected -->
+                    <!-- Finance Manager: pending_fm → rejected -->
                     <button
                         name="action_reject"
                         type="object"
@@ -48,22 +56,26 @@
                         widget="statusbar"
                         statusbar_visible="draft,pending_fm,approved,rejected"
                     />
+
                 </header>
 
+                <!-- ── SHEET ──────────────────────────────────────────── -->
                 <sheet>
+
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
 
-                    <!-- Classification banners -->
+                    <!-- ── Classification Banners ── -->
                     <div
                         class="alert alert-danger"
                         invisible="request_type != 'freeze_resolution'"
                         role="alert"
                     >
                         <strong>⚠ Freeze Resolution Request:</strong>
-                        Current exposure exceeds the limit. Approval will resolve the freeze if
-                        the new limit covers the current exposure.
+                        One or more buckets have exposure exceeding the current limit.
+                        FM approval will resolve the freeze for any bucket where the
+                        new proposed limit covers the current exposure.
                     </div>
                     <div
                         class="alert alert-info"
@@ -71,33 +83,36 @@
                         role="alert"
                     >
                         <strong>ℹ Standard Limit Increase:</strong>
-                        No active breach on this bucket.
+                        No active breach detected on any requested bucket.
                     </div>
 
+                    <!-- ── Request Details ── -->
                     <group>
                         <group string="Request Details">
-                            <field name="partner_id"    readonly="state != 'draft'"/>
-                            <field name="bucket"        readonly="state != 'draft'"/>
-                            <field name="request_type"  readonly="1"/>
-                            <field name="currency_id"   invisible="1"/>
+                            <field name="partner_id"   readonly="state != 'draft'"/>
+                            <field name="request_type" readonly="1"/>
+                            <field name="currency_id"  invisible="1"/>
                         </group>
-                        <group string="Limit Values">
-                            <field name="current_limit"    readonly="1"/>
-                            <field name="current_exposure" readonly="1"/>
-                            <field name="proposed_limit"   readonly="state != 'draft'"/>
+                        <group string="Audit Trail" invisible="state == 'draft'">
+                            <field name="initiated_by"  readonly="1"/>
+                            <field name="reviewed_by"   readonly="1"
+                                   invisible="state in ('draft','pending_fm')"/>
+                            <field name="reviewed_date" readonly="1"
+                                   invisible="state in ('draft','pending_fm')"/>
                         </group>
                     </group>
 
+                    <!-- ── Justification ── -->
                     <group string="Justification">
                         <field
                             name="justification"
                             nolabel="1"
                             readonly="state != 'draft'"
-                            placeholder="Provide business justification for this limit change..."
+                            placeholder="Provide business justification for this limit change request..."
                         />
                     </group>
 
-                    <!-- FM comment — visible from pending_fm onward -->
+                    <!-- ── Finance Manager Comment ── -->
                     <group
                         string="Finance Manager Comment"
                         invisible="state == 'draft'"
@@ -110,16 +125,86 @@
                         />
                     </group>
 
-                    <!-- Audit trail — shown after FM action -->
-                    <group
-                        string="Audit Trail"
-                        invisible="state in ('draft', 'pending_fm')"
-                    >
-                        <field name="initiated_by"   readonly="1"/>
-                        <field name="reviewed_by"    readonly="1"/>
-                        <field name="reviewed_date"  readonly="1"/>
-                        <field name="previous_limit" readonly="1"/>
-                    </group>
+                    <!-- ── Notebook: Bucket Lines ── -->
+                    <notebook>
+                        <page string="Bucket Limit Lines" name="limit_lines">
+
+                            <!-- Info banner — visible in draft only -->
+                            <div class="alert alert-info mb-3" role="alert"
+                                 invisible="state != 'draft'">
+                                <strong>ℹ All 5 buckets are auto-filled when you select a customer.</strong>
+                                Only edit the <b>Proposed Limit</b> for buckets you want to change.
+                                Buckets where Proposed Limit equals Current Limit will have no effect on approval.
+                            </div>
+
+                            <field
+                                name="line_ids"
+                                readonly="state != 'draft'"
+                            >
+                                <list
+                                    editable="bottom"
+                                    create="0"
+                                    delete="0"
+                                >
+                                    <!--
+                                        create="0" : CCM cannot add rows — auto-populated by onchange
+                                        delete="0" : CCM cannot remove rows — all 5 buckets must stay
+                                        bucket     : readonly — set by system, not user
+                                    -->
+
+                                    <field name="bucket" readonly="1"/>
+
+                                    <field
+                                        name="current_limit"
+                                        readonly="1"
+                                        string="Current Limit"
+                                    />
+
+                                    <field
+                                        name="current_exposure"
+                                        readonly="1"
+                                        string="Current Exposure"
+                                        decoration-danger="current_exposure > current_limit and current_limit > 0"
+                                        decoration-muted="current_limit == 0"
+                                    />
+
+                                    <!--
+                                        proposed_limit: the ONLY editable column
+                                        readonly when not in draft (locked after submission)
+                                    -->
+                                    <field
+                                        name="proposed_limit"
+                                        string="Proposed Limit"
+                                        decoration-warning="proposed_limit != current_limit"
+                                    />
+
+                                    <field
+                                        name="request_type"
+                                        widget="badge"
+                                        readonly="1"
+                                        decoration-danger="request_type == 'freeze_resolution'"
+                                        decoration-info="request_type == 'standard_increase'"
+                                        string="Type"
+                                    />
+
+                                    <!--
+                                        previous_limit: only meaningful after approval
+                                        hidden until state = approved
+                                    -->
+                                    <field
+                                        name="previous_limit"
+                                        readonly="1"
+                                        optional="show"
+                                        column_invisible="parent.state not in ('approved',)"
+                                        string="Previous Limit"
+                                    />
+
+                                </list>
+                            </field>
+
+                        </page>
+                    </notebook>
+
                 </sheet>
 
                 <chatter/>
@@ -142,14 +227,15 @@
             >
                 <field name="name"/>
                 <field name="partner_id"/>
-                <field name="bucket"/>
-                <field name="request_type" widget="badge"/>
-                <field name="current_limit"/>
-                <field name="proposed_limit"/>
+                <field name="request_type"  widget="badge"
+                       decoration-danger="request_type == 'freeze_resolution'"
+                       decoration-info="request_type == 'standard_increase'"
+                />
                 <field name="initiated_by"/>
-                <field name="state" widget="badge"/>
-                <field name="reviewed_date"/>
-                <field name="currency_id" invisible="1"/>
+                <field name="state"         widget="badge"/>
+                <field name="reviewed_by"   optional="show"/>
+                <field name="reviewed_date" optional="show"/>
+                <field name="currency_id"   invisible="1"/>
             </list>
         </field>
     </record>
@@ -162,23 +248,51 @@
         <field name="model">clm.limit.change.request</field>
         <field name="arch" type="xml">
             <search string="Limit Change Requests">
+
                 <field name="name"       string="Reference"/>
                 <field name="partner_id" string="Customer"/>
-                <filter string="My Requests"    name="my_requests"       domain="[('initiated_by', '=', uid)]"/>
+
+                <filter
+                    string="My Requests"
+                    name="my_requests"
+                    domain="[('initiated_by', '=', uid)]"
+                />
+
                 <separator/>
-                <filter string="Draft"          name="draft"             domain="[('state', '=', 'draft')]"/>
-                <filter string="Pending FM"     name="pending_fm"        domain="[('state', '=', 'pending_fm')]"/>
-                <filter string="Approved"       name="approved"          domain="[('state', '=', 'approved')]"/>
-                <filter string="Rejected"       name="rejected"          domain="[('state', '=', 'rejected')]"/>
+
+                <filter string="Draft"
+                        name="draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter string="Pending FM"
+                        name="pending_fm"
+                        domain="[('state', '=', 'pending_fm')]"/>
+                <filter string="Approved"
+                        name="approved"
+                        domain="[('state', '=', 'approved')]"/>
+                <filter string="Rejected"
+                        name="rejected"
+                        domain="[('state', '=', 'rejected')]"/>
+
                 <separator/>
+
                 <filter
                     string="Freeze Resolution"
                     name="freeze_resolution"
                     domain="[('request_type', '=', 'freeze_resolution')]"
                 />
-                <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
-                <filter string="Bucket"   name="group_bucket"  context="{'group_by': 'bucket'}"/>
-                <filter string="Status"   name="group_state"   context="{'group_by': 'state'}"/>
+
+                <separator/>
+
+                <filter string="Customer"
+                        name="group_partner"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter string="Status"
+                        name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Request Type"
+                        name="group_request_type"
+                        context="{'group_by': 'request_type'}"/>
+
             </search>
         </field>
     </record>
@@ -197,9 +311,10 @@
                 No limit change requests found.
             </p>
             <p>
-                Create a request to propose a credit limit change for a customer bucket.
+                Create a request to propose credit limit changes for a customer.
+                Select the customer — all 5 buckets are auto-filled.
+                Edit only the buckets you want to change.
                 Requests require Finance Manager approval before taking effect.
-                Only CCM may submit requests. Finance Manager approves or rejects.
             </p>
         </field>
     </record>
@@ -222,25 +337,5 @@
         sequence="10"
         groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
     />
-
-    <!-- <menuitem
-        id="menu_clm_credit_management" 
-        name="Credit Management" 
-        parent="sale.sale_menu_root" 
-        sequence="60" 
-        groups="zencore_clms.group_zencore_clm_ccm,
-                zencore_clms.group_zencore_clm_finance,
-                zencore_clms.group_zencore_clm_sales_manager"
-    /> -->
-    <!-- <menuitem 
-        id="menu_clm_limit_requests" 
-        name="Limit Change Requests" 
-        parent="menu_clm_credit_management" 
-        action="action_clm_limit_change_request" 
-        sequence="10" 
-        groups="zencore_clms.group_zencore_clm_ccm,
-                zencore_clms.group_zencore_clm_finance,
-                zencore_clms.group_zencore_clm_sales_manager"
-    /> -->
 
 </odoo>
