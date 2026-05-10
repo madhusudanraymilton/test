@@ -611,6 +611,23 @@ class AccountPaymentExtended(models.Model):
 
     _inherit = 'account.payment'
 
+
+    def action_validate(self):
+        # Call original method
+        res = super().action_validate()
+
+        for payment in self:
+            # Find related invoices from payment
+            invoices = payment.reconciled_invoice_ids
+
+            # Get related sale orders from invoice lines
+            sale_orders = invoices.mapped('invoice_line_ids.sale_line_ids.order_id')
+
+            # Update bucket 4 stage
+            sale_orders._clm_move_to_paid()
+
+        return res
+
     def action_post(self):
         """
         SoD: Finance posts payments (interactive sessions only).

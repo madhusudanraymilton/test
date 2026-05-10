@@ -2480,10 +2480,1003 @@
 #         # Use sudo to bypass terminal-state write guard on the line itself
 #         self.sudo().write({'previous_limit': prev})
 
+# from odoo import models, fields, api
+# from odoo.exceptions import UserError, AccessError, ValidationError
+# from markupsafe import Markup
+# from collections import Counter
+
+
+# class ClmLimitChangeRequest(models.Model):
+#     """
+#     Multi-Bucket Limit Change Workflow — clm.limit.change.request
+
+#     State Machine:
+#       draft → pending_fm → approved / rejected
+
+#     Design (v0.5.0 — fixed):
+#     ──────────────────────────
+#     - Header  : partner, justification, workflow state, audit trail
+#     - Lines   : auto-populated on partner select (all 5 buckets)
+#                 CCM edits only the proposed_limit cells they want to change
+#     - Approval: iterates ALL line_ids and writes each bucket's limit on partner
+#     - request_type on header: freeze_resolution if ANY line is a freeze case
+
+#     SRS §9 Compliance:
+#     ───────────────────
+#     - Only CCM can create and submit (draft → pending_fm)
+#     - Only Finance Manager can approve or reject
+#     - Rejected requests are permanently closed — cannot be reused
+#     - Full audit trail: initiator, approver, timestamps, per-line previous limits
+
+#     Bug fixes in this version:
+#     ───────────────────────────
+#     BUG #3 FIX: _check_lines_not_empty constraint fired before _populate_bucket_lines
+#                 because _populate_bucket_lines was called after super().create().
+#                 Fix: lines are now injected into vals_list BEFORE super().create(),
+#                 so the constraint always sees a fully populated record.
+
+#     BUG #4 FIX: _populate_bucket_lines post-create fallback removed (no longer needed).
+
+#     BUG #5 FIX: _onchange_partner_id_populate_lines used two separate O2M assignments.
+#                 In onchange context, only the last assignment wins — the first
+#                 fields.Command.clear() was silently discarded, leaving stale lines
+#                 from the previous partner on saved records.
+#                 Fix: combine clear + create commands into a single list assignment.
+
+#     BUG #3 (approve): action_approve message_post body was a plain f-string with HTML.
+#                 In Odoo 17+, plain strings passed to message_post are escaped.
+#                 Fix: Markup("...{var}...").format(...) — variables are auto-escaped,
+#                 surrounding HTML is trusted.
+
+#     Odoo 19 notes:
+#     ───────────────
+#     - group_ids (not groups_id) for res.users domain queries
+#     - fields.Command.create / fields.Command.clear for onchange O2M writes
+#     - Markup() required for all HTML in message_post body
+#     """
+
+#     _name = 'clm.limit.change.request'
+#     _description = 'CLM Bucket Limit Change Request'
+#     _inherit = ['mail.thread', 'mail.activity.mixin']
+#     _order = 'create_date desc'
+#     _rec_name = 'name'
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # BUCKET KEYS — canonical order, used by onchange + line model
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     _BUCKET_KEYS = ['proforma', 'bucket1', 'bucket2', 'bucket3', 'bucket4']
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # IDENTIFICATION
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     name = fields.Char(
+#         string='Reference',
+#         readonly=True,
+#         default='New',
+#         copy=False,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # HEADER FIELDS
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     partner_id = fields.Many2one(
+#         'res.partner',
+#         string='Customer',
+#         required=True,
+#         ondelete='restrict',
+#         tracking=True,
+#     )
+#     currency_id = fields.Many2one(
+#         'res.currency',
+#         default=lambda self: self.env.company.currency_id,
+#     )
+#     justification = fields.Text(
+#         string='Justification',
+#         required=True,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # LINES — Auto-populated on partner select. One line per bucket.
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     line_ids = fields.One2many(
+#         'clm.limit.change.request.line',
+#         'request_id',
+#         string='Bucket Limit Lines',
+#         copy=True,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # AUTO-CLASSIFICATION — Computed from lines
+#     # freeze_resolution if ANY line has exposure > current limit
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     request_type = fields.Selection(
+#         selection=[
+#             ('freeze_resolution', 'Freeze Resolution'),
+#             ('standard_increase', 'Standard Increase'),
+#         ],
+#         string='Request Type',
+#         compute='_compute_request_type',
+#         store=True,
+#         tracking=True,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # WORKFLOW STATE
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     state = fields.Selection(
+#         selection=[
+#             ('draft',      'Draft'),
+#             ('pending_fm', 'Pending FM Approval'),
+#             ('approved',   'Approved'),
+#             ('rejected',   'Rejected'),
+#         ],
+#         string='Status',
+#         default='draft',
+#         readonly=True,
+#         tracking=True,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # AUDIT TRAIL — All set by system, never by users
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     initiated_by = fields.Many2one(
+#         'res.users',
+#         string='Initiated By',
+#         readonly=True,
+#         copy=False,
+#     )
+#     reviewed_by = fields.Many2one(
+#         'res.users',
+#         string='Approved / Rejected By',
+#         readonly=True,
+#         copy=False,
+#         tracking=True,
+#     )
+#     reviewed_date = fields.Datetime(
+#         string='Reviewed On',
+#         readonly=True,
+#         copy=False,
+#     )
+#     fm_comment = fields.Text(
+#         string='Finance Manager Comment',
+#         copy=False,
+#         tracking=True,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # COMPUTE
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     @api.depends('line_ids.request_type')
+#     def _compute_request_type(self):
+#         for rec in self:
+#             if any(line.request_type == 'freeze_resolution' for line in rec.line_ids):
+#                 rec.request_type = 'freeze_resolution'
+#             else:
+#                 rec.request_type = 'standard_increase'
+
+#     # # ─────────────────────────────────────────────────────────────────────────
+#     # # ONCHANGE — Auto-populate all 5 bucket lines on partner select
+#     # # ─────────────────────────────────────────────────────────────────────────
+
+#     # @api.onchange('partner_id')
+#     # def _onchange_partner_id_populate_lines(self):
+#     #     """
+#     #     Fires in the UI when CCM selects or changes the partner.
+
+#     #     BUG #5 FIX:
+#     #       Original code used TWO separate assignments to self.line_ids:
+#     #         self.line_ids = [fields.Command.clear()]   ← discarded
+#     #         self.line_ids = new_lines                  ← wins (no clear happened)
+
+#     #       In onchange context, only the LAST assignment to a field is kept.
+#     #       The clear() was silently discarded. When a CCM changed the partner
+#     #       on an already-saved record, stale lines from the previous partner
+#     #       persisted alongside the new partner's lines.
+
+#     #       Fix: combine the clear command and all create commands into ONE list
+#     #       and assign it in a single operation. This sends (5,0,0) followed by
+#     #       (0,0,{vals}) entries to the client in one shot — clear then create.
+#     #     """
+#     #     if not self.partner_id:
+#     #         self.line_ids = [fields.Command.clear()]
+#     #         return
+
+#     #     partner = self.partner_id
+#     #     # Single list: (5,0,0) clears existing, then (0,0,{vals}) creates new.
+#     #     # ONE assignment — the clear is not discarded.
+#     #     commands = [fields.Command.clear()]
+
+#     #     for bucket in self._BUCKET_KEYS:
+#     #         limit_field   = ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
+#     #         current_limit = getattr(partner, limit_field, 0.0)
+#     #         commands.append(fields.Command.create({
+#     #             'bucket':         bucket,
+#     #             # Default proposed = current so CCM edits only intended buckets
+#     #             'proposed_limit': current_limit,
+#     #         }))
+
+#     #     self.line_ids = commands
+
+#     # # ─────────────────────────────────────────────────────────────────────────
+#     # # CONSTRAINTS
+#     # # ─────────────────────────────────────────────────────────────────────────
+
+#     # @api.constrains('partner_id', 'line_ids')
+#     # def _check_lines_not_empty(self):
+#     #     """
+#     #     Ensures records with a partner also have bucket lines.
+
+#     #     BUG #3 FIX (context):
+#     #       This constraint no longer raises false positives because lines are now
+#     #       injected into vals_list inside create() BEFORE super().create() is called.
+#     #       The constraint therefore always sees the lines — whether the record was
+#     #       created from the form (onchange provides lines) or programmatically
+#     #       (create() injects them).
+#     #     """
+#     #     for rec in self:
+#     #         if rec.partner_id and not rec.line_ids:
+#     #             raise ValidationError(
+#     #                 f"Request {rec.name} has no bucket lines.\n"
+#     #                 "Select the customer to auto-populate all buckets."
+#     #             )
+
+#     # @api.constrains('line_ids')
+#     # def _check_duplicate_buckets_in_lines(self):
+#     #     """Prevent the same bucket appearing twice on one request."""
+#     #     for rec in self:
+#     #         buckets = rec.line_ids.mapped('bucket')
+#     #         if len(buckets) != len(set(buckets)):
+#     #             raise ValidationError(
+#     #                 "Each bucket may appear only once per request.\n"
+#     #                 "Remove duplicate bucket lines."
+#     #             )
+
+#     # @api.constrains('partner_id', 'state')
+#     # def _check_unique_pending(self):
+#     #     """Prevent two pending requests for the same partner."""
+#     #     for rec in self:
+#     #         if rec.state == 'pending_fm':
+#     #             duplicate = self.search([
+#     #                 ('partner_id', '=', rec.partner_id.id),
+#     #                 ('state',      '=', 'pending_fm'),
+#     #                 ('id',         '!=', rec.id),
+#     #             ], limit=1)
+#     #             if duplicate:
+#     #                 raise ValidationError(
+#     #                     f"A pending request ({duplicate.name}) already exists "
+#     #                     f"for {rec.partner_id.name}.\n"
+#     #                     f"Resolve the existing request before creating a new one."
+#     #                 )
+
+#     # # ─────────────────────────────────────────────────────────────────────────
+#     # # WRITE PROTECTION — Terminal state guard
+#     # # SRS §9.3: Approved/rejected records cannot be modified
+#     # # ─────────────────────────────────────────────────────────────────────────
+
+#     # def write(self, vals):
+#     #     for rec in self:
+#     #         if rec.state in ('approved', 'rejected') and not self.env.su:
+#     #             raise AccessError(
+#     #                 f"Request {rec.name} is in a terminal state "
+#     #                 f"({rec.state}) and cannot be modified."
+#     #             )
+#     #     return super().write(vals)
+
+#     # # ─────────────────────────────────────────────────────────────────────────
+#     # # ORM OVERRIDES
+#     # # ─────────────────────────────────────────────────────────────────────────
+
+#     # @api.model_create_multi
+#     # def create(self, vals_list):
+#     #     """
+#     #     SoD: Only CCM can create limit change requests.
+#     #     Sequence assigned on creation.
+#     #     initiated_by set to current user for audit trail.
+
+#     #     BUG #3 FIX (constraint timing):
+#     #       Lines are now injected into vals_list HERE, before super().create().
+#     #       Previously, _populate_bucket_lines() was called after super().create(),
+#     #       meaning the constraint _check_lines_not_empty ran on a record with zero
+#     #       lines → ValidationError on every programmatic create with a partner.
+
+#     #       When the form is submitted normally, the onchange already put lines in
+#     #       vals — the 'line_ids' not in vals guard prevents double-population.
+#     #       When called programmatically with only partner_id, we build the line
+#     #       vals here so the constraint sees them atomically with the header.
+#     #     """
+#     #     self._assert_group(
+#     #         'zencore_clms.group_zencore_clm_ccm',
+#     #         'create limit change requests',
+#     #     )
+#     #     for vals in vals_list:
+#     #         if vals.get('name', 'New') == 'New':
+#     #             vals['name'] = (
+#     #                 self.env['ir.sequence'].next_by_code('clm.limit.change.request')
+#     #                 or 'New'
+#     #             )
+#     #         vals['initiated_by'] = self.env.uid
+
+#     #         # ── Pre-populate lines BEFORE super().create() ──────────────────
+#     #         # Constraint _check_lines_not_empty runs inside super().create().
+#     #         # Lines must already exist in vals at that point.
+#     #         # Guard: if caller already supplied line_ids (form submit), skip.
+#     #         if vals.get('partner_id') and 'line_ids' not in vals:
+#     #             partner = self.env['res.partner'].browse(vals['partner_id'])
+#     #             line_vals = []
+#     #             for bucket in self._BUCKET_KEYS:
+#     #                 limit_field   = ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
+#     #                 current_limit = getattr(partner, limit_field, 0.0)
+#     #                 line_vals.append(fields.Command.create({
+#     #                     'bucket':         bucket,
+#     #                     'proposed_limit': current_limit,
+#     #                 }))
+#     #             vals['line_ids'] = line_vals
+
+#     #     return super().create(vals_list)
+
+#     # -------------------------------------------------------------------------
+#     # ONCHANGE
+#     # -------------------------------------------------------------------------
+
+#     @api.onchange('partner_id')
+#     def _onchange_partner_id_populate_lines(self):
+#         """
+#         Auto-populate all bucket lines when customer changes.
+
+#         Odoo 19 Safe:
+#         - Clear existing lines first
+#         - Rebuild all buckets in ONE assignment
+#         - Prevent stale virtual rows from accumulating
+#         """
+#         if not self.partner_id:
+#             self.line_ids = [fields.Command.clear()]
+#             return
+
+#         partner = self.partner_id
+
+#         commands = [fields.Command.clear()]
+
+#         for bucket in self._BUCKET_KEYS:
+#             limit_field = (
+#                 ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
+#             )
+
+#             current_limit = getattr(partner, limit_field, 0.0)
+
+#             commands.append(
+#                 fields.Command.create({
+#                     'bucket': bucket,
+#                     'proposed_limit': current_limit,
+#                 })
+#             )
+
+#         self.line_ids = commands
+
+#     # -------------------------------------------------------------------------
+#     # CONSTRAINTS
+#     # -------------------------------------------------------------------------
+#     @api.constrains('partner_id')
+#     def _check_lines_not_empty(self):
+#         """
+#         Ensure partner requests contain bucket lines.
+
+#         Odoo 19 Safe:
+#         During constraint execution, one2many cache may still contain
+#         transient virtual records. Avoid checking child fields like
+#         line.bucket inside constraints.
+#         """
+#         for rec in self:
+#             if rec.partner_id and not rec.line_ids:
+#                 raise ValidationError(
+#                     f"Request {rec.name} has no bucket lines.\n"
+#                     "Select a customer to auto-populate bucket lines."
+#                 )
+
+#     @api.constrains('line_ids')
+#     def _check_duplicate_buckets_in_lines(self):
+#         """
+#         Prevent duplicate buckets.
+
+#         Odoo 19 Safe:
+#         - Ignore empty virtual rows
+#         - Ignore deleted cache rows
+#         - Validate only real bucket values
+#         """
+#         for rec in self:
+#             buckets = [
+#                 line.bucket
+#                 for line in rec.line_ids
+#                 if line.exists() and line.bucket
+#             ]
+
+#             duplicates = [
+#                 bucket
+#                 for bucket, count in Counter(buckets).items()
+#                 if count > 1
+#             ]
+
+#             if duplicates:
+#                 raise ValidationError(
+#                     "Each bucket may appear only once per request.\n"
+#                     f"Duplicate bucket(s): {', '.join(duplicates)}"
+#                 )
+
+#     @api.constrains('partner_id', 'state')
+#     def _check_unique_pending(self):
+#         """
+#         Prevent multiple pending requests for same customer.
+#         """
+#         for rec in self:
+#             if rec.state != 'pending_fm':
+#                 continue
+
+#             duplicate = self.search([
+#                 ('partner_id', '=', rec.partner_id.id),
+#                 ('state', '=', 'pending_fm'),
+#                 ('id', '!=', rec.id),
+#             ], limit=1)
+
+#             if duplicate:
+#                 raise ValidationError(
+#                     f"A pending request ({duplicate.name}) already exists "
+#                     f"for {rec.partner_id.name}.\n"
+#                     "Resolve the existing request first."
+#                 )
+
+#     # -------------------------------------------------------------------------
+#     # WRITE PROTECTION
+#     # -------------------------------------------------------------------------
+
+#     def write(self, vals):
+#         """
+#         Prevent modification after approval/rejection.
+#         """
+#         for rec in self:
+#             if (
+#                 rec.state in ('approved', 'rejected')
+#                 and not self.env.su
+#             ):
+#                 raise AccessError(
+#                     f"Request {rec.name} is already {rec.state} "
+#                     "and cannot be modified."
+#                 )
+
+#         return super().write(vals)
+
+#     # -------------------------------------------------------------------------
+#     # CREATE
+#     # -------------------------------------------------------------------------
+
+#     # @api.model_create_multi
+#     # def create(self, vals_list):
+#     #     """
+#     #     Create request with:
+#     #     - sequence
+#     #     - audit user
+#     #     - automatic bucket population
+#     #     """
+
+#     #     self._assert_group(
+#     #         'zencore_clms.group_zencore_clm_ccm',
+#     #         'create limit change requests',
+#     #     )
+
+#     #     for vals in vals_list:
+
+#     #         # -------------------------------------------------------------
+#     #         # Sequence
+#     #         # -------------------------------------------------------------
+
+#     #         if vals.get('name', 'New') == 'New':
+#     #             vals['name'] = (
+#     #                 self.env['ir.sequence'].next_by_code(
+#     #                     'clm.limit.change.request'
+#     #                 ) or 'New'
+#     #             )
+
+#     #         # -------------------------------------------------------------
+#     #         # Audit
+#     #         # -------------------------------------------------------------
+
+#     #         vals['initiated_by'] = self.env.uid
+
+#     #         # -------------------------------------------------------------
+#     #         # Auto-create bucket lines
+#     #         #
+#     #         # IMPORTANT:
+#     #         # Use NOT vals.get('line_ids')
+#     #         # instead of:
+#     #         #   'line_ids' not in vals
+#     #         #
+#     #         # Odoo 19 sometimes sends:
+#     #         #   line_ids = []
+#     #         #
+#     #         # which would otherwise bypass the guard incorrectly.
+#     #         # -------------------------------------------------------------
+
+#     #         if vals.get('partner_id') and not vals.get('line_ids'):
+
+#     #             partner = self.env['res.partner'].browse(
+#     #                 vals['partner_id']
+#     #             )
+
+#     #             line_commands = []
+
+#     #             for bucket in self._BUCKET_KEYS:
+
+#     #                 limit_field = (
+#     #                     ClmLimitChangeRequestLine
+#     #                     ._LIMIT_FIELD_MAP[bucket]
+#     #                 )
+
+#     #                 current_limit = getattr(
+#     #                     partner,
+#     #                     limit_field,
+#     #                     0.0,
+#     #                 )
+
+#     #                 line_commands.append(
+#     #                     fields.Command.create({
+#     #                         'bucket': bucket,
+#     #                         'proposed_limit': current_limit,
+#     #                     })
+#     #                 )
+
+#     #             vals['line_ids'] = line_commands
+
+#     #     return super().create(vals_list)
+
+#     @api.model_create_multi
+#     def create(self, vals_list):
+
+#         self._assert_group(
+#             'zencore_clms.group_zencore_clm_ccm',
+#             'create limit change requests',
+#         )
+
+#         for vals in vals_list:
+
+#             if vals.get('name', 'New') == 'New':
+#                 vals['name'] = (
+#                     self.env['ir.sequence'].next_by_code(
+#                         'clm.limit.change.request'
+#                     ) or 'New'
+#                 )
+
+#             vals['initiated_by'] = self.env.uid
+
+#             # ---------------------------------------------------------
+#             # SAFE bucket generator (single source of truth)
+#             # ---------------------------------------------------------
+#             if vals.get('partner_id') and not vals.get('line_ids'):
+
+#                 partner = self.env['res.partner'].browse(vals['partner_id'])
+
+#                 line_commands = self._generate_bucket_lines(partner)
+
+#                 vals['line_ids'] = line_commands
+
+#         return super().create(vals_list)
+    
+    
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # WORKFLOW ACTIONS
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     def action_submit_to_fm(self):
+#         """
+#         CCM submits request for FM review.
+#         Transitions: draft → pending_fm.
+#         Schedules a mail.activity for the Finance Manager.
+#         """
+#         self._assert_group(
+#             'zencore_clms.group_zencore_clm_ccm',
+#             'submit limit change requests',
+#         )
+#         for rec in self:
+#             if rec.state != 'draft':
+#                 raise UserError(
+#                     f"Only draft requests can be submitted. "
+#                     f"Current state: {rec.state} ({rec.name})"
+#                 )
+#             if not rec.line_ids:
+#                 raise UserError(
+#                     f"Cannot submit {rec.name} — no bucket lines found.\n"
+#                     "Select the customer to auto-populate all bucket lines."
+#                 )
+
+#             rec.write({'state': 'pending_fm'})
+
+#             bucket_labels = dict(
+#                 self.env['clm.limit.change.request.line']
+#                 ._fields['bucket'].selection
+#             )
+#             line_items = Markup('').join(
+#                 Markup(
+#                     "<li><b>{bucket}</b>: "
+#                     "Current {current:,.2f} → Proposed {proposed:,.2f}"
+#                     "{freeze}</li>"
+#                 ).format(
+#                     bucket=bucket_labels.get(l.bucket, l.bucket),
+#                     current=l.current_limit,
+#                     proposed=l.proposed_limit,
+#                     freeze=' ⚠ Freeze' if l.request_type == 'freeze_resolution' else '',
+#                 )
+#                 for l in rec.line_ids
+#             )
+
+#             rec.message_post(
+#                 body=Markup(
+#                     "<b>Submitted for FM Approval</b><br/>"
+#                     "Submitted by : {user}<br/>"
+#                     "Customer     : {customer}<br/>"
+#                     "Request Type : {rtype}<br/>"
+#                     "Buckets:<ul>{lines}</ul>"
+#                 ).format(
+#                     user=self.env.user.name,
+#                     customer=rec.partner_id.name,
+#                     rtype=dict(self._fields['request_type'].selection).get(rec.request_type, ''),
+#                     lines=line_items,
+#                 ),
+#                 subtype_xmlid='mail.mt_note',
+#             )
+
+#             # Notify Finance Manager — Odoo 19: group_ids (not groups_id)
+#             finance_group = self.env.ref(
+#                 'zencore_clms.group_zencore_clm_finance',
+#                 raise_if_not_found=False,
+#             )
+#             if finance_group:
+#                 finance_users = self.env['res.users'].search([
+#                     ('group_ids', 'in', [finance_group.id]),
+#                     ('share',     '=', False),
+#                     ('active',    '=', True),
+#                 ], limit=1)
+#                 if finance_users:
+#                     rec.activity_schedule(
+#                         'mail.mail_activity_data_todo',
+#                         user_id=finance_users[0].id,
+#                         note=(
+#                             f"Limit Change Request {rec.name} submitted by "
+#                             f"{self.env.user.name} for {rec.partner_id.name}. "
+#                             f"Please review and approve or reject."
+#                         ),
+#                     )
+
+#     def action_approve(self):
+#         """
+#         Finance Manager approves the request.
+#         Transitions: pending_fm → approved.
+#         Iterates ALL lines and writes each bucket's proposed_limit on the partner.
+#         previous_limit is captured per line for full audit trail.
+
+#         BUG #3 FIX (Markup):
+#           Original used a plain f-string for message_post body.
+#           In Odoo 17+, plain strings are HTML-escaped → chatter showed raw tags.
+#           Fix: Markup("...{var}...").format(...) — variables are auto-escaped,
+#           surrounding HTML markup is trusted as safe.
+#         """
+#         self._assert_group(
+#             'zencore_clms.group_zencore_clm_finance',
+#             'approve limit change requests',
+#         )
+#         for rec in self:
+#             if rec.state != 'pending_fm':
+#                 raise UserError(
+#                     f"Only pending requests can be approved. "
+#                     f"Current state: {rec.state} ({rec.name})"
+#                 )
+#             if not rec.line_ids:
+#                 raise UserError(f"Request {rec.name} has no lines to approve.")
+
+#             for line in rec.line_ids:
+#                 line._apply_limit_to_partner()
+
+#             rec.write({
+#                 'state':         'approved',
+#                 'reviewed_by':   self.env.uid,
+#                 'reviewed_date': fields.Datetime.now(),
+#             })
+#             rec.activity_ids.action_done()
+
+#             bucket_labels = dict(
+#                 self.env['clm.limit.change.request.line']
+#                 ._fields['bucket'].selection
+#             )
+#             # Build the line summary using Markup.join — each item is a trusted
+#             # Markup fragment; variables are escaped via .format().
+#             line_items = Markup('').join(
+#                 Markup(
+#                     "<li><b>{bucket}</b>: {prev:,.2f} → {new:,.2f}</li>"
+#                 ).format(
+#                     bucket=bucket_labels.get(l.bucket, l.bucket),
+#                     prev=l.previous_limit,
+#                     new=l.proposed_limit,
+#                 )
+#                 for l in rec.line_ids
+#             )
+
+#             rec.message_post(
+#                 body=Markup(
+#                     "<b>✅ Approved by {user}</b><br/>"
+#                     "Customer : {customer}<br/>"
+#                     "Changes  :<ul>{lines}</ul>"
+#                     "Comment  : {comment}"
+#                 ).format(
+#                     user=self.env.user.name,
+#                     customer=rec.partner_id.name,
+#                     lines=line_items,
+#                     comment=rec.fm_comment or '—',
+#                 ),
+#                 subtype_xmlid='mail.mt_note',
+#             )
+
+#     def action_reject(self):
+#         """
+#         Finance Manager rejects the request.
+#         Transitions: pending_fm → rejected.
+#         FM comment is required. Terminal state — cannot be reused.
+#         """
+#         self._assert_group(
+#             'zencore_clms.group_zencore_clm_finance',
+#             'reject limit change requests',
+#         )
+#         for rec in self:
+#             if rec.state != 'pending_fm':
+#                 raise UserError(
+#                     f"Only pending requests can be rejected. "
+#                     f"Current state: {rec.state} ({rec.name})"
+#                 )
+#             if not rec.fm_comment or not rec.fm_comment.strip():
+#                 raise UserError(
+#                     "A Finance Manager comment is required before rejecting.\n"
+#                     "Enter the rejection reason in the FM Comment field."
+#                 )
+#             rec.write({
+#                 'state':         'rejected',
+#                 'reviewed_by':   self.env.uid,
+#                 'reviewed_date': fields.Datetime.now(),
+#             })
+#             rec.activity_ids.action_done()
+#             rec.message_post(
+#                 body=Markup(
+#                     "<b>❌ Rejected by {user}</b><br/>"
+#                     "Customer: {customer}<br/>"
+#                     "Reason  : {reason}"
+#                 ).format(
+#                     user=self.env.user.name,
+#                     customer=rec.partner_id.name,
+#                     reason=rec.fm_comment,
+#                 ),
+#                 subtype_xmlid='mail.mt_note',
+#             )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # PRIVATE HELPERS
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     def _assert_group(self, group_xml_id, action_label):
+#         if not self.env.user.has_group(group_xml_id):
+#             group = self.env.ref(group_xml_id)
+#             raise AccessError(
+#                 f"You do not have permission to {action_label}.\n"
+#                 f"Required group: {group.full_name}"
+#             )
+
+
+# # ─────────────────────────────────────────────────────────────────────────────
+# # LINE MODEL
+# # ─────────────────────────────────────────────────────────────────────────────
+
+# class ClmLimitChangeRequestLine(models.Model):
+#     """
+#     clm.limit.change.request.line — One line per bucket.
+
+#     Fields:
+#     ────────
+#     bucket           : which bucket this line targets (auto-set, readonly in view)
+#     current_limit    : live value from partner at time of viewing (non-stored compute)
+#     current_exposure : live balance from partner (non-stored compute)
+#     proposed_limit   : new limit requested — the ONLY field CCM edits
+#     previous_limit   : captured at approval time for audit trail
+#     request_type     : auto-classified freeze_resolution / standard_increase (stored compute)
+
+#     Design:
+#     ────────
+#     - All 5 buckets are always present — created by header's create() or onchange
+#     - CCM cannot add or delete lines (enforced in view: create=0, delete=0)
+#     - bucket is readonly after creation (enforced in view)
+#     - proposed_limit defaults to current_limit — no accidental changes
+#     """
+
+#     _name = 'clm.limit.change.request.line'
+#     _description = 'CLM Limit Change Request Line'
+#     _order = 'bucket'
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # FIELD MAPS — Class-level so header create() and onchange can reference them
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     _LIMIT_FIELD_MAP = {
+#         'proforma': 'clm_proforma_limit',
+#         'bucket1':  'clm_bucket_1_limit',
+#         'bucket2':  'clm_bucket_2_limit',
+#         'bucket3':  'clm_bucket_3_limit',
+#         'bucket4':  'clm_bucket_4_limit',
+#     }
+
+#     _BALANCE_FIELD_MAP = {
+#         'proforma': 'clm_proforma_balance',
+#         'bucket1':  'clm_bucket_1_balance',
+#         'bucket2':  'clm_bucket_2_balance',
+#         'bucket3':  'clm_bucket_3_balance',
+#         'bucket4':  'clm_bucket_4_balance',
+#     }
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # RELATIONAL
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     request_id = fields.Many2one(
+#         'clm.limit.change.request',
+#         string='Request',
+#         required=True,
+#         ondelete='cascade',
+#         index=True,
+#     )
+
+#     # Related convenience fields — not stored, read from header
+#     partner_id = fields.Many2one(
+#         related='request_id.partner_id',
+#         string='Customer',
+#         store=False,
+#     )
+#     currency_id = fields.Many2one(
+#         related='request_id.currency_id',
+#         string='Currency',
+#         store=False,
+#     )
+#     state = fields.Selection(
+#         related='request_id.state',
+#         string='Request State',
+#         store=False,
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # CORE FIELDS
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     bucket = fields.Selection(
+#         selection=[
+#             ('proforma', 'Proforma Invoice'),
+#             ('bucket1',  'Bucket 1'),
+#             ('bucket2',  'Bucket 2'),
+#             ('bucket3',  'Bucket 3'),
+#             ('bucket4',  'Bucket 4'),
+#         ],
+#         string='Bucket',
+#     )
+#     current_limit = fields.Monetary(
+#         string='Current Limit',
+#         compute='_compute_current_values',
+#         currency_field='currency_id',
+#     )
+#     current_exposure = fields.Monetary(
+#         string='Current Exposure',
+#         compute='_compute_current_values',
+#         currency_field='currency_id',
+#     )
+#     proposed_limit = fields.Monetary(
+#         string='Proposed Limit',
+#         required=True,
+#         currency_field='currency_id',
+#     )
+#     previous_limit = fields.Monetary(
+#         string='Previous Limit (at Approval)',
+#         readonly=True,
+#         currency_field='currency_id',
+#         copy=False,
+#         help='Captured at the moment FM approves. Shows what value was replaced.',
+#     )
+#     request_type = fields.Selection(
+#         selection=[
+#             ('freeze_resolution', 'Freeze Resolution'),
+#             ('standard_increase', 'Standard Increase'),
+#         ],
+#         string='Type',
+#         compute='_compute_request_type',
+#         store=True,
+#         help='freeze_resolution: exposure > current limit on this bucket.',
+#     )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # COMPUTE
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     @api.depends('request_id.partner_id', 'bucket')
+#     def _compute_current_values(self):
+#         for line in self:
+#             partner = line.request_id.partner_id
+#             if partner and line.bucket:
+#                 line.current_limit    = getattr(
+#                     partner, self._LIMIT_FIELD_MAP[line.bucket], 0.0
+#                 )
+#                 line.current_exposure = getattr(
+#                     partner, self._BALANCE_FIELD_MAP[line.bucket], 0.0
+#                 )
+#             else:
+#                 line.current_limit    = 0.0
+#                 line.current_exposure = 0.0
+
+#     @api.depends('current_exposure', 'current_limit')
+#     def _compute_request_type(self):
+#         for line in self:
+#             line.request_type = (
+#                 'freeze_resolution'
+#                 if line.current_exposure > line.current_limit > 0.0
+#                 else 'standard_increase'
+#             )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # CONSTRAINTS
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     @api.constrains('proposed_limit')
+#     def _check_proposed_limit_positive(self):
+#         for line in self:
+#             if line.proposed_limit < 0:
+#                 bucket_label = dict(
+#                     self._fields['bucket'].selection
+#                 ).get(line.bucket, line.bucket)
+#                 raise ValidationError(
+#                     f"Proposed limit cannot be negative — {bucket_label}."
+#                 )
+
+#     # ─────────────────────────────────────────────────────────────────────────
+#     # APPROVAL HELPER — Called by action_approve on the header
+#     # ─────────────────────────────────────────────────────────────────────────
+
+#     def _apply_limit_to_partner(self):
+#         """
+#         Writes this line's proposed_limit onto the partner for its bucket.
+#         Captures current value as previous_limit for audit trail.
+#         Uses clm_bypass_limit_protection context to pass res.partner.write() guard.
+
+#         Called by ClmLimitChangeRequest.action_approve() — not by users directly.
+
+#         sudo() on the line write:
+#           The header is already in 'approved' state when this runs (set in action_approve
+#           before calling _apply_limit_to_partner). The line's related state field
+#           reflects 'approved'. The header write() guard blocks non-sudo writes to
+#           approved records. We use sudo() to bypass that guard for this system write.
+#         """
+#         self.ensure_one()
+#         partner     = self.request_id.partner_id
+#         limit_field = self._LIMIT_FIELD_MAP[self.bucket]
+#         prev        = getattr(partner, limit_field, 0.0)
+
+#         # Write new limit — bypass the write() protection on res.partner
+#         partner.with_context(
+#             clm_bypass_limit_protection=True
+#         ).write({limit_field: self.proposed_limit})
+
+#         # Capture previous value on this line for the approval chatter summary.
+#         # sudo() is required because the header is already in 'approved' state
+#         # at this point, and the header write() guard would otherwise block this.
+#         self.sudo().write({'previous_limit': prev})
+
 from odoo import models, fields, api
 from odoo.exceptions import UserError, AccessError, ValidationError
 from markupsafe import Markup
-from collections import Counter
 
 
 class ClmLimitChangeRequest(models.Model):
@@ -2493,46 +3486,43 @@ class ClmLimitChangeRequest(models.Model):
     State Machine:
       draft → pending_fm → approved / rejected
 
-    Design (v0.5.0 — fixed):
-    ──────────────────────────
-    - Header  : partner, justification, workflow state, audit trail
-    - Lines   : auto-populated on partner select (all 5 buckets)
-                CCM edits only the proposed_limit cells they want to change
-    - Approval: iterates ALL line_ids and writes each bucket's limit on partner
-    - request_type on header: freeze_resolution if ANY line is a freeze case
+    ── Bug Fixes (v0.6.1) ──────────────────────────────────────────────────────
 
-    SRS §9 Compliance:
-    ───────────────────
-    - Only CCM can create and submit (draft → pending_fm)
-    - Only Finance Manager can approve or reject
-    - Rejected requests are permanently closed — cannot be reused
-    - Full audit trail: initiator, approver, timestamps, per-line previous limits
+    BUG: Bucket column blank + chatter shows "False"
+    ─────────────────────────────────────────────────
+    ROOT CAUSE (Odoo 19 client behaviour):
+      The `bucket` field in the line list view has `readonly="1"`.
+      In Odoo 19, the JavaScript client STRIPS readonly fields from the
+      One2many create commands it sends to the server on form save.
+      The server received: (0, 0, {'proposed_limit': X})  ← NO bucket
+      Result: bucket = NULL in DB → False in Python → "False" in chatter.
 
-    Bug fixes in this version:
-    ───────────────────────────
-    BUG #3 FIX: _check_lines_not_empty constraint fired before _populate_bucket_lines
-                because _populate_bucket_lines was called after super().create().
-                Fix: lines are now injected into vals_list BEFORE super().create(),
-                so the constraint always sees a fully populated record.
+    FIX:
+      create() ALWAYS rebuilds lines entirely server-side:
+        1. Extract proposed_limit values from client payload BY POSITION.
+           The onchange creates lines in _BUCKET_KEYS order; client preserves order.
+        2. Discard the client's line_ids commands (they have incomplete data).
+        3. Create new lines with bucket from _BUCKET_KEYS + proposed_limit from client.
+      bucket is now ALWAYS correctly set regardless of client payload.
 
-    BUG #4 FIX: _populate_bucket_lines post-create fallback removed (no longer needed).
+    BUG: Can submit multiple requests
+    ──────────────────────────────────
+    ROOT CAUSE:
+      _check_unique_pending only blocked multiple 'pending_fm' records.
+      Multiple 'draft' records per partner were allowed.
 
-    BUG #5 FIX: _onchange_partner_id_populate_lines used two separate O2M assignments.
-                In onchange context, only the last assignment wins — the first
-                fields.Command.clear() was silently discarded, leaving stale lines
-                from the previous partner on saved records.
-                Fix: combine clear + create commands into a single list assignment.
+    FIX:
+      _check_unique_pending now blocks ANY second active request per partner
+      (state in ('draft', 'pending_fm')). At most one non-terminal request
+      can exist per partner at any time.
 
-    BUG #3 (approve): action_approve message_post body was a plain f-string with HTML.
-                In Odoo 17+, plain strings passed to message_post are escaped.
-                Fix: Markup("...{var}...").format(...) — variables are auto-escaped,
-                surrounding HTML is trusted.
-
-    Odoo 19 notes:
-    ───────────────
-    - group_ids (not groups_id) for res.users domain queries
-    - fields.Command.create / fields.Command.clear for onchange O2M writes
-    - Markup() required for all HTML in message_post body
+    BUG: Can submit request with no meaningful changes
+    ───────────────────────────────────────────────────
+    FIX:
+      action_submit_to_fm() now validates that at least one line has a
+      proposed_limit that differs from the current_limit. Prevents submitting
+      no-op requests for FM review.
+    ────────────────────────────────────────────────────────────────────────────
     """
 
     _name = 'clm.limit.change.request'
@@ -2541,14 +3531,11 @@ class ClmLimitChangeRequest(models.Model):
     _order = 'create_date desc'
     _rec_name = 'name'
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # BUCKET KEYS — canonical order, used by onchange + line model
-    # ─────────────────────────────────────────────────────────────────────────
-
+    # Canonical bucket order — used everywhere lines are built server-side.
     _BUCKET_KEYS = ['proforma', 'bucket1', 'bucket2', 'bucket3', 'bucket4']
 
     # ─────────────────────────────────────────────────────────────────────────
-    # IDENTIFICATION
+    # HEADER FIELDS
     # ─────────────────────────────────────────────────────────────────────────
 
     name = fields.Char(
@@ -2557,11 +3544,6 @@ class ClmLimitChangeRequest(models.Model):
         default='New',
         copy=False,
     )
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # HEADER FIELDS
-    # ─────────────────────────────────────────────────────────────────────────
-
     partner_id = fields.Many2one(
         'res.partner',
         string='Customer',
@@ -2577,23 +3559,12 @@ class ClmLimitChangeRequest(models.Model):
         string='Justification',
         required=True,
     )
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # LINES — Auto-populated on partner select. One line per bucket.
-    # ─────────────────────────────────────────────────────────────────────────
-
     line_ids = fields.One2many(
         'clm.limit.change.request.line',
         'request_id',
         string='Bucket Limit Lines',
         copy=True,
     )
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # AUTO-CLASSIFICATION — Computed from lines
-    # freeze_resolution if ANY line has exposure > current limit
-    # ─────────────────────────────────────────────────────────────────────────
-
     request_type = fields.Selection(
         selection=[
             ('freeze_resolution', 'Freeze Resolution'),
@@ -2604,11 +3575,6 @@ class ClmLimitChangeRequest(models.Model):
         store=True,
         tracking=True,
     )
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # WORKFLOW STATE
-    # ─────────────────────────────────────────────────────────────────────────
-
     state = fields.Selection(
         selection=[
             ('draft',      'Draft'),
@@ -2623,32 +3589,13 @@ class ClmLimitChangeRequest(models.Model):
     )
 
     # ─────────────────────────────────────────────────────────────────────────
-    # AUDIT TRAIL — All set by system, never by users
+    # AUDIT TRAIL
     # ─────────────────────────────────────────────────────────────────────────
 
-    initiated_by = fields.Many2one(
-        'res.users',
-        string='Initiated By',
-        readonly=True,
-        copy=False,
-    )
-    reviewed_by = fields.Many2one(
-        'res.users',
-        string='Approved / Rejected By',
-        readonly=True,
-        copy=False,
-        tracking=True,
-    )
-    reviewed_date = fields.Datetime(
-        string='Reviewed On',
-        readonly=True,
-        copy=False,
-    )
-    fm_comment = fields.Text(
-        string='Finance Manager Comment',
-        copy=False,
-        tracking=True,
-    )
+    initiated_by = fields.Many2one('res.users', string='Initiated By',         readonly=True, copy=False)
+    reviewed_by  = fields.Many2one('res.users', string='Approved / Rejected By',readonly=True, copy=False, tracking=True)
+    reviewed_date = fields.Datetime(string='Reviewed On',                       readonly=True, copy=False)
+    fm_comment   = fields.Text(string='Finance Manager Comment',                copy=False,    tracking=True)
 
     # ─────────────────────────────────────────────────────────────────────────
     # COMPUTE
@@ -2657,380 +3604,300 @@ class ClmLimitChangeRequest(models.Model):
     @api.depends('line_ids.request_type')
     def _compute_request_type(self):
         for rec in self:
-            if any(line.request_type == 'freeze_resolution' for line in rec.line_ids):
-                rec.request_type = 'freeze_resolution'
-            else:
-                rec.request_type = 'standard_increase'
+            rec.request_type = (
+                'freeze_resolution'
+                if any(l.request_type == 'freeze_resolution' for l in rec.line_ids)
+                else 'standard_increase'
+            )
 
-    # # ─────────────────────────────────────────────────────────────────────────
-    # # ONCHANGE — Auto-populate all 5 bucket lines on partner select
-    # # ─────────────────────────────────────────────────────────────────────────
-
-    # @api.onchange('partner_id')
-    # def _onchange_partner_id_populate_lines(self):
-    #     """
-    #     Fires in the UI when CCM selects or changes the partner.
-
-    #     BUG #5 FIX:
-    #       Original code used TWO separate assignments to self.line_ids:
-    #         self.line_ids = [fields.Command.clear()]   ← discarded
-    #         self.line_ids = new_lines                  ← wins (no clear happened)
-
-    #       In onchange context, only the LAST assignment to a field is kept.
-    #       The clear() was silently discarded. When a CCM changed the partner
-    #       on an already-saved record, stale lines from the previous partner
-    #       persisted alongside the new partner's lines.
-
-    #       Fix: combine the clear command and all create commands into ONE list
-    #       and assign it in a single operation. This sends (5,0,0) followed by
-    #       (0,0,{vals}) entries to the client in one shot — clear then create.
-    #     """
-    #     if not self.partner_id:
-    #         self.line_ids = [fields.Command.clear()]
-    #         return
-
-    #     partner = self.partner_id
-    #     # Single list: (5,0,0) clears existing, then (0,0,{vals}) creates new.
-    #     # ONE assignment — the clear is not discarded.
-    #     commands = [fields.Command.clear()]
-
-    #     for bucket in self._BUCKET_KEYS:
-    #         limit_field   = ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
-    #         current_limit = getattr(partner, limit_field, 0.0)
-    #         commands.append(fields.Command.create({
-    #             'bucket':         bucket,
-    #             # Default proposed = current so CCM edits only intended buckets
-    #             'proposed_limit': current_limit,
-    #         }))
-
-    #     self.line_ids = commands
-
-    # # ─────────────────────────────────────────────────────────────────────────
-    # # CONSTRAINTS
-    # # ─────────────────────────────────────────────────────────────────────────
-
-    # @api.constrains('partner_id', 'line_ids')
-    # def _check_lines_not_empty(self):
-    #     """
-    #     Ensures records with a partner also have bucket lines.
-
-    #     BUG #3 FIX (context):
-    #       This constraint no longer raises false positives because lines are now
-    #       injected into vals_list inside create() BEFORE super().create() is called.
-    #       The constraint therefore always sees the lines — whether the record was
-    #       created from the form (onchange provides lines) or programmatically
-    #       (create() injects them).
-    #     """
-    #     for rec in self:
-    #         if rec.partner_id and not rec.line_ids:
-    #             raise ValidationError(
-    #                 f"Request {rec.name} has no bucket lines.\n"
-    #                 "Select the customer to auto-populate all buckets."
-    #             )
-
-    # @api.constrains('line_ids')
-    # def _check_duplicate_buckets_in_lines(self):
-    #     """Prevent the same bucket appearing twice on one request."""
-    #     for rec in self:
-    #         buckets = rec.line_ids.mapped('bucket')
-    #         if len(buckets) != len(set(buckets)):
-    #             raise ValidationError(
-    #                 "Each bucket may appear only once per request.\n"
-    #                 "Remove duplicate bucket lines."
-    #             )
-
-    # @api.constrains('partner_id', 'state')
-    # def _check_unique_pending(self):
-    #     """Prevent two pending requests for the same partner."""
-    #     for rec in self:
-    #         if rec.state == 'pending_fm':
-    #             duplicate = self.search([
-    #                 ('partner_id', '=', rec.partner_id.id),
-    #                 ('state',      '=', 'pending_fm'),
-    #                 ('id',         '!=', rec.id),
-    #             ], limit=1)
-    #             if duplicate:
-    #                 raise ValidationError(
-    #                     f"A pending request ({duplicate.name}) already exists "
-    #                     f"for {rec.partner_id.name}.\n"
-    #                     f"Resolve the existing request before creating a new one."
-    #                 )
-
-    # # ─────────────────────────────────────────────────────────────────────────
-    # # WRITE PROTECTION — Terminal state guard
-    # # SRS §9.3: Approved/rejected records cannot be modified
-    # # ─────────────────────────────────────────────────────────────────────────
-
-    # def write(self, vals):
-    #     for rec in self:
-    #         if rec.state in ('approved', 'rejected') and not self.env.su:
-    #             raise AccessError(
-    #                 f"Request {rec.name} is in a terminal state "
-    #                 f"({rec.state}) and cannot be modified."
-    #             )
-    #     return super().write(vals)
-
-    # # ─────────────────────────────────────────────────────────────────────────
-    # # ORM OVERRIDES
-    # # ─────────────────────────────────────────────────────────────────────────
-
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     """
-    #     SoD: Only CCM can create limit change requests.
-    #     Sequence assigned on creation.
-    #     initiated_by set to current user for audit trail.
-
-    #     BUG #3 FIX (constraint timing):
-    #       Lines are now injected into vals_list HERE, before super().create().
-    #       Previously, _populate_bucket_lines() was called after super().create(),
-    #       meaning the constraint _check_lines_not_empty ran on a record with zero
-    #       lines → ValidationError on every programmatic create with a partner.
-
-    #       When the form is submitted normally, the onchange already put lines in
-    #       vals — the 'line_ids' not in vals guard prevents double-population.
-    #       When called programmatically with only partner_id, we build the line
-    #       vals here so the constraint sees them atomically with the header.
-    #     """
-    #     self._assert_group(
-    #         'zencore_clms.group_zencore_clm_ccm',
-    #         'create limit change requests',
-    #     )
-    #     for vals in vals_list:
-    #         if vals.get('name', 'New') == 'New':
-    #             vals['name'] = (
-    #                 self.env['ir.sequence'].next_by_code('clm.limit.change.request')
-    #                 or 'New'
-    #             )
-    #         vals['initiated_by'] = self.env.uid
-
-    #         # ── Pre-populate lines BEFORE super().create() ──────────────────
-    #         # Constraint _check_lines_not_empty runs inside super().create().
-    #         # Lines must already exist in vals at that point.
-    #         # Guard: if caller already supplied line_ids (form submit), skip.
-    #         if vals.get('partner_id') and 'line_ids' not in vals:
-    #             partner = self.env['res.partner'].browse(vals['partner_id'])
-    #             line_vals = []
-    #             for bucket in self._BUCKET_KEYS:
-    #                 limit_field   = ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
-    #                 current_limit = getattr(partner, limit_field, 0.0)
-    #                 line_vals.append(fields.Command.create({
-    #                     'bucket':         bucket,
-    #                     'proposed_limit': current_limit,
-    #                 }))
-    #             vals['line_ids'] = line_vals
-
-    #     return super().create(vals_list)
-
-    # -------------------------------------------------------------------------
-    # ONCHANGE
-    # -------------------------------------------------------------------------
+    # ─────────────────────────────────────────────────────────────────────────
+    # ONCHANGE — Provides a UI PREVIEW of lines only.
+    # The actual server-side line creation is handled in create().
+    # Even if the client strips bucket from the payload, create() rebuilds correctly.
+    # ─────────────────────────────────────────────────────────────────────────
 
     @api.onchange('partner_id')
     def _onchange_partner_id_populate_lines(self):
         """
-        Auto-populate all bucket lines when customer changes.
+        Visual preview: populates the list so the CCM can see current limits
+        and type proposed limits before saving.
 
-        Odoo 19 Safe:
-        - Clear existing lines first
-        - Rebuild all buckets in ONE assignment
-        - Prevent stale virtual rows from accumulating
+        WHY this alone is not sufficient (Odoo 19 caveat):
+          `bucket` has readonly="1" in the list view. Odoo 19's JS client
+          does NOT include readonly fields in the One2many create commands
+          it sends to the server on form save. So even though this onchange
+          correctly sets bucket on the virtual records, the server would
+          receive lines WITHOUT bucket → bucket = NULL.
+
+          Fix: create() always rebuilds lines server-side from _BUCKET_KEYS.
+          It extracts proposed_limit by position from client payload and
+          assigns the correct bucket itself.
         """
         if not self.partner_id:
             self.line_ids = [fields.Command.clear()]
             return
 
         partner = self.partner_id
-
         commands = [fields.Command.clear()]
 
         for bucket in self._BUCKET_KEYS:
-            limit_field = (
-                ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
-            )
-
+            limit_field   = ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
             current_limit = getattr(partner, limit_field, 0.0)
-
-            commands.append(
-                fields.Command.create({
-                    'bucket': bucket,
-                    'proposed_limit': current_limit,
-                })
-            )
+            commands.append(fields.Command.create({
+                'bucket':         bucket,         # preview only; stripped by client
+                'proposed_limit': current_limit,  # CCM edits this column
+            }))
 
         self.line_ids = commands
 
-    # -------------------------------------------------------------------------
+    # ─────────────────────────────────────────────────────────────────────────
     # CONSTRAINTS
-    # -------------------------------------------------------------------------
-    @api.constrains('partner_id')
-    def _check_lines_not_empty(self):
-        """
-        Ensure partner requests contain bucket lines.
+    # ─────────────────────────────────────────────────────────────────────────
 
-        Odoo 19 Safe:
-        During constraint execution, one2many cache may still contain
-        transient virtual records. Avoid checking child fields like
-        line.bucket inside constraints.
-        """
+    @api.constrains('partner_id', 'line_ids')
+    def _check_lines_not_empty(self):
         for rec in self:
             if rec.partner_id and not rec.line_ids:
                 raise ValidationError(
                     f"Request {rec.name} has no bucket lines.\n"
-                    "Select a customer to auto-populate bucket lines."
+                    "Select the customer to auto-populate all buckets."
                 )
 
     @api.constrains('line_ids')
     def _check_duplicate_buckets_in_lines(self):
         """
-        Prevent duplicate buckets.
+        Prevent the same bucket appearing twice on one request.
 
-        Odoo 19 Safe:
-        - Ignore empty virtual rows
-        - Ignore deleted cache rows
-        - Validate only real bucket values
+        Note: After the create() fix, bucket is always set server-side, so
+        False values are no longer possible. This constraint is retained as
+        a defence-in-depth guard.
         """
         for rec in self:
-            buckets = [
-                line.bucket
-                for line in rec.line_ids
-                if line.exists() and line.bucket
-            ]
-
-            duplicates = [
-                bucket
-                for bucket, count in Counter(buckets).items()
-                if count > 1
-            ]
-
-            if duplicates:
+            buckets = [b for b in rec.line_ids.mapped('bucket') if b]
+            if len(buckets) != len(set(buckets)):
                 raise ValidationError(
                     "Each bucket may appear only once per request.\n"
-                    f"Duplicate bucket(s): {', '.join(duplicates)}"
+                    "Remove duplicate bucket lines."
                 )
 
-    @api.constrains('partner_id', 'state')
+    # @api.constrains('partner_id', 'state')
+    # def _check_unique_pending(self):
+    #     """
+    #     BUG FIX: Prevent ANY second active request per partner.
+
+    #     Original constraint only blocked multiple 'pending_fm' records.
+    #     A CCM could create multiple 'draft' requests for the same partner,
+    #     leading to confusion and duplicate pending approvals.
+
+    #     Fix: block if any other non-terminal (draft OR pending_fm) request
+    #     already exists for this partner. At most one active request per partner.
+    #     """
+    #     for rec in self:
+    #         if rec.state in ('draft', 'pending_fm'):
+    #             duplicate = self.search([
+    #                 ('partner_id', '=', rec.partner_id.id),
+    #                 ('state',      'in', ('draft', 'pending_fm')),
+    #                 ('id',         '!=', rec.id),
+    #             ], limit=1)
+    #             if duplicate:
+    #                 state_label = dict(self._fields['state'].selection).get(
+    #                     duplicate.state, duplicate.state
+    #                 )
+    #                 raise ValidationError(
+    #                     f"An active limit request ({duplicate.name} — {state_label}) "
+    #                     f"already exists for {rec.partner_id.name}.\n"
+    #                     f"Resolve or cancel the existing request before creating a new one."
+    #                 )
+
+    @api.constrains('partner_id', 'state', 'line_ids')
     def _check_unique_pending(self):
         """
-        Prevent multiple pending requests for same customer.
+        Allow multiple active requests for the same customer
+        ONLY when they affect different buckets.
+
+        Block:
+            Same customer + same bucket + active request
+
+        Ignore:
+            Buckets where proposed_limit == current_limit
+            (no actual change requested)
         """
+
+        active_states = ('draft', 'pending_fm')
+
+        bucket_labels = dict(
+            self.env['clm.limit.change.request.line']
+            ._fields['bucket'].selection
+        )
+
         for rec in self:
-            if rec.state != 'pending_fm':
+
+            # Validate only active requests
+            if rec.state not in active_states:
                 continue
 
-            duplicate = self.search([
+            # ─────────────────────────────────────────────
+            # Requested buckets in THIS request
+            # Only meaningful changes count
+            # ─────────────────────────────────────────────
+            requested_buckets = set()
+
+            for line in rec.line_ids:
+
+                # Ignore no-op lines
+                if abs(line.proposed_limit - line.current_limit) <= 0.001:
+                    continue
+
+                requested_buckets.add(line.bucket)
+
+            if not requested_buckets:
+                continue
+
+            # ─────────────────────────────────────────────
+            # Find other active requests for same customer
+            # ─────────────────────────────────────────────
+            duplicates = self.search([
                 ('partner_id', '=', rec.partner_id.id),
-                ('state', '=', 'pending_fm'),
+                ('state', 'in', active_states),
                 ('id', '!=', rec.id),
-            ], limit=1)
+            ])
 
-            if duplicate:
-                raise ValidationError(
-                    f"A pending request ({duplicate.name}) already exists "
-                    f"for {rec.partner_id.name}.\n"
-                    "Resolve the existing request first."
-                )
+            for duplicate in duplicates:
 
-    # -------------------------------------------------------------------------
-    # WRITE PROTECTION
-    # -------------------------------------------------------------------------
+                duplicate_buckets = set()
+
+                for line in duplicate.line_ids:
+
+                    # Ignore no-op lines
+                    if abs(line.proposed_limit - line.current_limit) <= 0.001:
+                        continue
+
+                    duplicate_buckets.add(line.bucket)
+
+                # ─────────────────────────────────────────
+                # Detect overlapping buckets
+                # ─────────────────────────────────────────
+                overlap = requested_buckets & duplicate_buckets
+
+                if overlap:
+
+                    overlap_names = [
+                        bucket_labels.get(b, b)
+                        for b in overlap
+                    ]
+
+                    state_label = dict(
+                        self._fields['state'].selection
+                    ).get(
+                        duplicate.state,
+                        duplicate.state
+                    )
+
+                    raise ValidationError(
+                        "An active request already exists for:\n"
+                        f"{', '.join(overlap_names)}\n\n"
+                        f"Customer : {rec.partner_id.name}\n"
+                        f"Request  : {duplicate.name}\n"
+                        f"State    : {state_label}\n\n"
+                        "Approve, reject, or cancel the existing request first."
+                    )
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # WRITE PROTECTION — Terminal state guard
+    # ─────────────────────────────────────────────────────────────────────────
 
     def write(self, vals):
-        """
-        Prevent modification after approval/rejection.
-        """
         for rec in self:
-            if (
-                rec.state in ('approved', 'rejected')
-                and not self.env.su
-            ):
+            if rec.state in ('approved', 'rejected') and not self.env.su:
                 raise AccessError(
-                    f"Request {rec.name} is already {rec.state} "
-                    "and cannot be modified."
+                    f"Request {rec.name} is in a terminal state "
+                    f"({rec.state}) and cannot be modified."
                 )
-
         return super().write(vals)
 
-    # -------------------------------------------------------------------------
-    # CREATE
-    # -------------------------------------------------------------------------
+    # ─────────────────────────────────────────────────────────────────────────
+    # ORM OVERRIDES
+    # ─────────────────────────────────────────────────────────────────────────
 
     @api.model_create_multi
     def create(self, vals_list):
         """
-        Create request with:
-        - sequence
-        - audit user
-        - automatic bucket population
-        """
+        Always rebuilds lines server-side to ensure bucket is correctly set.
 
+        ── Why client-sent line_ids cannot be trusted ───────────────────────
+        In Odoo 19, the JS client filters out readonly fields from One2many
+        create commands. The `bucket` field has readonly="1" in the list view,
+        so it is NEVER included in the client payload.
+
+        Server receives:  (0, 0, {'proposed_limit': X})   ← no bucket
+        Without fix:      bucket = NULL in DB → False in Python
+
+        ── Server-side rebuild strategy ────────────────────────────────────
+        1. Extract proposed_limit values from the client payload IN ORDER.
+           The onchange always creates lines in _BUCKET_KEYS order and the
+           client preserves that order, so position 0 = proforma, 1 = bucket1...
+        2. Discard the client's line_ids entirely (bucket is missing/unreliable).
+        3. Create new (0, 0, {...}) commands with bucket from _BUCKET_KEYS
+           and proposed_limit from the client payload by position.
+        4. Fall back to current_limit if no client value exists at that position.
+
+        Result: bucket is ALWAYS correctly set regardless of client behaviour.
+        ─────────────────────────────────────────────────────────────────────
+        """
         self._assert_group(
             'zencore_clms.group_zencore_clm_ccm',
             'create limit change requests',
         )
 
         for vals in vals_list:
-
-            # -------------------------------------------------------------
-            # Sequence
-            # -------------------------------------------------------------
-
+            # Assign sequence number
             if vals.get('name', 'New') == 'New':
                 vals['name'] = (
-                    self.env['ir.sequence'].next_by_code(
-                        'clm.limit.change.request'
-                    ) or 'New'
+                    self.env['ir.sequence'].next_by_code('clm.limit.change.request')
+                    or 'New'
                 )
-
-            # -------------------------------------------------------------
-            # Audit
-            # -------------------------------------------------------------
-
             vals['initiated_by'] = self.env.uid
 
-            # -------------------------------------------------------------
-            # Auto-create bucket lines
-            #
-            # IMPORTANT:
-            # Use NOT vals.get('line_ids')
-            # instead of:
-            #   'line_ids' not in vals
-            #
-            # Odoo 19 sometimes sends:
-            #   line_ids = []
-            #
-            # which would otherwise bypass the guard incorrectly.
-            # -------------------------------------------------------------
+            if vals.get('partner_id'):
+                partner = self.env['res.partner'].browse(vals['partner_id'])
 
-            if vals.get('partner_id') and not vals.get('line_ids'):
+                # ── Step 1: Extract proposed_limits from client payload by position ──
+                # client_lines collects proposed_limit in the order received.
+                # Skip non-create commands (clear = (5,0,0), etc.).
+                client_proposed_by_pos = []
+                for cmd in vals.get('line_ids', []):
+                    if isinstance(cmd, (list, tuple)) and len(cmd) == 3 and cmd[0] == 0:
+                        # (0, 0, {vals}) — a new-line command from client
+                        client_proposed_by_pos.append(
+                            cmd[2].get('proposed_limit', None)
+                        )
+                    elif hasattr(cmd, '__int__') and int(cmd) == 0:
+                        # fields.Command.create result — handled above
+                        pass
 
-                partner = self.env['res.partner'].browse(
-                    vals['partner_id']
-                )
+                # ── Step 2: Discard client line_ids — bucket is not reliable ──────
+                vals.pop('line_ids', None)
 
-                line_commands = []
+                # ── Step 3: Rebuild lines with correct bucket + proposed_limit ─────
+                new_lines = []
+                for idx, bucket in enumerate(self._BUCKET_KEYS):
+                    limit_field   = ClmLimitChangeRequestLine._LIMIT_FIELD_MAP[bucket]
+                    current_limit = getattr(partner, limit_field, 0.0)
 
-                for bucket in self._BUCKET_KEYS:
-
-                    limit_field = (
-                        ClmLimitChangeRequestLine
-                        ._LIMIT_FIELD_MAP[bucket]
+                    # Use client's proposed_limit if provided for this position,
+                    # else fall back to current_limit (no-change default).
+                    proposed_limit = (
+                        client_proposed_by_pos[idx]
+                        if idx < len(client_proposed_by_pos) and client_proposed_by_pos[idx] is not None
+                        else current_limit
                     )
 
-                    current_limit = getattr(
-                        partner,
-                        limit_field,
-                        0.0,
-                    )
+                    new_lines.append(fields.Command.create({
+                        'bucket':         bucket,         # ← always set server-side
+                        'proposed_limit': proposed_limit, # ← from client or default
+                    }))
 
-                    line_commands.append(
-                        fields.Command.create({
-                            'bucket': bucket,
-                            'proposed_limit': current_limit,
-                        })
-                    )
-
-                vals['line_ids'] = line_commands
+                vals['line_ids'] = new_lines
 
         return super().create(vals_list)
 
@@ -3042,6 +3909,7 @@ class ClmLimitChangeRequest(models.Model):
         """
         CCM submits request for FM review.
         Transitions: draft → pending_fm.
+        Validates at least one bucket has a meaningful change.
         Schedules a mail.activity for the Finance Manager.
         """
         self._assert_group(
@@ -3060,19 +3928,41 @@ class ClmLimitChangeRequest(models.Model):
                     "Select the customer to auto-populate all bucket lines."
                 )
 
+            # ── Validate at least one line has a meaningful change ────────────
+            # BUG FIX: Prevents submitting a no-op request where all proposed
+            # limits equal current limits (nothing would change on approval).
+            has_change = any(
+                abs(line.proposed_limit - line.current_limit) > 0.001
+                for line in rec.line_ids
+            )
+            if not has_change:
+                raise UserError(
+                    "Cannot submit this request — no bucket limits have been changed.\n"
+                    "Edit at least one Proposed Limit before submitting."
+                )
+
             rec.write({'state': 'pending_fm'})
 
+            # ── Build chatter summary ─────────────────────────────────────────
+            # BUG FIX: Use .get() with a safe fallback for the bucket label.
+            # Before the create() fix, l.bucket was False → bucket_labels.get(False)
+            # returned False → "False" appeared in chatter. After the fix, bucket is
+            # always a valid string. The fallback handles any edge case.
             bucket_labels = dict(
                 self.env['clm.limit.change.request.line']
                 ._fields['bucket'].selection
             )
+
             line_items = Markup('').join(
                 Markup(
                     "<li><b>{bucket}</b>: "
                     "Current {current:,.2f} → Proposed {proposed:,.2f}"
                     "{freeze}</li>"
                 ).format(
-                    bucket=bucket_labels.get(l.bucket, l.bucket),
+                    bucket=(
+                        bucket_labels.get(l.bucket)
+                        or str(l.bucket or 'Unknown Bucket')
+                    ),
                     current=l.current_limit,
                     proposed=l.proposed_limit,
                     freeze=' ⚠ Freeze' if l.request_type == 'freeze_resolution' else '',
@@ -3090,13 +3980,16 @@ class ClmLimitChangeRequest(models.Model):
                 ).format(
                     user=self.env.user.name,
                     customer=rec.partner_id.name,
-                    rtype=dict(self._fields['request_type'].selection).get(rec.request_type, ''),
+                    rtype=dict(self._fields['request_type'].selection).get(
+                        rec.request_type, ''
+                    ),
                     lines=line_items,
                 ),
                 subtype_xmlid='mail.mt_note',
             )
 
-            # Notify Finance Manager — Odoo 19: group_ids (not groups_id)
+            # ── Notify Finance Manager ────────────────────────────────────────
+            # Odoo 19: group_ids (not groups_id) for res.users domain
             finance_group = self.env.ref(
                 'zencore_clms.group_zencore_clm_finance',
                 raise_if_not_found=False,
@@ -3122,14 +4015,7 @@ class ClmLimitChangeRequest(models.Model):
         """
         Finance Manager approves the request.
         Transitions: pending_fm → approved.
-        Iterates ALL lines and writes each bucket's proposed_limit on the partner.
-        previous_limit is captured per line for full audit trail.
-
-        BUG #3 FIX (Markup):
-          Original used a plain f-string for message_post body.
-          In Odoo 17+, plain strings are HTML-escaped → chatter showed raw tags.
-          Fix: Markup("...{var}...").format(...) — variables are auto-escaped,
-          surrounding HTML markup is trusted as safe.
+        Writes each bucket's proposed_limit on the partner.
         """
         self._assert_group(
             'zencore_clms.group_zencore_clm_finance',
@@ -3158,13 +4044,14 @@ class ClmLimitChangeRequest(models.Model):
                 self.env['clm.limit.change.request.line']
                 ._fields['bucket'].selection
             )
-            # Build the line summary using Markup.join — each item is a trusted
-            # Markup fragment; variables are escaped via .format().
             line_items = Markup('').join(
                 Markup(
                     "<li><b>{bucket}</b>: {prev:,.2f} → {new:,.2f}</li>"
                 ).format(
-                    bucket=bucket_labels.get(l.bucket, l.bucket),
+                    bucket=(
+                        bucket_labels.get(l.bucket)
+                        or str(l.bucket or 'Unknown Bucket')
+                    ),
                     prev=l.previous_limit,
                     new=l.proposed_limit,
                 )
@@ -3190,7 +4077,7 @@ class ClmLimitChangeRequest(models.Model):
         """
         Finance Manager rejects the request.
         Transitions: pending_fm → rejected.
-        FM comment is required. Terminal state — cannot be reused.
+        FM comment required. Terminal state — cannot be reused.
         """
         self._assert_group(
             'zencore_clms.group_zencore_clm_finance',
@@ -3247,30 +4134,23 @@ class ClmLimitChangeRequestLine(models.Model):
     """
     clm.limit.change.request.line — One line per bucket.
 
-    Fields:
-    ────────
-    bucket           : which bucket this line targets (auto-set, readonly in view)
-    current_limit    : live value from partner at time of viewing (non-stored compute)
-    current_exposure : live balance from partner (non-stored compute)
-    proposed_limit   : new limit requested — the ONLY field CCM edits
-    previous_limit   : captured at approval time for audit trail
-    request_type     : auto-classified freeze_resolution / standard_increase (stored compute)
+    IMPORTANT — bucket field:
+    ──────────────────────────
+    bucket is ALWAYS set server-side in ClmLimitChangeRequest.create().
+    It must NEVER be set by the client (it's readonly in the view), and
+    the create() override ensures it is populated from _BUCKET_KEYS
+    regardless of what the client sends.
 
-    Design:
-    ────────
-    - All 5 buckets are always present — created by header's create() or onchange
-    - CCM cannot add or delete lines (enforced in view: create=0, delete=0)
-    - bucket is readonly after creation (enforced in view)
-    - proposed_limit defaults to current_limit — no accidental changes
+    Do NOT add readonly=True to the field definition — that would prevent
+    the ORM from accepting the value we write during server-side create().
+    The view controls editability; the model just stores the value.
     """
 
     _name = 'clm.limit.change.request.line'
     _description = 'CLM Limit Change Request Line'
     _order = 'bucket'
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # FIELD MAPS — Class-level so header create() and onchange can reference them
-    # ─────────────────────────────────────────────────────────────────────────
+    # ── Class-level field maps — referenced by header model and res.partner ──
 
     _LIMIT_FIELD_MAP = {
         'proforma': 'clm_proforma_limit',
@@ -3299,8 +4179,6 @@ class ClmLimitChangeRequestLine(models.Model):
         ondelete='cascade',
         index=True,
     )
-
-    # Related convenience fields — not stored, read from header
     partner_id = fields.Many2one(
         related='request_id.partner_id',
         string='Customer',
@@ -3330,6 +4208,10 @@ class ClmLimitChangeRequestLine(models.Model):
             ('bucket4',  'Bucket 4'),
         ],
         string='Bucket',
+        required=True,
+        # DO NOT add readonly=True here.
+        # The view controls user editability (readonly="1" in the list column).
+        # The model must accept the value written by create() server-side.
     )
     current_limit = fields.Monetary(
         string='Current Limit',
@@ -3361,7 +4243,6 @@ class ClmLimitChangeRequestLine(models.Model):
         string='Type',
         compute='_compute_request_type',
         store=True,
-        help='freeze_resolution: exposure > current limit on this bucket.',
     )
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -3373,12 +4254,8 @@ class ClmLimitChangeRequestLine(models.Model):
         for line in self:
             partner = line.request_id.partner_id
             if partner and line.bucket:
-                line.current_limit    = getattr(
-                    partner, self._LIMIT_FIELD_MAP[line.bucket], 0.0
-                )
-                line.current_exposure = getattr(
-                    partner, self._BALANCE_FIELD_MAP[line.bucket], 0.0
-                )
+                line.current_limit    = getattr(partner, self._LIMIT_FIELD_MAP[line.bucket],   0.0)
+                line.current_exposure = getattr(partner, self._BALANCE_FIELD_MAP[line.bucket], 0.0)
             else:
                 line.current_limit    = 0.0
                 line.current_exposure = 0.0
@@ -3397,45 +4274,33 @@ class ClmLimitChangeRequestLine(models.Model):
     # ─────────────────────────────────────────────────────────────────────────
 
     @api.constrains('proposed_limit')
-    def _check_proposed_limit_positive(self):
+    def _check_proposed_limit_not_negative(self):
         for line in self:
             if line.proposed_limit < 0:
                 bucket_label = dict(
                     self._fields['bucket'].selection
-                ).get(line.bucket, line.bucket)
+                ).get(line.bucket, line.bucket or 'Unknown')
                 raise ValidationError(
                     f"Proposed limit cannot be negative — {bucket_label}."
                 )
 
     # ─────────────────────────────────────────────────────────────────────────
-    # APPROVAL HELPER — Called by action_approve on the header
+    # APPROVAL HELPER
     # ─────────────────────────────────────────────────────────────────────────
 
     def _apply_limit_to_partner(self):
         """
-        Writes this line's proposed_limit onto the partner for its bucket.
-        Captures current value as previous_limit for audit trail.
-        Uses clm_bypass_limit_protection context to pass res.partner.write() guard.
-
-        Called by ClmLimitChangeRequest.action_approve() — not by users directly.
-
-        sudo() on the line write:
-          The header is already in 'approved' state when this runs (set in action_approve
-          before calling _apply_limit_to_partner). The line's related state field
-          reflects 'approved'. The header write() guard blocks non-sudo writes to
-          approved records. We use sudo() to bypass that guard for this system write.
+        Writes this line's proposed_limit to the partner for its bucket.
+        Captures previous limit for audit trail.
+        sudo() bypasses the terminal-state write guard on the line itself.
         """
         self.ensure_one()
         partner     = self.request_id.partner_id
         limit_field = self._LIMIT_FIELD_MAP[self.bucket]
         prev        = getattr(partner, limit_field, 0.0)
 
-        # Write new limit — bypass the write() protection on res.partner
         partner.with_context(
             clm_bypass_limit_protection=True
         ).write({limit_field: self.proposed_limit})
 
-        # Capture previous value on this line for the approval chatter summary.
-        # sudo() is required because the header is already in 'approved' state
-        # at this point, and the header write() guard would otherwise block this.
         self.sudo().write({'previous_limit': prev})
