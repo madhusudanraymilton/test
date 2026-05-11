@@ -568,6 +568,162 @@ class ResPartnerExtended(models.Model):
         ('clm_bucket_4_limit_positive', 'CHECK(clm_bucket_4_limit >= 0)',   'Bucket 4 Limit must be zero or positive.'),
     ]
 
+     # All requests — used for smart button (total count) and history list
+    clm_limit_request_ids = fields.One2many(
+        'clm.limit.change.request',
+        'partner_id',
+        string='All Limit Requests',
+    )
+
+    # Active requests only — used for the Credit Management tab embedded list
+    # domain= on One2many filters what is displayed (Odoo 17+ behaviour)
+    clm_active_request_ids = fields.One2many(
+        'clm.limit.change.request',
+        'partner_id',
+        string='Active Requests',
+        domain=[('state', 'in', ('draft', 'pending_fm'))],
+    )
+
+    # ── Statistics (computed via _read_group — one SQL query for all four) ──
+
+    clm_request_total_count = fields.Integer(
+        string='Total Requests',
+        compute='_compute_clm_request_counts',
+    )
+    clm_request_pending_count = fields.Integer(
+        string='Pending Requests',
+        compute='_compute_clm_request_counts',
+    )
+    clm_request_approved_count = fields.Integer(
+        string='Approved Requests',
+        compute='_compute_clm_request_counts',
+    )
+    clm_request_rejected_count = fields.Integer(
+        string='Rejected Requests',
+        compute='_compute_clm_request_counts',
+    )
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # COMPUTE: REQUEST STATISTICS
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @api.depends('clm_limit_request_ids.state')
+    def _compute_clm_request_counts(self):
+        """
+        Batch-compute all four request counts in ONE SQL query.
+
+        Uses _read_group (Odoo 17+ / 19 API — replaces read_group).
+        Returns tuples: (partner_record, state_str, count_int).
+
+        Falls back to zero for partners with no requests.
+        """
+        if not self.ids:
+            for p in self:
+                p.clm_request_total_count = 0
+                p.clm_request_pending_count = 0
+                p.clm_request_approved_count = 0
+                p.clm_request_rejected_count = 0
+            return
+
+        # _read_group: Odoo 19 standard — returns list of tuples
+        groups = self.env['clm.limit.change.request']._read_group(
+            domain=[('partner_id', 'in', self.ids)],
+            groupby=['partner_id', 'state'],
+            aggregates=['__count'],
+        )
+
+        # data[partner_id][state] = count
+        data = {}
+        for partner_rec, state, count in groups:
+            data.setdefault(partner_rec.id, {})[state] = count
+
+        for partner in self:
+            pdata = data.get(partner.id, {})
+            partner.clm_request_total_count   = sum(pdata.values())
+            partner.clm_request_pending_count = pdata.get('pending_fm', 0)
+            partner.clm_request_approved_count = pdata.get('approved', 0)
+            partner.clm_request_rejected_count = pdata.get('rejected', 0)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ACTIONS
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def action_view_limit_requests(self):
+        """
+        Smart button → ALL requests for this customer (all states).
+        """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Limit Requests — {self.name}',
+            'res_model': 'clm.limit.change.request',
+            'view_mode': 'list,form',
+            'domain': [('partner_id', '=', self.id)],
+            'context': {'default_partner_id': self.id},
+        }
+
+    def action_view_pending_requests(self):
+        """
+        Smart button → PENDING requests for this customer.
+        Primarily useful for Finance quick-access.
+        """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Pending Requests — {self.name}',
+            'res_model': 'clm.limit.change.request',
+            'view_mode': 'list,form',
+            'domain': [
+                ('partner_id', '=', self.id),
+                ('state', '=', 'pending_fm'),
+            ],
+            'context': {'default_partner_id': self.id},
+        }
+
+    def action_clm_new_limit_request(self):
+        """
+        CCM: Opens a new limit change request form in a dialog.
+
+        If a draft request already exists for this customer, opens it
+        (prevents creating another draft for the same customer when buckets
+        from the previous draft are still unclaimed).
+
+        Note: Multiple PENDING requests for different buckets are allowed —
+        this only deduplicates unsubmitted drafts.
+
+        SoD: CCM group only. Also enforced in ClmLimitChangeRequest.create().
+        """
+        self.ensure_one()
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_ccm'):
+            raise AccessError("Only CCM can submit limit change requests.")
+
+        # Find the most recent unsubmitted draft for this partner
+        existing_draft = self.env['clm.limit.change.request'].search([
+            ('partner_id', '=', self.id),
+            ('state', '=', 'draft'),
+        ], limit=1, order='create_date desc')
+
+        if existing_draft:
+            # Open the existing draft rather than create a duplicate
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'clm.limit.change.request',
+                'res_id': existing_draft.id,
+                'view_mode': 'form',
+                'target': 'new',
+                'name': f'Edit Draft — {existing_draft.name}',
+            }
+
+        # No existing draft — open a blank form pre-filled with this partner
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'clm.limit.change.request',
+            'view_mode': 'form',
+            'target': 'new',
+            'name': 'New Limit Change Request',
+            'context': {'default_partner_id': self.id},
+        }
+
     # ─────────────────────────────────────────────────────────────────────────
     # WRITE PROTECTION — Limit fields require workflow approval
     # ─────────────────────────────────────────────────────────────────────────

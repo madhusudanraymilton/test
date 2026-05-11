@@ -2,21 +2,21 @@
 <odoo>
 
     <!--
-        clm.limit.change.request — Views (v0.6.0)
+        clm.limit.change.request — Views (v1.0)
 
-        Changes from v0.5.0:
+        Changes from v0.6.1:
         ─────────────────────
-        - Menu items REMOVED. Access is now exclusively via:
-            1. Partner Credit Management tab buttons (inline workflow)
-            2. Partner smart button → list view → form view
-        - Form view: added fm_comment field visibility in 'pending_fm' state
-          even for Finance when opened via reject dialog (clm_reject_mode context).
-        - Form and list views retained in full for dialog and smart button use.
+        - state statusbar: added 'cancelled' stop
+        - Cancel button added (CCM, draft state only)
+        - FM overview menu re-added for Finance (all pending requests)
+        - submitted_date column in list view
+        - list view: pending filter shows partner aggregate count
 
-        Dialog behaviour (target='new'):
-        ──────────────────────────────────
-        The form opens as a modal dialog when called from the partner form.
-        Standard Odoo modal behaviour applies — Save closes and refreshes parent.
+        Access patterns:
+        ─────────────────
+        1. From partner Credit Management tab (inline embedded list)
+        2. From partner smart button (full list filtered by partner)
+        3. From Finance menu (all pending requests — company-wide)
     -->
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -28,9 +28,7 @@
         <field name="arch" type="xml">
             <form string="Limit Change Request">
 
-                <!-- ── HEADER ─────────────────────────────────────────── -->
                 <header>
-
                     <!-- CCM: draft → pending_fm -->
                     <button
                         name="action_submit_to_fm"
@@ -41,6 +39,16 @@
                         groups="zencore_clms.group_zencore_clm_ccm"
                     />
 
+                    <!-- CCM: draft → cancelled -->
+                    <button
+                        name="action_cancel"
+                        type="object"
+                        string="Cancel Request"
+                        invisible="state != 'draft'"
+                        groups="zencore_clms.group_zencore_clm_ccm"
+                        confirm="Cancel this draft? The request cannot be reopened."
+                    />
+
                     <!-- Finance: pending_fm → approved -->
                     <button
                         name="action_approve"
@@ -49,7 +57,7 @@
                         class="btn-success"
                         invisible="state != 'pending_fm'"
                         groups="zencore_clms.group_zencore_clm_finance"
-                        confirm="This will immediately update all bucket limits on the customer. Proceed?"
+                        confirm="Approve? All proposed limits will be applied to the customer immediately."
                     />
 
                     <!-- Finance: pending_fm → rejected -->
@@ -60,7 +68,7 @@
                         class="btn-danger"
                         invisible="state != 'pending_fm'"
                         groups="zencore_clms.group_zencore_clm_finance"
-                        confirm="Reject this request? This action is permanent and cannot be undone."
+                        confirm="Reject this request? This action is permanent."
                     />
 
                     <field
@@ -68,47 +76,27 @@
                         widget="statusbar"
                         statusbar_visible="draft,pending_fm,approved,rejected"
                     />
-
                 </header>
 
-                <!-- ── SHEET ──────────────────────────────────────────── -->
                 <sheet>
-
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
 
-                    <!-- ── Classification Banners ── -->
-                    <div
-                        class="alert alert-danger"
-                        invisible="request_type != 'freeze_resolution'"
-                        role="alert"
-                    >
-                        <strong>⚠ Freeze Resolution Request:</strong>
+                    <!-- Classification banners -->
+                    <div class="alert alert-danger" role="alert"
+                         invisible="request_type != 'freeze_resolution'">
+                        <strong>⚠ Freeze Resolution:</strong>
                         One or more buckets have exposure exceeding the current limit.
-                        Approving this request will raise the limit to cover the exposure.
+                        Approving will raise the limit to cover the breach.
                     </div>
-                    <div
-                        class="alert alert-info"
-                        invisible="request_type != 'standard_increase'"
-                        role="alert"
-                    >
-                        <strong>ℹ Standard Limit Increase:</strong>
+                    <div class="alert alert-info" role="alert"
+                         invisible="request_type != 'standard_increase'">
+                        <strong>ℹ Standard Increase:</strong>
                         No active breach detected on any requested bucket.
                     </div>
 
-                    <!-- ── Reject Mode Banner (context flag from partner action) ── -->
-                    <div
-                        class="alert alert-warning"
-                        invisible="not context.get('clm_reject_mode')"
-                        role="alert"
-                    >
-                        <strong>Rejection Mode:</strong>
-                        Enter your rejection reason in the Finance Manager Comment field below,
-                        then click <b>✗ Reject</b>.
-                    </div>
-
-                    <!-- ── Request Details ── -->
+                    <!-- Request details -->
                     <group>
                         <group string="Request Details">
                             <field name="partner_id"   readonly="state != 'draft'"/>
@@ -117,14 +105,16 @@
                         </group>
                         <group string="Audit Trail" invisible="state == 'draft'">
                             <field name="initiated_by"  readonly="1"/>
-                            <field name="reviewed_by"   readonly="1"
-                                   invisible="state in ('draft','pending_fm')"/>
-                            <field name="reviewed_date" readonly="1"
-                                   invisible="state in ('draft','pending_fm')"/>
+                            <field name="submitted_date" readonly="1"
+                                   invisible="not submitted_date"/>
+                            <field name="reviewed_by"    readonly="1"
+                                   invisible="state in ('draft', 'pending_fm')"/>
+                            <field name="reviewed_date"  readonly="1"
+                                   invisible="state in ('draft', 'pending_fm')"/>
                         </group>
                     </group>
 
-                    <!-- ── Justification ── -->
+                    <!-- Justification -->
                     <group string="Justification">
                         <field
                             name="justification"
@@ -134,34 +124,27 @@
                         />
                     </group>
 
-                    <!-- ── Finance Manager Comment ── -->
-                    <!--
-                        Visible when:
-                          - state is pending_fm (Finance needs to enter before reject)
-                          - state is approved / rejected (audit trail)
-                        Hidden in draft state.
-                    -->
-                    <group
-                        string="Finance Manager Comment"
-                        invisible="state == 'draft'"
-                    >
+                    <!-- FM Comment — visible from pending_fm onwards -->
+                    <group string="Finance Manager Comment"
+                           invisible="state == 'draft'">
                         <field
                             name="fm_comment"
                             nolabel="1"
-                            readonly="state not in ('pending_fm',)"
+                            readonly="state != 'pending_fm'"
                             placeholder="Required for rejection. Optional for approval."
                         />
                     </group>
 
-                    <!-- ── Notebook: Bucket Lines ── -->
+                    <!-- Bucket Lines -->
                     <notebook>
                         <page string="Bucket Limit Lines" name="limit_lines">
 
-                            <div class="alert alert-info mb-3" role="alert"
+                            <div class="alert alert-info mb-2" role="alert"
                                  invisible="state != 'draft'">
-                                <strong>ℹ All 5 buckets are auto-filled when you select a customer.</strong>
-                                Only edit the <b>Proposed Limit</b> for buckets you want to change.
-                                Buckets where Proposed = Current have no effect on approval.
+                                <strong>ℹ</strong>
+                                All 5 buckets are auto-filled when you select a customer.
+                                Edit only the <b>Proposed Limit</b> for buckets you want to change.
+                                Buckets where Proposed = Current are skipped at approval.
                             </div>
 
                             <field
@@ -173,19 +156,23 @@
                                     create="0"
                                     delete="0"
                                 >
+                                    <!--
+                                        bucket is readonly="1" in the view.
+                                        DO NOT remove this — it must match the model-level
+                                        constraint that bucket is not user-editable.
+                                        The create() override sets bucket server-side.
+                                    -->
                                     <field name="bucket"           readonly="1"/>
-                                    <field name="current_limit"    readonly="1" string="Current Limit"/>
+                                    <field name="current_limit"    readonly="1"/>
                                     <field
                                         name="current_exposure"
                                         readonly="1"
-                                        string="Current Exposure"
                                         decoration-danger="current_exposure > current_limit and current_limit > 0"
                                         decoration-muted="current_limit == 0"
                                     />
                                     <field
                                         name="proposed_limit"
-                                        string="Proposed Limit"
-                                        decoration-warning="proposed_limit != current_limit"
+                                        
                                     />
                                     <field
                                         name="request_type"
@@ -193,14 +180,12 @@
                                         readonly="1"
                                         decoration-danger="request_type == 'freeze_resolution'"
                                         decoration-info="request_type == 'standard_increase'"
-                                        string="Type"
                                     />
                                     <field
                                         name="previous_limit"
                                         readonly="1"
                                         optional="show"
                                         column_invisible="parent.state not in ('approved',)"
-                                        string="Previous Limit"
                                     />
                                 </list>
                             </field>
@@ -209,7 +194,6 @@
                     </notebook>
 
                 </sheet>
-
                 <chatter/>
             </form>
         </field>
@@ -217,7 +201,7 @@
 
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         LIST VIEW — Used by smart button and action_view_limit_requests
+         LIST VIEW
     ══════════════════════════════════════════════════════════════════════ -->
     <record id="view_clm_limit_change_request_list" model="ir.ui.view">
         <field name="name">clm.limit.change.request.list</field>
@@ -225,9 +209,10 @@
         <field name="arch" type="xml">
             <list
                 string="Limit Change Requests"
-                decoration-danger="state == 'rejected'"
+                decoration-danger="state in ('rejected', 'cancelled')"
                 decoration-success="state == 'approved'"
                 decoration-warning="state == 'pending_fm'"
+                decoration-muted="state == 'cancelled'"
             >
                 <field name="name"/>
                 <field name="partner_id"/>
@@ -238,10 +223,11 @@
                     decoration-info="request_type == 'standard_increase'"
                 />
                 <field name="initiated_by"/>
-                <field name="state"         widget="badge"/>
-                <field name="reviewed_by"   optional="show"/>
-                <field name="reviewed_date" optional="show"/>
-                <field name="currency_id"   invisible="1"/>
+                <field name="submitted_date" optional="show"/>
+                <field name="state"          widget="badge"/>
+                <field name="reviewed_by"    optional="show"/>
+                <field name="reviewed_date"  optional="show"/>
+                <field name="currency_id"    invisible="1"/>
             </list>
         </field>
     </record>
@@ -255,31 +241,37 @@
         <field name="model">clm.limit.change.request</field>
         <field name="arch" type="xml">
             <search string="Limit Change Requests">
-
                 <field name="name"       string="Reference"/>
                 <field name="partner_id" string="Customer"/>
-
-                <filter string="My Requests"    name="my_requests"    domain="[('initiated_by', '=', uid)]"/>
+                <filter string="My Requests" name="my"
+                        domain="[('initiated_by', '=', uid)]"/>
                 <separator/>
-                <filter string="Draft"          name="draft"          domain="[('state', '=', 'draft')]"/>
-                <filter string="Pending FM"     name="pending_fm"     domain="[('state', '=', 'pending_fm')]"/>
-                <filter string="Approved"       name="approved"       domain="[('state', '=', 'approved')]"/>
-                <filter string="Rejected"       name="rejected"       domain="[('state', '=', 'rejected')]"/>
+                <filter string="Draft"     name="draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter string="Pending FM" name="pending"
+                        domain="[('state', '=', 'pending_fm')]"/>
+                <filter string="Approved"  name="approved"
+                        domain="[('state', '=', 'approved')]"/>
+                <filter string="Rejected"  name="rejected"
+                        domain="[('state', '=', 'rejected')]"/>
                 <separator/>
-                <filter string="Freeze Resolution" name="freeze_resolution" domain="[('request_type', '=', 'freeze_resolution')]"/>
+                <filter string="Freeze Resolution" name="freeze"
+                        domain="[('request_type', '=', 'freeze_resolution')]"/>
                 <separator/>
-                <filter string="Customer"       name="group_partner"  context="{'group_by': 'partner_id'}"/>
-                <filter string="Status"         name="group_state"    context="{'group_by': 'state'}"/>
-
+                <filter string="Customer" name="grp_partner"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter string="Status"   name="grp_state"
+                        context="{'group_by': 'state'}"/>
             </search>
         </field>
     </record>
 
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         WINDOW ACTION — Used by smart button + action_view_limit_requests()
-         No menuitem — access is via partner form only.
+         WINDOW ACTIONS
     ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- General action — used by smart button and partner form -->
     <record id="action_clm_limit_change_request" model="ir.actions.act_window">
         <field name="name">Limit Change Requests</field>
         <field name="res_model">clm.limit.change.request</field>
@@ -287,9 +279,7 @@
         <field name="search_view_id" ref="view_clm_limit_change_request_search"/>
         <field name="context">{}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No limit change requests found.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No limit change requests found.</p>
             <p>
                 Limit change requests are submitted from the customer's
                 <b>Credit Management</b> tab by the CCM role.
@@ -297,21 +287,51 @@
         </field>
     </record>
 
-    <!--
-        ══════════════════════════════════════════════════════════════════════
-        MENU ITEMS — REMOVED in v0.6.0.
+    <!-- Finance-specific action — pre-filtered to pending_fm only -->
+    <record id="action_clm_pending_requests_finance" model="ir.actions.act_window">
+        <field name="name">Pending FM Approvals</field>
+        <field name="res_model">clm.limit.change.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'pending_fm')]</field>
+        <field name="search_view_id" ref="view_clm_limit_change_request_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No pending requests awaiting approval.</p>
+        </field>
+    </record>
 
-        Rationale:
-          All limit management is now driven from the partner Credit Management
-          tab. There is no need for a standalone CLM navigation menu.
-          Finance users access pending requests via:
-            1. The partner Credit Management tab (approve/reject buttons)
-            2. The partner smart button (full request history)
 
-        If a standalone Finance overview is needed in future, re-add:
-            <menuitem id="menu_clm_credit_management" .../>
-            <menuitem id="menu_clm_limit_requests"    .../>
-        ══════════════════════════════════════════════════════════════════════
-    -->
+    <!-- ══════════════════════════════════════════════════════════════════════
+         MENU — Finance can access all pending requests directly
+         (removed in v0.6.0, restored in v1.0 for Finance overview)
+    ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Root menu (visible to Finance and CCM) -->
+    <menuitem
+        id="menu_clm_root"
+        name="Credit Limits"
+        sequence="55"
+        groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
+    />
+
+    <!-- Finance: overview of all pending approvals -->
+    <menuitem
+        id="menu_clm_pending_approvals"
+        name="Pending FM Approvals"
+        parent="menu_clm_root"
+        action="action_clm_pending_requests_finance"
+        sequence="10"
+        groups="zencore_clms.group_zencore_clm_finance"
+    />
+
+    <!-- Finance + CCM: full request history -->
+    <menuitem
+        id="menu_clm_all_requests"
+        name="All Limit Requests"
+        parent="menu_clm_root"
+        action="action_clm_limit_change_request"
+        sequence="20"
+        groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
+    />
 
 </odoo>

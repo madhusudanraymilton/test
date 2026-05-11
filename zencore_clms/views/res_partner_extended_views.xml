@@ -2,62 +2,105 @@
 <odoo>
 
     <!--
-        CLM Credit Management — res.partner form extensions.
+        CLM — res.partner form extensions (v1.0)
 
-        v0.6.0 design:
-        ───────────────
-        1. Smart button (header): shows count of ALL limit requests → opens list
-        2. Credit Management tab:
-             Section A : Freeze status banner
-             Section B : Individual limits + balances table (readonly)
-             Section C : Limit Change Request panel (group-wise, state-driven)
-                         ├── No active request  → CCM sees "Request Limit Change"
-                         ├── Active draft       → CCM sees "Submit for FM" + View
-                         ├── Pending FM         → Finance sees Approve / Reject
-                         └── Info banner for Sales Manager (read-only)
-             Section D : Parent (group head) aggregated view
+        Smart button bar (4 buttons):
+          • Total Requests   → all history
+          • Pending          → pending_fm only (most important for Finance)
+          • Approved         → approved history
+          • Rejected         → rejected history
 
-        Groups:
-        ────────
-        CCM          → can create and submit requests
-        Finance      → can approve or reject pending_fm requests
-        Sales Manager→ read-only, no action buttons
+        Credit Management tab:
+          A. Freeze banners
+          B. Individual limits + exposure (readonly)
+          C. Active requests panel (embedded list — draft + pending_fm)
+             CCM: "New Request" button
+             Finance: click any row → form opens as dialog → Approve / Reject
+          D. Group aggregate view (parent partners only)
     -->
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         1. SMART BUTTON — Limit Request Counter
-         Added to the partner form's existing smart button bar.
+         SMART BUTTONS
     ══════════════════════════════════════════════════════════════════════ -->
-    <record id="view_partner_form_clm_smart_button" model="ir.ui.view">
-        <field name="name">res.partner.form.clm.smart_button</field>
+    <record id="view_partner_form_clm_smart_buttons" model="ir.ui.view">
+        <field name="name">res.partner.form.clm.smart_buttons</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
 
-            <!-- Inject the smart button into the existing stat buttons div -->
             <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+
+                <!-- Total requests -->
                 <button
                     name="action_view_limit_requests"
                     type="object"
                     class="oe_stat_button"
                     icon="fa-file-text-o"
-                    invisible="clm_limit_request_count == 0"
-                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance"
+                    invisible="clm_request_total_count == 0"
+                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
                 >
                     <field
-                        name="clm_limit_request_count"
+                        name="clm_request_total_count"
                         widget="statinfo"
-                        string="Limit Requests"
+                        string="All Requests"
                     />
                 </button>
-            </xpath>
 
+                <!-- Pending FM — highlighted for Finance urgency -->
+                <button
+                    name="action_view_pending_requests"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-hourglass-half"
+                    invisible="clm_request_pending_count == 0"
+                    groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
+                >
+                    <field
+                        name="clm_request_pending_count"
+                        widget="statinfo"
+                        string="Pending FM"
+                    />
+                </button>
+
+                <!-- Approved history -->
+                <button
+                    name="action_view_limit_requests"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-check-circle"
+                    invisible="clm_request_approved_count == 0"
+                    groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
+                >
+                    <field
+                        name="clm_request_approved_count"
+                        widget="statinfo"
+                        string="Approved"
+                    />
+                </button>
+
+                <!-- Rejected history -->
+                <button
+                    name="action_view_limit_requests"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-times-circle"
+                    invisible="clm_request_rejected_count == 0"
+                    groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
+                >
+                    <field
+                        name="clm_request_rejected_count"
+                        widget="statinfo"
+                        string="Rejected"
+                    />
+                </button>
+
+            </xpath>
         </field>
     </record>
 
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         2. CREDIT MANAGEMENT TAB — Full tab replacement
+         CREDIT MANAGEMENT TAB
     ══════════════════════════════════════════════════════════════════════ -->
     <record id="view_partner_form_clm" model="ir.ui.view">
         <field name="name">res.partner.form.clm</field>
@@ -66,43 +109,31 @@
         <field name="arch" type="xml">
 
             <xpath expr="//notebook/page[@name='sales_purchases']" position="after">
-
                 <page
                     string="Credit Management"
                     name="clm_credit"
-                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance"
+                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
                 >
 
-                    <!-- ── Hidden utility fields needed by invisible attrs ── -->
-                    <field name="clm_pending_request_id"            invisible="1"/>
-                    <field name="clm_pending_request_state"         invisible="1"/>
-                    <field name="clm_pending_request_ref"           invisible="1"/>
-                    <field name="clm_pending_request_type"          invisible="1"/>
-                    <field name="clm_pending_request_initiated_by"  invisible="1"/>
-                    <field name="clm_limit_request_count"           invisible="1"/>
+                    <!-- Hidden stat fields consumed by smart buttons -->
+                    <field name="clm_request_total_count"    invisible="1"/>
+                    <field name="clm_request_pending_count"  invisible="1"/>
+                    <field name="clm_request_approved_count" invisible="1"/>
+                    <field name="clm_request_rejected_count" invisible="1"/>
 
                     <!-- ════════════════════════════════════════════════════
-                         SECTION A — FREEZE STATUS BANNERS
+                         A — FREEZE STATUS BANNERS
                     ════════════════════════════════════════════════════ -->
 
-                    <!-- INDIVIDUAL FROZEN -->
-                    <div
-                        class="alert alert-danger"
-                        role="alert"
-                        invisible="not clm_is_frozen or child_ids"
-                    >
+                    <div class="alert alert-danger" role="alert"
+                         invisible="not clm_is_frozen or child_ids">
                         <strong>⛔ Credit Frozen:</strong>
                         This customer has exceeded at least one bucket limit.
-                        New orders and deliveries are blocked until the limit is raised
-                        or the exposure is reduced.
+                        New orders and deliveries are blocked until resolved.
                     </div>
 
-                    <!-- GROUP FROZEN -->
-                    <div
-                        class="alert alert-danger"
-                        role="alert"
-                        invisible="not clm_group_is_frozen or not child_ids"
-                    >
+                    <div class="alert alert-danger" role="alert"
+                         invisible="not clm_group_is_frozen or not child_ids">
                         <strong>⛔ Group Credit Frozen:</strong>
                         One or more members of this group have exceeded a bucket limit.
                         All group members are blocked.
@@ -110,18 +141,10 @@
 
 
                     <!-- ════════════════════════════════════════════════════
-                         SECTION B — INDIVIDUAL CREDIT LIMITS TABLE
-                         Shown when: partner is a leaf / standalone (no children)
+                         B — INDIVIDUAL CREDIT LIMITS TABLE
+                         Only for leaf / standalone partners (no children)
                     ════════════════════════════════════════════════════ -->
-                    <group
-                        string="Individual Credit Limits"
-                        invisible="child_ids"
-                    >
-                        <!--
-                            Two-column layout:
-                              Left  : Limits (set via approval workflow, readonly here)
-                              Right : Real-time balances (computed, always readonly)
-                        -->
+                    <group string="Individual Credit Limits" invisible="child_ids">
                         <group string="Limits (Approval Workflow Only)">
                             <field name="clm_proforma_limit" readonly="1"/>
                             <field name="clm_bucket_1_limit" readonly="1"/>
@@ -129,7 +152,7 @@
                             <field name="clm_bucket_3_limit" readonly="1"/>
                             <field name="clm_bucket_4_limit" readonly="1"/>
                         </group>
-                        <group string="Current Exposure Balances (Real-Time)">
+                        <group string="Current Exposure (Real-Time)">
                             <field name="clm_proforma_balance" readonly="1"
                                    decoration-danger="clm_proforma_balance > clm_proforma_limit and clm_proforma_limit > 0"/>
                             <field name="clm_bucket_1_balance" readonly="1"
@@ -143,206 +166,90 @@
                         </group>
                     </group>
 
-                    <!-- Freeze toggle for individual partners -->
                     <group invisible="child_ids">
-                        <field
-                            name="clm_is_frozen"
-                            readonly="1"
-                            widget="boolean_toggle"
-                            string="Credit Frozen"
-                        />
+                        <field name="clm_is_frozen" readonly="1"
+                               widget="boolean_toggle" string="Credit Frozen"/>
                     </group>
 
                     <separator invisible="child_ids"/>
 
 
                     <!-- ════════════════════════════════════════════════════
-                         SECTION C — LIMIT CHANGE REQUEST PANEL
-                         Shown only for individual / leaf partners (no children).
-                         Group-wise and state-driven button visibility.
+                         C — ACTIVE LIMIT REQUESTS PANEL
+                         Shown only for leaf / standalone partners.
+                         clm_active_request_ids = domain-filtered O2M
+                         showing only draft + pending_fm records.
                     ════════════════════════════════════════════════════ -->
-                    <group
-                        string="Limit Change Request"
-                        invisible="child_ids"
-                    >
-
-                        <!-- ── C1: No Active Request ── -->
+                    <group string="Active Limit Change Requests" invisible="child_ids">
 
                         <!--
-                            CCM: sees "Request Limit Change" button.
-                            Finance: sees a muted info message — no action needed.
-                            Sales Manager: sees nothing (no role in the request process).
+                            CCM: can create a new request from this button.
+                            Finance / Sales Manager: no create button — they review only.
                         -->
-                        <div
-                            class="o_field_widget"
-                            invisible="clm_pending_request_state != ''"
-                        >
-                            <!-- CCM: create / open new request -->
+                        <div class="mb-2"
+                             groups="zencore_clms.group_zencore_clm_ccm">
                             <button
                                 name="action_clm_new_limit_request"
                                 type="object"
-                                string="➕ Request Limit Change"
+                                string="➕ New Limit Change Request"
                                 class="btn btn-primary"
-                                groups="zencore_clms.group_zencore_clm_ccm"
                             />
-
-                            <!-- Finance: no pending request, nothing to do -->
-                            <span
-                                class="text-muted"
-                                groups="zencore_clms.group_zencore_clm_finance"
-                            >
-                                No pending limit change request for this customer.
-                            </span>
                         </div>
 
-
-                        <!-- ── C2: Active DRAFT Request (submitted by CCM, not yet with FM) ── -->
-                        <div
-                            invisible="clm_pending_request_state != 'draft'"
-                        >
-                            <div class="alert alert-warning mb-2" role="alert">
-                                <strong>📝 Draft Limit Request:</strong>
-                                <field
-                                    name="clm_pending_request_ref"
-                                    readonly="1"
-                                    nolabel="1"
-                                    class="fw-bold"
-                                />
-                                — Not yet submitted to Finance Manager.
-                                <span
-                                    groups="zencore_clms.group_zencore_clm_ccm"
-                                >
-                                    Open the request to review and submit.
-                                </span>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <!-- CCM: open draft to edit and submit -->
-                                <button
-                                    name="action_clm_new_limit_request"
-                                    type="object"
-                                    string="📝 Open Draft Request"
-                                    class="btn btn-secondary"
-                                    groups="zencore_clms.group_zencore_clm_ccm"
-                                />
-
-                                <!-- Finance / Sales Manager: view only -->
-                                <button
-                                    name="action_clm_view_pending_request"
-                                    type="object"
-                                    string="🔍 View Request"
-                                    class="btn btn-secondary"
-                                    groups="zencore_clms.group_zencore_clm_finance"
-                                />
-                            </div>
+                        <!--
+                            Finance hint — no active requests:
+                            Shows only when no active (draft/pending) requests exist
+                            and the user is Finance (so they understand why the list is empty).
+                        -->
+                        <div class="text-muted small mb-2"
+                             invisible="clm_request_pending_count != 0 or clm_request_total_count == 0"
+                             groups="zencore_clms.group_zencore_clm_finance">
+                            No pending limit change requests for this customer.
                         </div>
 
+                        <!--
+                            Embedded active requests list.
+                            clm_active_request_ids is filtered by domain at field
+                            definition level: state in ('draft', 'pending_fm').
 
-                        <!-- ── C3: Active PENDING_FM Request (awaiting Finance approval) ── -->
-                        <div
-                            invisible="clm_pending_request_state != 'pending_fm'"
+                            readonly="1" → prevents inline editing.
+                            Clicking a row opens the form as a dialog where FM can
+                            see the full detail and the Approve / Reject buttons.
+
+                            Finance tip: Click any row below to open and approve/reject.
+                        -->
+                        <field
+                            name="clm_active_request_ids"
+                            readonly="1"
+                            nolabel="1"
+                            invisible="clm_request_total_count == 0"
                         >
-                            <!-- Summary banner -->
-                            <div class="alert alert-info mb-2" role="alert">
-                                <strong>⏳ Pending FM Approval:</strong>
-                                Request
-                                <field
-                                    name="clm_pending_request_ref"
-                                    readonly="1"
-                                    nolabel="1"
-                                    class="fw-bold"
-                                />
-                                submitted by
-                                <field
-                                    name="clm_pending_request_initiated_by"
-                                    readonly="1"
-                                    nolabel="1"
-                                />
-                                — Type:
-                                <field
-                                    name="clm_pending_request_type"
-                                    readonly="1"
-                                    nolabel="1"
-                                />
-                            </div>
-
-                            <!-- ── Finance: Approve / Reject buttons ── -->
-                            <div
-                                class="d-flex gap-2 mb-2"
-                                groups="zencore_clms.group_zencore_clm_finance"
+                            <list
+                                string="Active Requests"
+                                decoration-warning="state == 'draft'"
+                                decoration-info="state == 'pending_fm'"
                             >
-                                <!--
-                                    APPROVE: direct action with confirmation dialog.
-                                    No comment required for approval.
-                                    action_clm_approve_limit_request() proxies to
-                                    clm.limit.change.request.action_approve().
-                                -->
-                                <button
-                                    name="action_clm_approve_limit_request"
-                                    type="object"
-                                    string="✔ Approve"
-                                    class="btn btn-success"
-                                    confirm="Approve this limit change request? All proposed bucket limits will be applied to the customer immediately."
+                                <field name="name"         string="Reference"/>
+                                <field
+                                    name="request_type"
+                                    widget="badge"
+                                    decoration-danger="request_type == 'freeze_resolution'"
+                                    decoration-info="request_type == 'standard_increase'"
                                 />
+                                <field name="state"        widget="badge"/>
+                                <field name="initiated_by" string="Submitted By"/>
+                                <field name="submitted_date" optional="show"/>
+                                <field name="currency_id"  invisible="1"/>
+                            </list>
+                        </field>
 
-                                <!--
-                                    REJECT: opens the request form in a dialog.
-                                    FM comment is REQUIRED for rejection — the dialog
-                                    lets Finance enter the comment and click Reject.
-                                    This avoids duplicating the validation here.
-                                -->
-                                <button
-                                    name="action_clm_reject_limit_request"
-                                    type="object"
-                                    string="✗ Reject"
-                                    class="btn btn-danger"
-                                />
-
-                                <!-- View full details before deciding -->
-                                <button
-                                    name="action_clm_view_pending_request"
-                                    type="object"
-                                    string="🔍 View Details"
-                                    class="btn btn-secondary"
-                                />
-                            </div>
-
-                            <!-- ── CCM: view status only ── -->
-                            <div
-                                class="d-flex gap-2 mb-2"
-                                groups="zencore_clms.group_zencore_clm_ccm"
-                            >
-                                <button
-                                    name="action_clm_view_pending_request"
-                                    type="object"
-                                    string="🔍 View Request"
-                                    class="btn btn-secondary"
-                                />
-                            </div>
-
-                            <!-- ── Sales Manager: read-only ── -->
-                            <!-- <div
-                                class="d-flex gap-2 mb-2"
-                                groups="zencore_clms.group_zencore_clm_sales_manager"
-                            >
-                                <button
-                                    name="action_clm_view_pending_request"
-                                    type="object"
-                                    string="🔍 View Request"
-                                    class="btn btn-secondary"
-                                />
-                            </div> -->
-                        </div>
-
-                        <!-- ── C4: History link (always visible when requests exist) ── -->
-                        <div
-                            class="mt-2"
-                            invisible="clm_limit_request_count == 0"
-                        >
+                        <!-- History link — all requests including approved/rejected -->
+                        <div class="mt-2"
+                             invisible="clm_request_total_count == 0">
                             <button
                                 name="action_view_limit_requests"
                                 type="object"
-                                string="📋 View All Limit Requests"
+                                string="📋 View Full Request History"
                                 class="btn btn-link p-0"
                             />
                         </div>
@@ -351,41 +258,37 @@
 
 
                     <!-- ════════════════════════════════════════════════════
-                         SECTION D — GROUP HEAD AGGREGATED VIEW
-                         Shown when: partner HAS children
+                         D — GROUP AGGREGATED VIEW
+                         Only for group head partners (those with children)
                     ════════════════════════════════════════════════════ -->
-                    <group
-                        string="Group Aggregated Credit (Sum of All Children)"
-                        invisible="not child_ids"
-                    >
+                    <group string="Group Aggregated Credit (Sum of All Children)"
+                           invisible="not child_ids">
                         <group string="Aggregated Limits">
-                            <field name="clm_agg_proforma_limit"    readonly="1"/>
-                            <field name="clm_agg_bucket_1_limit"    readonly="1"/>
-                            <field name="clm_agg_bucket_2_limit"    readonly="1"/>
-                            <field name="clm_agg_bucket_3_limit"    readonly="1"/>
-                            <field name="clm_agg_bucket_4_limit"    readonly="1"/>
+                            <field name="clm_agg_proforma_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_1_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_2_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_3_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_4_limit"   readonly="1"/>
                         </group>
                         <group string="Aggregated Balances">
-                            <field name="clm_agg_proforma_balance"  readonly="1"/>
-                            <field name="clm_agg_bucket_1_balance"  readonly="1"/>
-                            <field name="clm_agg_bucket_2_balance"  readonly="1"/>
-                            <field name="clm_agg_bucket_3_balance"  readonly="1"/>
-                            <field name="clm_agg_bucket_4_balance"  readonly="1"/>
+                            <field name="clm_agg_proforma_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_1_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_2_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_3_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_4_balance" readonly="1"/>
                         </group>
                     </group>
 
                     <group invisible="not child_ids">
-                        <field
-                            name="clm_group_is_frozen"
-                            readonly="1"
-                            widget="boolean_toggle"
-                            string="Group Frozen (any child has breached limit)"
-                        />
+                        <field name="clm_group_is_frozen"
+                               readonly="1"
+                               widget="boolean_toggle"
+                               string="Group Frozen (any child breached)"/>
                     </group>
 
                 </page>
-
             </xpath>
+
         </field>
     </record>
 
