@@ -4,11 +4,6 @@ access_clm_lcr_ccm,clm lcr ccm,model_clm_limit_change_request,zencore_clms.group
 access_clm_lcr_finance,clm lcr finance,model_clm_limit_change_request,zencore_clms.group_zencore_clm_finance,1,1,0,0
 access_clm_lcr_sales_manager,clm lcr sales manager,model_clm_limit_change_request,zencore_clms.group_zencore_clm_sales_manager,1,0,0,0
 
-
-access_clm_lcr_line_ccm,clm lcr line ccm,model_clm_limit_change_request_line,zencore_clms.group_zencore_clm_ccm,1,1,1,0
-access_clm_lcr_line_finance,clm lcr line finance,model_clm_limit_change_request_line,zencore_clms.group_zencore_clm_finance,1,1,0,0
-access_clm_lcr_line_sales_manager,clm lcr line sales manager,model_clm_limit_change_request_line,zencore_clms.group_zencore_clm_sales_manager,1,0,0,0
-
 access_sale_order_salesperson,sale order salesperson,sale.model_sale_order,zencore_clms.group_zencore_clm_salesperson,1,1,1,0
 access_sale_order_sales_manager,sale order sales manager,sale.model_sale_order,zencore_clms.group_zencore_clm_sales_manager,1,1,0,0
 access_sale_order_ccm,sale order ccm,sale.model_sale_order,zencore_clms.group_zencore_clm_ccm,1,1,0,0

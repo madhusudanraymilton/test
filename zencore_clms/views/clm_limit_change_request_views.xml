@@ -102,6 +102,17 @@
                             <field name="partner_id"   readonly="state != 'draft'"/>
                             <field name="request_type" readonly="1"/>
                             <field name="currency_id"  invisible="1"/>
+                            <field name="bucket"/>
+                            <field name="current_limit"    readonly="1"/>
+                            <field
+                                name="current_exposure"
+                                readonly="1"
+                                decoration-danger="current_exposure > current_limit and current_limit > 0"
+                                decoration-muted="current_limit == 0"
+                            />
+                            <field
+                                name="proposed_limit"
+                            />
                         </group>
                         <group string="Audit Trail" invisible="state == 'draft'">
                             <field name="initiated_by"  readonly="1"/>
@@ -121,6 +132,7 @@
                             nolabel="1"
                             readonly="state != 'draft'"
                             placeholder="Provide business justification for this limit change request..."
+                            width="100%"
                         />
                     </group>
 
@@ -134,65 +146,6 @@
                             placeholder="Required for rejection. Optional for approval."
                         />
                     </group>
-
-                    <!-- Bucket Lines -->
-                    <notebook>
-                        <page string="Bucket Limit Lines" name="limit_lines">
-
-                            <div class="alert alert-info mb-2" role="alert"
-                                 invisible="state != 'draft'">
-                                <strong>ℹ</strong>
-                                All 5 buckets are auto-filled when you select a customer.
-                                Edit only the <b>Proposed Limit</b> for buckets you want to change.
-                                Buckets where Proposed = Current are skipped at approval.
-                            </div>
-
-                            <field
-                                name="line_ids"
-                                readonly="state != 'draft'"
-                            >
-                                <list
-                                    editable="bottom"
-                                    create="0"
-                                    delete="0"
-                                >
-                                    <!--
-                                        bucket is readonly="1" in the view.
-                                        DO NOT remove this — it must match the model-level
-                                        constraint that bucket is not user-editable.
-                                        The create() override sets bucket server-side.
-                                    -->
-                                    <field name="bucket"           readonly="1"/>
-                                    <field name="current_limit"    readonly="1"/>
-                                    <field
-                                        name="current_exposure"
-                                        readonly="1"
-                                        decoration-danger="current_exposure > current_limit and current_limit > 0"
-                                        decoration-muted="current_limit == 0"
-                                    />
-                                    <field
-                                        name="proposed_limit"
-                                        
-                                    />
-                                    <field
-                                        name="request_type"
-                                        widget="badge"
-                                        readonly="1"
-                                        decoration-danger="request_type == 'freeze_resolution'"
-                                        decoration-info="request_type == 'standard_increase'"
-                                    />
-                                    <field
-                                        name="previous_limit"
-                                        readonly="1"
-                                        optional="show"
-                                        column_invisible="parent.state not in ('approved',)"
-                                    />
-                                </list>
-                            </field>
-
-                        </page>
-                    </notebook>
-
                 </sheet>
                 <chatter/>
             </form>
@@ -333,136 +286,5 @@
         sequence="20"
         groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
     />
-
-<!--
-    Add this block to the BOTTOM of clm_limit_change_request_views.xml
-    (just before the closing </odoo> tag).
-
-    Alternatively, register this as a separate file in __manifest__.py
-    under 'data' (after the existing views file):
-        'views/clm_bulk_actions_views.xml',
--->
-
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         BULK REJECT WIZARD — Form View
-    ══════════════════════════════════════════════════════════════════════ -->
-    <record id="view_clm_bulk_reject_wizard_form" model="ir.ui.view">
-        <field name="name">clm.bulk.reject.wizard.form</field>
-        <field name="model">clm.bulk.reject.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Bulk Reject — Limit Change Requests">
-
-                <sheet>
-
-                    <!-- Summary banner — shows counts so Finance knows what they are rejecting -->
-                    <div class="alert alert-warning" role="alert">
-                        <strong>⚠ Bulk Rejection</strong><br/>
-                        You are about to reject
-                        <strong><field name="pending_count" readonly="1" nolabel="1"/></strong>
-                        pending request(s).
-
-                        <!-- Warn if some selected records are not pending -->
-                        <span invisible="skipped_count == 0">
-                            <br/>
-                            <strong>
-                                <field name="skipped_count" readonly="1" nolabel="1"/>
-                                record(s)
-                            </strong>
-                            will be <em>skipped</em> (not in Pending FM state).
-                        </span>
-                    </div>
-
-                    <!-- Requests being rejected (readonly list for audit clarity) -->
-                    <group string="Requests to Reject">
-                        <field
-                            name="request_ids"
-                            readonly="1"
-                            nolabel="1"
-                        >
-                            <list string="Selected Requests">
-                                <field name="name"         string="Reference"/>
-                                <field name="partner_id"   string="Customer"/>
-                                <field name="request_type" widget="badge"
-                                       decoration-danger="request_type == 'freeze_resolution'"
-                                       decoration-info="request_type == 'standard_increase'"/>
-                                <field name="initiated_by" string="Submitted By"/>
-                                <field name="state"        widget="badge"/>
-                                <field name="currency_id"  invisible="1"/>
-                            </list>
-                        </field>
-                    </group>
-
-                    <!-- Required rejection reason — shared across all records -->
-                    <group string="Rejection Reason (applied to all selected requests)">
-                        <field
-                            name="fm_comment"
-                            nolabel="1"
-                            placeholder="Enter the rejection reason. This will be recorded on all selected requests..."
-                            required="1"
-                        />
-                    </group>
-
-                </sheet>
-
-                <footer>
-                    <button
-                        name="action_confirm_reject"
-                        type="object"
-                        string="✗ Confirm Rejection"
-                        class="btn-danger"
-                        data-hotkey="q"
-                        confirm="This will permanently reject all selected pending requests. Continue?"
-                    />
-                    <button
-                        string="Cancel"
-                        class="btn-secondary"
-                        special="cancel"
-                        data-hotkey="z"
-                    />
-                </footer>
-
-            </form>
-        </field>
-    </record>
-
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         SERVER ACTIONS — Bound to list view (appear in Action dropdown)
-         Only Finance users see these (groups restriction on the action).
-
-         Odoo 19 note:
-           binding_model_id  = which model's list view shows this action
-           binding_view_types = 'list' → appears ONLY in list view Action menu
-           groups_ext_id     = restricts visibility to the specified group
-    ══════════════════════════════════════════════════════════════════════ -->
-
-    <!-- Bulk Approve -->
-    <record id="action_server_clm_bulk_approve" model="ir.actions.server">
-        <field name="name">✔ Approve Selected</field>
-        <field name="model_id" ref="model_clm_limit_change_request"/>
-        <field name="binding_model_id" ref="model_clm_limit_change_request"/>
-        <field name="binding_view_types">list</field>
-        <field name="groups_ext_id">zencore_clms.group_zencore_clm_finance</field>
-        <field name="state">code</field>
-        <field name="code">
-if records:
-    action = records.action_bulk_approve()
-        </field>
-    </record>
-
-    <!-- Bulk Reject (opens wizard) -->
-    <record id="action_server_clm_bulk_reject" model="ir.actions.server">
-        <field name="name">✗ Reject Selected</field>
-        <field name="model_id" ref="model_clm_limit_change_request"/>
-        <field name="binding_model_id" ref="model_clm_limit_change_request"/>
-        <field name="binding_view_types">list</field>
-        <field name="groups_ext_id">zencore_clms.group_zencore_clm_finance</field>
-        <field name="state">code</field>
-        <field name="code">
-if records:
-    action = records.action_open_bulk_reject_wizard()
-        </field>
-    </record>
 
 </odoo>
