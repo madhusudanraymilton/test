@@ -563,6 +563,31 @@ class AccountMoveExtended(models.Model):
                 sale_orders._clm_move_to_bucket2()
 
         return result
+    
+    def action_register_payment(self):
+        """
+        SoD: Only Finance can register payments.
+        Allowed even when customer is frozen (SRS §6.2).
+        """
+        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+            raise AccessError(
+                "Only Finance can register payments for invoices."
+            )
+        for move in self.filtered(
+            lambda m: m.move_type == 'out_invoice' and m.state == 'posted'
+        ):
+            sale_orders = (
+                move.invoice_line_ids
+                .mapped('sale_line_ids')
+                .mapped('order_id')
+            )
+            if sale_orders.clm_state == 'bucket4':
+                raise UserError(
+                    "Payment registration blocked — invoice is in Bucket 4 stage.\n\n"
+                    "Please move the order out of Bucket 4 before registering payment."
+                )
+                
+        return super().action_register_payment()
 
 
 class AccountPaymentExtended(models.Model):

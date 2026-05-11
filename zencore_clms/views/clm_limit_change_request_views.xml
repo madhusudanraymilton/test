@@ -259,32 +259,32 @@
          (removed in v0.6.0, restored in v1.0 for Finance overview)
     ══════════════════════════════════════════════════════════════════════ -->
 
-    <!-- Root menu (visible to Finance and CCM) -->
+    <!-- Root menu (visible to Finance and CCM)
     <menuitem
         id="menu_clm_root"
         name="Credit Limits"
         sequence="55"
         groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
-    />
+    /> -->
 
     <!-- Finance: overview of all pending approvals -->
-    <menuitem
+    <!-- <menuitem
         id="menu_clm_pending_approvals"
         name="Pending FM Approvals"
         parent="menu_clm_root"
         action="action_clm_pending_requests_finance"
         sequence="10"
         groups="zencore_clms.group_zencore_clm_finance"
-    />
+    /> -->
 
     <!-- Finance + CCM: full request history -->
-    <menuitem
+    <!-- <menuitem
         id="menu_clm_all_requests"
         name="All Limit Requests"
         parent="menu_clm_root"
         action="action_clm_limit_change_request"
         sequence="20"
         groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
-    />
+    /> -->
 
 </odoo>

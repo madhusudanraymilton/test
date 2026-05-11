@@ -497,52 +497,133 @@ class SaleOrderExtended(models.Model):
     # FREEZE CHECK — Core group-level enforcement
     # ─────────────────────────────────────────────────────────────────────────
 
+    # def _clm_check_group_freeze(self, operation_label):
+    #     """
+    #     Validates the entire customer group for freeze before any blocked operation.
+    #     SRS §7 — group-wide enforcement: if ANY child is frozen, ALL are blocked.
+
+    #     Group resolution:
+    #       child partner → group_head = partner.parent_id
+    #       standalone    → group_head = partner itself
+    #       All children of group_head are checked.
+
+    #     Raises UserError with full breach details (SRS §6.4 / §7.10).
+    #     """
+    #     partner = self.partner_id
+    #     if not partner:
+    #         return
+
+    #     group_head = partner.parent_id if partner.parent_id else partner
+    #     all_members = group_head | group_head.child_ids.filtered(lambda c: c.active)
+
+    #     frozen_members = all_members.filtered(lambda p: p.clm_is_frozen)
+    #     if not frozen_members:
+    #         return
+
+    #     breached = frozen_members[0]
+    #     breach = breached.clm_get_first_breach()
+
+    #     currency = breached.currency_id
+    #     fmt = lambda amt: f"{currency.symbol} {amt:,.2f}"
+
+    #     if not breach:
+    #         raise UserError(
+    #             f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
+    #             f"Group           : {group_head.name}\n"
+    #             f"Frozen Customer : {breached.name}\n\n"
+    #             f"Contact the Credit & Collections Manager to resolve."
+    #         )
+
+    #     raise UserError(
+    #         f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
+    #         f"Group           : {group_head.name}\n"
+    #         f"Frozen Customer : {breached.name}\n"
+    #         f"Bucket          : {breach['bucket']}\n"
+    #         f"Defined Limit   : {fmt(breach['limit'])}\n"
+    #         f"Current Exposure: {fmt(breach['exposure'])}\n"
+    #         f"Excess Amount   : {fmt(breach['excess'])}\n\n"
+    #         f"Resolution: reduce exposure or submit a Limit Increase Request (CCM → FM)."
+    #     )
+
     def _clm_check_group_freeze(self, operation_label):
         """
-        Validates the entire customer group for freeze before any blocked operation.
-        SRS §7 — group-wide enforcement: if ANY child is frozen, ALL are blocked.
+        SRS §3.3 / §3.4 — Blocks the operation if the customer's credit group is frozen.
 
-        Group resolution:
-          child partner → group_head = partner.parent_id
-          standalone    → group_head = partner itself
-          All children of group_head are checked.
+        Uses partner.bucket_freeze_active as the single source of truth.
+        bucket_freeze_active already encodes the full group resolution logic,
+        so this method only needs to read it and format the error message.
 
-        Raises UserError with full breach details (SRS §6.4 / §7.10).
+        Freeze blocks (SRS §3.3):
+        - New PI issuance     (sale.order.create)
+        - SO confirmation     (action_confirm)
+        - Delivery validation (stock_picking.button_validate)
+
+        Freeze NEVER blocks (SRS §3.3):
+        - Invoice posting, customer/bank acceptance, payment registration.
         """
         partner = self.partner_id
         if not partner:
             return
 
+        # Single field read — group resolution is inside bucket_freeze_active
+        if not partner.bucket_freeze_active:
+            return
+
+        # ── Find the member that caused the freeze (for error details) ────────
+        # We need to identify WHICH partner is breached and WHICH bucket.
         group_head = partner.parent_id if partner.parent_id else partner
         all_members = group_head | group_head.child_ids.filtered(lambda c: c.active)
 
-        frozen_members = all_members.filtered(lambda p: p.clm_is_frozen)
-        if not frozen_members:
-            return
+        # Find the first member with a personal breach
+        breached = next(
+            (m for m in all_members if m.clm_is_frozen),
+            None,
+        )
 
-        breached = frozen_members[0]
+        if not breached:
+            # bucket_freeze_active = True but no member found — cache race condition.
+            # Raise a generic message rather than silently allowing the operation.
+            raise UserError(
+                f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
+                f"Group           : {group_head.name}\n"
+                f"Customer        : {partner.name}\n\n"
+                "A credit limit has been exceeded. Contact the Credit & Collections Manager."
+            )
+
         breach = breached.clm_get_first_breach()
-
         currency = breached.currency_id
-        fmt = lambda amt: f"{currency.symbol} {amt:,.2f}"
+        fmt = lambda amt: f"{currency.symbol or ''} {amt:,.2f}".strip()
+
+        # ── Partner context in message ────────────────────────────────────────
+        # If the frozen member is different from the order's partner, name both.
+        if breached.id != partner.id:
+            who = (
+                f"Group           : {group_head.name}\n"
+                f"Order Customer  : {partner.name}\n"
+                f"Frozen Member   : {breached.name} (sibling in group)\n"
+            )
+        else:
+            who = (
+                f"Group           : {group_head.name}\n"
+                f"Customer        : {partner.name}\n"
+            )
 
         if not breach:
             raise UserError(
                 f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
-                f"Group           : {group_head.name}\n"
-                f"Frozen Customer : {breached.name}\n\n"
-                f"Contact the Credit & Collections Manager to resolve."
+                + who +
+                "\nContact the Credit & Collections Manager to resolve the freeze."
             )
 
         raise UserError(
             f"⛔  Credit Freeze — '{operation_label}' Blocked\n\n"
-            f"Group           : {group_head.name}\n"
-            f"Frozen Customer : {breached.name}\n"
+            + who +
             f"Bucket          : {breach['bucket']}\n"
             f"Defined Limit   : {fmt(breach['limit'])}\n"
             f"Current Exposure: {fmt(breach['exposure'])}\n"
             f"Excess Amount   : {fmt(breach['excess'])}\n\n"
-            f"Resolution: reduce exposure or submit a Limit Increase Request (CCM → FM)."
+            "Resolution: reduce exposure in the breached bucket, or submit a\n"
+            "Limit Increase Request via CCM → FM approval workflow."
         )
 
     # ─────────────────────────────────────────────────────────────────────────

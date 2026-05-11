@@ -1,24 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!--
-        CLM — res.partner form extensions (v1.0)
-
-        Smart button bar (4 buttons):
-          • Total Requests   → all history
-          • Pending          → pending_fm only (most important for Finance)
-          • Approved         → approved history
-          • Rejected         → rejected history
-
-        Credit Management tab:
-          A. Freeze banners
-          B. Individual limits + exposure (readonly)
-          C. Active requests panel (embedded list — draft + pending_fm)
-             CCM: "New Request" button
-             Finance: click any row → form opens as dialog → Approve / Reject
-          D. Group aggregate view (parent partners only)
-    -->
-
     <!-- ══════════════════════════════════════════════════════════════════════
          SMART BUTTONS
     ══════════════════════════════════════════════════════════════════════ -->
@@ -30,7 +12,6 @@
 
             <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
 
-                <!-- Total requests -->
                 <button
                     name="action_view_limit_requests"
                     type="object"
@@ -46,7 +27,6 @@
                     />
                 </button>
 
-                <!-- Pending FM — highlighted for Finance urgency -->
                 <button
                     name="action_view_pending_requests"
                     type="object"
@@ -62,7 +42,6 @@
                     />
                 </button>
 
-                <!-- Approved history -->
                 <button
                     name="action_view_limit_requests"
                     type="object"
@@ -78,7 +57,6 @@
                     />
                 </button>
 
-                <!-- Rejected history -->
                 <button
                     name="action_view_limit_requests"
                     type="object"
@@ -101,6 +79,13 @@
 
     <!-- ══════════════════════════════════════════════════════════════════════
          CREDIT MANAGEMENT TAB
+         Supports both child (leaf) partners and parent (group head) partners.
+
+         Layout:
+           A — Freeze banners        (all partners)
+           B — Individual limits     (all partners — own bucket fields)
+           C — Aggregated view       (parent partners only — sum of children)
+           D — Active requests panel (all partners)
     ══════════════════════════════════════════════════════════════════════ -->
     <record id="view_partner_form_clm" model="ir.ui.view">
         <field name="name">res.partner.form.clm</field>
@@ -116,78 +101,195 @@
                 >
 
                     <!-- Hidden stat fields consumed by smart buttons -->
-                    <field name="clm_request_total_count"    invisible="1"/>
-                    <field name="clm_request_pending_count"  invisible="1"/>
-                    <field name="clm_request_approved_count" invisible="1"/>
-                    <field name="clm_request_rejected_count" invisible="1"/>
+                    <field name="clm_request_total_count"     invisible="1"/>
+                    <field name="clm_request_pending_count"   invisible="1"/>
+                    <field name="clm_request_approved_count"  invisible="1"/>
+                    <field name="clm_request_rejected_count"  invisible="1"/>
+                    <field name="bucket_freeze_active"        invisible="1"/>
+                    <field name="clm_group_is_frozen"         invisible="1"/>
+                    <field name="clm_is_frozen"               invisible="1"/>
 
                     <!-- ════════════════════════════════════════════════════
-                         A — FREEZE STATUS BANNERS
+                         A — FREEZE STATUS BANNERS (all partner types)
                     ════════════════════════════════════════════════════ -->
 
+                    <!--
+                        Standalone or child partner: own freeze or group sibling freeze.
+                        Uses bucket_freeze_active (SRS §3.4 canonical field).
+                    -->
                     <div class="alert alert-danger" role="alert"
-                         invisible="not clm_is_frozen or child_ids">
-                        <strong>⛔ Credit Frozen:</strong>
-                        This customer has exceeded at least one bucket limit.
-                        New orders and deliveries are blocked until resolved.
+                         invisible="not bucket_freeze_active or child_ids">
+                        <strong>⛔ Credit Freeze Active:</strong>
+                        This customer or a member of their credit group has exceeded
+                        a bucket limit. New orders, confirmations, and deliveries are
+                        blocked for all group members until resolved.
                     </div>
 
+                    <!--
+                        Group head (parent) partner: any group member breached.
+                        Uses clm_group_is_frozen which now correctly includes
+                        the parent's own breach (fixed in res_partner_extended.py).
+                    -->
                     <div class="alert alert-danger" role="alert"
                          invisible="not clm_group_is_frozen or not child_ids">
-                        <strong>⛔ Group Credit Frozen:</strong>
+                        <strong>⛔ Group Credit Freeze Active:</strong>
                         One or more members of this group have exceeded a bucket limit.
-                        All group members are blocked.
+                        All group members are blocked from new commercial activity.
                     </div>
 
 
                     <!-- ════════════════════════════════════════════════════
-                         B — INDIVIDUAL CREDIT LIMITS TABLE
-                         Only for leaf / standalone partners (no children)
+                         B — INDIVIDUAL CREDIT LIMITS
+                         Shown for ALL partners (leaf AND group head).
+
+                         WHY shown for parent partners:
+                           A parent partner has its OWN clm_bucket_X_limit fields.
+                           These are independent of the aggregated sums in section C.
+                           CCM can raise a limit change request against the parent
+                           directly, and upon FM approval the parent's own bucket
+                           limit fields are updated (same code path as child partners).
+                           Section C shows the additional aggregated child view.
                     ════════════════════════════════════════════════════ -->
-                    <group string="Individual Credit Limits" invisible="child_ids">
-                        <group string="Limits (Approval Workflow Only)">
+                    <group string="Individual Credit Limits">
+
+                        <!--
+                            For parent partners: contextual note explaining the
+                            relationship between own limits and aggregated limits.
+                        -->
+                        <!-- <div class="text-muted small mb-2" invisible="not child_ids">
+                            These are this partner's <strong>own</strong> bucket limits.
+                            The <em>Aggregated View</em> below shows the sum across all
+                            group members. Limit change requests target these own fields.
+                        </div> -->
+
+                        <group string="Limits (Workflow-Controlled — Read Only)">
                             <field name="clm_proforma_limit" readonly="1"/>
                             <field name="clm_bucket_1_limit" readonly="1"/>
                             <field name="clm_bucket_2_limit" readonly="1"/>
                             <field name="clm_bucket_3_limit" readonly="1"/>
                             <field name="clm_bucket_4_limit" readonly="1"/>
                         </group>
+
                         <group string="Current Exposure (Real-Time)">
-                            <field name="clm_proforma_balance" readonly="1"
-                                   decoration-danger="clm_proforma_balance > clm_proforma_limit and clm_proforma_limit > 0"/>
-                            <field name="clm_bucket_1_balance" readonly="1"
-                                   decoration-danger="clm_bucket_1_balance > clm_bucket_1_limit and clm_bucket_1_limit > 0"/>
-                            <field name="clm_bucket_2_balance" readonly="1"
-                                   decoration-danger="clm_bucket_2_balance > clm_bucket_2_limit and clm_bucket_2_limit > 0"/>
-                            <field name="clm_bucket_3_balance" readonly="1"
-                                   decoration-danger="clm_bucket_3_balance > clm_bucket_3_limit and clm_bucket_3_limit > 0"/>
-                            <field name="clm_bucket_4_balance" readonly="1"
-                                   decoration-danger="clm_bucket_4_balance > clm_bucket_4_limit and clm_bucket_4_limit > 0"/>
+                            <field
+                                name="clm_proforma_balance"
+                                readonly="1"
+                                decoration-danger="clm_proforma_balance > clm_proforma_limit
+                                                   and clm_proforma_limit > 0"
+                                decoration-muted="clm_proforma_limit == 0"
+                            />
+                            <field
+                                name="clm_bucket_1_balance"
+                                readonly="1"
+                                decoration-danger="clm_bucket_1_balance > clm_bucket_1_limit
+                                                   and clm_bucket_1_limit > 0"
+                                decoration-muted="clm_bucket_1_limit == 0"
+                            />
+                            <field
+                                name="clm_bucket_2_balance"
+                                readonly="1"
+                                decoration-danger="clm_bucket_2_balance > clm_bucket_2_limit
+                                                   and clm_bucket_2_limit > 0"
+                                decoration-muted="clm_bucket_2_limit == 0"
+                            />
+                            <field
+                                name="clm_bucket_3_balance"
+                                readonly="1"
+                                decoration-danger="clm_bucket_3_balance > clm_bucket_3_limit
+                                                   and clm_bucket_3_limit > 0"
+                                decoration-muted="clm_bucket_3_limit == 0"
+                            />
+                            <field
+                                name="clm_bucket_4_balance"
+                                readonly="1"
+                                decoration-danger="clm_bucket_4_balance > clm_bucket_4_limit
+                                                   and clm_bucket_4_limit > 0"
+                                decoration-muted="clm_bucket_4_limit == 0"
+                            />
                         </group>
                     </group>
 
-                    <group invisible="child_ids">
-                        <field name="clm_is_frozen" readonly="1"
-                               widget="boolean_toggle" string="Credit Frozen"/>
+                    <group>
+                        <field
+                            name="clm_is_frozen"
+                            readonly="1"
+                            widget="boolean_toggle"
+                            string="Own Limit Breached"
+                        />
+                        <field
+                            name="bucket_freeze_active"
+                            readonly="1"
+                            widget="boolean_toggle"
+                            string="Group Freeze Active"
+                        />
                     </group>
 
-                    <separator invisible="child_ids"/>
+                    <separator/>
 
 
                     <!-- ════════════════════════════════════════════════════
-                         C — ACTIVE LIMIT REQUESTS PANEL
-                         Shown only for leaf / standalone partners.
-                         clm_active_request_ids = domain-filtered O2M
-                         showing only draft + pending_fm records.
+                         C — GROUP AGGREGATED VIEW
+                         Only visible for group head partners (those with children).
+                         Shows SUM across all active children — read only.
+                         Cannot be changed by limit requests directly.
+                         Changes flow through by updating individual child limits.
                     ════════════════════════════════════════════════════ -->
-                    <group string="Active Limit Change Requests" invisible="child_ids">
+                    <group
+                        string="Group Aggregated Credit (Sum of All Group Members)"
+                        invisible="not child_ids"
+                    >
+                        <!-- <div class="text-muted small mb-2">
+                            These values are <strong>computed</strong> — sum of all
+                            active group members' individual limits and balances.
+                            To change a member's limit, open that member's record and
+                            submit a Limit Change Request, or submit one here for this
+                            partner's own limits above.
+                        </div> -->
 
-                        <!--
-                            CCM: can create a new request from this button.
-                            Finance / Sales Manager: no create button — they review only.
-                        -->
-                        <div class="mb-2"
-                             groups="zencore_clms.group_zencore_clm_ccm">
+                        <group string="Aggregated Limits">
+                            <field name="clm_agg_proforma_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_1_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_2_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_3_limit"   readonly="1"/>
+                            <field name="clm_agg_bucket_4_limit"   readonly="1"/>
+                        </group>
+
+                        <group string="Aggregated Balances">
+                            <field name="clm_agg_proforma_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_1_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_2_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_3_balance" readonly="1"/>
+                            <field name="clm_agg_bucket_4_balance" readonly="1"/>
+                        </group>
+
+                        <group>
+                            <field
+                                name="clm_group_is_frozen"
+                                readonly="1"
+                                widget="boolean_toggle"
+                                string="Any Group Member Breached"
+                            />
+                        </group>
+                    </group>
+
+                    <separator invisible="not child_ids"/>
+
+
+                    <!-- ════════════════════════════════════════════════════
+                         D — ACTIVE LIMIT CHANGE REQUESTS PANEL
+                         Visible for ALL partners (leaf AND group head).
+
+                         For parent partners:
+                           Requests target this partner's own bucket fields.
+                           Approval writes to clm_bucket_X_limit on THIS record.
+                           The aggregated view (section C) recalculates automatically
+                           if this partner is also a group member counted in its
+                           own parent's aggregation.
+                    ════════════════════════════════════════════════════ -->
+                    <group string="Active Limit Change Requests">
+
+                        <!-- CCM: New request button — available for ALL partner types -->
+                        <div class="mb-2" groups="zencore_clms.group_zencore_clm_ccm">
                             <button
                                 name="action_clm_new_limit_request"
                                 type="object"
@@ -197,26 +299,29 @@
                         </div>
 
                         <!--
-                            Finance hint — no active requests:
-                            Shows only when no active (draft/pending) requests exist
-                            and the user is Finance (so they understand why the list is empty).
+                            Parent-partner contextual hint for CCM.
+                            Clarifies that the request targets this partner's OWN
+                            limits — not the aggregated child limits.
                         -->
-                        <div class="text-muted small mb-2"
-                             invisible="clm_request_pending_count != 0 or clm_request_total_count == 0"
-                             groups="zencore_clms.group_zencore_clm_finance">
+                        <div class="alert alert-info small mb-2" role="alert"
+                             invisible="not child_ids"
+                             groups="zencore_clms.group_zencore_clm_ccm">
+                            <strong>Note:</strong> A limit change request on this record
+                            updates <em>this partner's own</em> bucket limits (shown in
+                            Individual Credit Limits above). To change a child member's
+                            limits, open that child's record instead.
+                        </div>
+
+                        <!-- Finance: no active requests hint -->
+                        <div class="text-muted small mb-2" invisible="clm_request_pending_count != 0 or clm_request_total_count == 0" groups="zencore_clms.group_zencore_clm_finance">
                             No pending limit change requests for this customer.
                         </div>
 
                         <!--
                             Embedded active requests list.
-                            clm_active_request_ids is filtered by domain at field
-                            definition level: state in ('draft', 'pending_fm').
-
-                            readonly="1" → prevents inline editing.
-                            Clicking a row opens the form as a dialog where FM can
-                            see the full detail and the Approve / Reject buttons.
-
-                            Finance tip: Click any row below to open and approve/reject.
+                            domain at field level: state in ('draft', 'pending_fm').
+                            readonly="1" — clicking a row opens the form dialog
+                            where Finance can Approve / Reject.
                         -->
                         <field
                             name="clm_active_request_ids"
@@ -229,23 +334,25 @@
                                 decoration-warning="state == 'draft'"
                                 decoration-info="state == 'pending_fm'"
                             >
-                                <field name="name"         string="Reference"/>
+                                <field name="name"           string="Reference"/>
+                                <field name="bucket"         string="Bucket"/>
                                 <field
                                     name="request_type"
                                     widget="badge"
                                     decoration-danger="request_type == 'freeze_resolution'"
                                     decoration-info="request_type == 'standard_increase'"
                                 />
-                                <field name="state"        widget="badge"/>
-                                <field name="initiated_by" string="Submitted By"/>
-                                <field name="submitted_date" optional="show"/>
-                                <field name="currency_id"  invisible="1"/>
+                                <field name="current_limit"    string="Current Limit"/>
+                                <field name="proposed_limit"   string="Proposed Limit"/>
+                                <field name="state"            widget="badge"/>
+                                <field name="initiated_by"     string="Submitted By"/>
+                                <field name="submitted_date"   optional="show"/>
+                                <field name="currency_id"      invisible="1"/>
                             </list>
                         </field>
 
-                        <!-- History link — all requests including approved/rejected -->
-                        <div class="mt-2"
-                             invisible="clm_request_total_count == 0">
+                        <!-- Full history link -->
+                        <div class="mt-2" invisible="clm_request_total_count == 0">
                             <button
                                 name="action_view_limit_requests"
                                 type="object"
@@ -254,36 +361,6 @@
                             />
                         </div>
 
-                    </group>
-
-
-                    <!-- ════════════════════════════════════════════════════
-                         D — GROUP AGGREGATED VIEW
-                         Only for group head partners (those with children)
-                    ════════════════════════════════════════════════════ -->
-                    <group string="Group Aggregated Credit (Sum of All Children)"
-                           invisible="not child_ids">
-                        <group string="Aggregated Limits">
-                            <field name="clm_agg_proforma_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_1_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_2_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_3_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_4_limit"   readonly="1"/>
-                        </group>
-                        <group string="Aggregated Balances">
-                            <field name="clm_agg_proforma_balance" readonly="1"/>
-                            <field name="clm_agg_bucket_1_balance" readonly="1"/>
-                            <field name="clm_agg_bucket_2_balance" readonly="1"/>
-                            <field name="clm_agg_bucket_3_balance" readonly="1"/>
-                            <field name="clm_agg_bucket_4_balance" readonly="1"/>
-                        </group>
-                    </group>
-
-                    <group invisible="not child_ids">
-                        <field name="clm_group_is_frozen"
-                               readonly="1"
-                               widget="boolean_toggle"
-                               string="Group Frozen (any child breached)"/>
                     </group>
 
                 </page>
