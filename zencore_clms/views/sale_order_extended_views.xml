@@ -52,7 +52,7 @@
             </xpath>
 
             <!-- ── 3. CLM Credit Control tab ── -->
-            <xpath expr="//page[@name='order_lines']" position="before">
+            <xpath expr="//page[@name='order_lines']" position="after">
                 <page string="Credit Control" name="clm_info">
                     <group>
                         <group string="CLM Stage Information">

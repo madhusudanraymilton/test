@@ -938,122 +938,222 @@ class ResPartnerExtended(models.Model):
             'context':   {'default_partner_id': self.id},
         }
 
+    # def action_clm_new_limit_request(self):
+    #     """
+    #     CCM: Opens a new limit change request form for this partner in a dialog.
+
+    #     Behaviour:
+    #       - If an active draft/pending_fm request already exists, opens that
+    #         request instead (prevents duplicates).
+    #       - If no active request, opens a blank new form pre-filled with partner.
+    #       - Always opens as target='new' (dialog) so the user stays on the partner.
+
+    #     SoD: CCM group only. Enforced here AND in clm.limit.change.request.create().
+    #     """
+    #     self.ensure_one()
+    #     if not self.env.user.has_group('zencore_clms.group_zencore_clm_ccm'):
+    #         raise AccessError("Only CCM can submit limit change requests.")
+
+    #     if self.clm_pending_request_id:
+    #         # Open the existing active request — do not create a duplicate
+    #         return {
+    #             'type':      'ir.actions.act_window',
+    #             'res_model': 'clm.limit.change.request',
+    #             'res_id':    self.clm_pending_request_id.id,
+    #             'view_mode': 'form',
+    #             'target':    'new',
+    #         }
+
+    #     return {
+    #         'type':      'ir.actions.act_window',
+    #         'res_model': 'clm.limit.change.request',
+    #         'view_mode': 'form',
+    #         'target':    'new',
+    #         'context': {
+    #             'default_partner_id': self.id,
+    #         },
+    #     }
+
     def action_clm_new_limit_request(self):
         """
-        CCM: Opens a new limit change request form for this partner in a dialog.
+        CCM: Opens a new blank limit change request form for this partner in a dialog.
 
-        Behaviour:
-          - If an active draft/pending_fm request already exists, opens that
-            request instead (prevents duplicates).
-          - If no active request, opens a blank new form pre-filled with partner.
-          - Always opens as target='new' (dialog) so the user stays on the partner.
+        Multi-bucket design:
+        - One active (draft or pending_fm) request per bucket per customer is allowed.
+        - CCM can have up to 5 parallel active requests (proforma, bucket1–4).
+        - Each request is reviewed and approved/rejected independently by Finance.
+        - If CCM attempts a second active request for the SAME bucket,
+            _check_unique_active_per_bucket on the model raises a clear ValidationError.
+        - This button always opens a blank form — it does NOT redirect to an
+            existing request. The model constraint is the guard, not this action.
 
-        SoD: CCM group only. Enforced here AND in clm.limit.change.request.create().
+        SoD: CCM only. Also enforced in clm.limit.change.request.create().
         """
         self.ensure_one()
         if not self.env.user.has_group('zencore_clms.group_zencore_clm_ccm'):
             raise AccessError("Only CCM can submit limit change requests.")
 
-        if self.clm_pending_request_id:
-            # Open the existing active request — do not create a duplicate
-            return {
-                'type':      'ir.actions.act_window',
-                'res_model': 'clm.limit.change.request',
-                'res_id':    self.clm_pending_request_id.id,
-                'view_mode': 'form',
-                'target':    'new',
-            }
-
         return {
-            'type':      'ir.actions.act_window',
+            'type': 'ir.actions.act_window',
             'res_model': 'clm.limit.change.request',
             'view_mode': 'form',
-            'target':    'new',
+            'target': 'new',
             'context': {
                 'default_partner_id': self.id,
             },
         }
 
+    # def action_clm_view_pending_request(self):
+    #     """
+    #     Opens the active pending request in a dialog (read-only for non-CCM).
+    #     Available to all roles that can see the Credit Management tab.
+    #     """
+    #     self.ensure_one()
+    #     if not self.clm_pending_request_id:
+    #         raise UserError("No active limit change request found for this customer.")
+    #     return {
+    #         'type':      'ir.actions.act_window',
+    #         'res_model': 'clm.limit.change.request',
+    #         'res_id':    self.clm_pending_request_id.id,
+    #         'view_mode': 'form',
+    #         'target':    'new',
+    #     }
     def action_clm_view_pending_request(self):
         """
-        Opens the active pending request in a dialog (read-only for non-CCM).
-        Available to all roles that can see the Credit Management tab.
+        Opens ALL active (draft + pending_fm) requests for this partner in a list.
+        Finance clicks individual rows to open, review, approve, or reject each one.
         """
         self.ensure_one()
-        if not self.clm_pending_request_id:
-            raise UserError("No active limit change request found for this customer.")
+        active_ids = self.clm_limit_request_ids.filtered(
+            lambda r: r.state in ('draft', 'pending_fm')
+        ).ids
+        if not active_ids:
+            raise UserError("No active limit change requests found for this customer.")
         return {
-            'type':      'ir.actions.act_window',
+            'type': 'ir.actions.act_window',
+            'name': f'Active Requests — {self.name}',
             'res_model': 'clm.limit.change.request',
-            'res_id':    self.clm_pending_request_id.id,
-            'view_mode': 'form',
-            'target':    'new',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', active_ids)],
+            'context': {'default_partner_id': self.id},
         }
+
+    # def action_clm_approve_limit_request(self):
+    #     """
+    #     Finance: Directly approves the active pending_fm request from the partner form.
+
+    #     Why direct (not dialog):
+    #       Approve has no required input (no comment needed) — a single click
+    #       with a confirm dialog in the view is enough for Finance to approve.
+    #       The chatter note is written by action_approve() on the request model.
+
+    #     SoD: Finance group only. Enforced here AND in clm.limit.change.request.action_approve().
+    #     """
+    #     self.ensure_one()
+    #     if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+    #         raise AccessError("Only Finance can approve limit change requests.")
+
+    #     request = self.clm_pending_request_id
+    #     if not request:
+    #         raise UserError("No active limit change request found for this customer.")
+    #     if request.state != 'pending_fm':
+    #         raise UserError(
+    #             f"Request {request.name} is in state '{request.state}'. "
+    #             f"Only 'Pending FM' requests can be approved."
+    #         )
+
+    #     request.action_approve()
+
+    #     # Invalidate partner-level computed fields so the view refreshes
+    #     self.invalidate_recordset([
+    #         'clm_pending_request_id',
+    #         'clm_pending_request_state',
+    #         'clm_pending_request_ref',
+    #     ])
+
+    
+
+    # def action_clm_reject_limit_request(self):
+    #     """
+    #     Finance: Opens the pending request form in a dialog so Finance can enter
+    #     the required FM comment and click Reject from within the request form.
+
+    #     Why dialog (not direct):
+    #       Reject REQUIRES an FM comment (enforced in action_reject()).
+    #       The cleanest UX is to open the request form where the fm_comment
+    #       field is visible and the Reject button is already present.
+    #       This avoids duplicating validation logic here.
+
+    #     SoD: Finance group only.
+    #     """
+    #     self.ensure_one()
+    #     if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+    #         raise AccessError("Only Finance can reject limit change requests.")
+
+    #     request = self.clm_pending_request_id
+    #     if not request:
+    #         raise UserError("No active limit change request found for this customer.")
+    #     if request.state != 'pending_fm':
+    #         raise UserError(
+    #             f"Request {request.name} is in state '{request.state}'. "
+    #             f"Only 'Pending FM' requests can be rejected."
+    #         )
+
+    #     return {
+    #         'type':      'ir.actions.act_window',
+    #         'res_model': 'clm.limit.change.request',
+    #         'res_id':    request.id,
+    #         'view_mode': 'form',
+    #         'target':    'new',
+    #         'context':   {'clm_reject_mode': True},
+    #     }
 
     def action_clm_approve_limit_request(self):
         """
-        Finance: Directly approves the active pending_fm request from the partner form.
+        Finance: Opens the list of pending_fm requests for this partner.
+        Finance clicks each row to approve individually from the form view.
 
-        Why direct (not dialog):
-          Approve has no required input (no comment needed) — a single click
-          with a confirm dialog in the view is enough for Finance to approve.
-          The chatter note is written by action_approve() on the request model.
-
-        SoD: Finance group only. Enforced here AND in clm.limit.change.request.action_approve().
+        Why a list instead of direct approve:
+        Multiple buckets can be pending simultaneously. Approving all in one
+        click is the bulk_approve action on the clm.limit.change.request list.
+        From the partner form, Finance selects which bucket(s) to act on.
         """
         self.ensure_one()
         if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
             raise AccessError("Only Finance can approve limit change requests.")
-
-        request = self.clm_pending_request_id
-        if not request:
-            raise UserError("No active limit change request found for this customer.")
-        if request.state != 'pending_fm':
-            raise UserError(
-                f"Request {request.name} is in state '{request.state}'. "
-                f"Only 'Pending FM' requests can be approved."
-            )
-
-        request.action_approve()
-
-        # Invalidate partner-level computed fields so the view refreshes
-        self.invalidate_recordset([
-            'clm_pending_request_id',
-            'clm_pending_request_state',
-            'clm_pending_request_ref',
-        ])
+        pending = self.clm_limit_request_ids.filtered(
+            lambda r: r.state == 'pending_fm'
+        )
+        if not pending:
+            raise UserError("No pending limit change requests found for this customer.")
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Pending Requests — {self.name}',
+            'res_model': 'clm.limit.change.request',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', pending.ids)],
+            'context': {'default_partner_id': self.id},
+        }
 
     def action_clm_reject_limit_request(self):
         """
-        Finance: Opens the pending request form in a dialog so Finance can enter
-        the required FM comment and click Reject from within the request form.
-
-        Why dialog (not direct):
-          Reject REQUIRES an FM comment (enforced in action_reject()).
-          The cleanest UX is to open the request form where the fm_comment
-          field is visible and the Reject button is already present.
-          This avoids duplicating validation logic here.
-
-        SoD: Finance group only.
+        Finance: Opens the list of pending_fm requests for this partner.
+        Finance clicks the row for the specific bucket they want to reject,
+        enters fm_comment in the form, and clicks Reject.
         """
         self.ensure_one()
         if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
             raise AccessError("Only Finance can reject limit change requests.")
-
-        request = self.clm_pending_request_id
-        if not request:
-            raise UserError("No active limit change request found for this customer.")
-        if request.state != 'pending_fm':
-            raise UserError(
-                f"Request {request.name} is in state '{request.state}'. "
-                f"Only 'Pending FM' requests can be rejected."
-            )
-
+        pending = self.clm_limit_request_ids.filtered(
+            lambda r: r.state == 'pending_fm'
+        )
+        if not pending:
+            raise UserError("No pending limit change requests found for this customer.")
         return {
-            'type':      'ir.actions.act_window',
+            'type': 'ir.actions.act_window',
+            'name': f'Pending Requests — {self.name}',
             'res_model': 'clm.limit.change.request',
-            'res_id':    request.id,
-            'view_mode': 'form',
-            'target':    'new',
-            'context':   {'clm_reject_mode': True},
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', pending.ids)],
+            'context': {'default_partner_id': self.id, 'clm_reject_mode': True},
         }
