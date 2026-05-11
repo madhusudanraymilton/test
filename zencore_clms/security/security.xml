@@ -21,7 +21,6 @@
     <record id="group_zencore_clm_salesperson" model="res.groups">
         <field name="name">Zencore CLM Salesperson</field>
         <field name="privilege_id" ref="module_zencore_clm"/>
-        
     </record>
 
     <!-- Sales Manager: confirm SOs, view all orders in company -->

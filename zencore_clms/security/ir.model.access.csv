@@ -26,3 +26,5 @@ access_account_move_ccm,account move ccm,account.model_account_move,zencore_clms
 access_res_partner_ccm,res partner ccm,base.model_res_partner,zencore_clms.group_zencore_clm_ccm,1,1,0,0
 access_res_partner_finance,res partner finance,base.model_res_partner,zencore_clms.group_zencore_clm_finance,1,0,0,0
 access_res_partner_sales_manager,res partner sales manager,base.model_res_partner,zencore_clms.group_zencore_clm_sales_manager,1,0,0,0
+
+access_clm_bulk_reject_wizard_finance,clm bulk reject wizard finance,model_clm_bulk_reject_wizard,zencore_clms.group_zencore_clm_finance,1,1,1,1

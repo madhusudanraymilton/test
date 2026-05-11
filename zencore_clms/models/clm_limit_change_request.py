@@ -4952,6 +4952,123 @@ class ClmLimitChangeRequest(models.Model):
                 subtype_xmlid='mail.mt_note',
             )
 
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BULK WORKFLOW ACTIONS — Bound to list view via ir.actions.server
+    # These are called when Finance selects multiple records and uses the
+    # Action dropdown in the list view.
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def action_bulk_approve(self):
+        """
+        Finance: bulk-approve all selected pending_fm records.
+
+        Called via ir.actions.server (list view Action dropdown).
+        `self` = recordset of all selected records (any state).
+
+        Steps:
+        1. SoD guard — Finance only.
+        2. Filter to pending_fm records — silently skip others.
+        3. Call action_approve() on each — full audit trail per record.
+        4. Return display_notification so the list refreshes.
+
+        Why not use a wizard:
+        Approve requires no additional user input (no mandatory comment).
+        A single confirm dialog in the server action XML is sufficient.
+
+        Transaction safety:
+        All approve() calls happen in the same ORM transaction.
+        Any single failure rolls back all limit writes — no partial updates.
+        """
+        self._assert_group(
+            'zencore_clms.group_zencore_clm_finance',
+            'bulk approve limit change requests',
+        )
+
+        pending = self.filtered(lambda r: r.state == 'pending_fm')
+        if not pending:
+            raise UserError(
+                "No 'Pending FM Approval' requests found in the selection.\n"
+                "Only requests with state 'Pending FM Approval' can be approved."
+            )
+
+        approved_names = []
+        errors = []
+
+        for rec in pending:
+            try:
+                rec.action_approve()
+                approved_names.append(rec.name)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"  • {rec.name}: {exc}")
+
+        skipped = len(self) - len(pending)
+
+        if errors:
+            raise UserError(
+                f"Bulk approval failed for {len(errors)} request(s):\n\n"
+                + "\n".join(errors)
+                + (
+                    f"\n\n✅ {len(approved_names)} request(s) were approved before the failure."
+                    if approved_names else ""
+                )
+            )
+
+        msg_parts = [f"✅ {len(approved_names)} request(s) approved successfully."]
+        if skipped:
+            msg_parts.append(f"{skipped} record(s) skipped (not in Pending FM state).")
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Bulk Approval Complete',
+                'message': ' '.join(msg_parts),
+                'type': 'success',
+                'sticky': False,
+            },
+        }
+
+    def action_open_bulk_reject_wizard(self):
+        """
+        Finance: open the bulk-reject wizard for all selected pending_fm records.
+
+        Called via ir.actions.server (list view Action dropdown).
+        `self` = recordset of all selected records (any state).
+
+        A wizard is required because:
+        action_reject() enforces a non-empty fm_comment (SRS §9.3 audit trail).
+        The wizard collects one shared comment before any writes occur.
+
+        Only pending_fm records are passed to the wizard.
+        Non-pending records are silently excluded (wizard shows the count).
+        """
+        self._assert_group(
+            'zencore_clms.group_zencore_clm_finance',
+            'bulk reject limit change requests',
+        )
+
+        pending = self.filtered(lambda r: r.state == 'pending_fm')
+        if not pending:
+            raise UserError(
+                "No 'Pending FM Approval' requests found in the selection.\n"
+                "Only requests with state 'Pending FM Approval' can be rejected."
+            )
+
+        wizard = self.env['clm.bulk.reject.wizard'].create({
+            'request_ids': [fields.Command.set(pending.ids)],
+        })
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'clm.bulk.reject.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+            'name': f'Reject {len(pending)} Request(s)',
+            'context': {'dialog_size': 'medium'},
+        }
+
     # ─────────────────────────────────────────────────────────────────────────
     # PRIVATE HELPERS
     # ─────────────────────────────────────────────────────────────────────────
