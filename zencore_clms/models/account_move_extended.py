@@ -769,3 +769,41 @@ class AccountPaymentExtended(models.Model):
                     f"{refs}\n\n"
                     "Record bank acceptance on the sale order before registering payment."
                 )
+# class AccountPaymentRegisterExtended(models.TransientModel):
+#     """
+#     Extension of account.payment.register to enforce SoD and bank acceptance checks at the point of payment registration.
+#     This ensures that even if someone bypasses action_post() directly, they still cannot register a payment without passing the necessary checks.
+#     """
+    
+#     _inherit = 'account.payment.register'
+
+#     def _create_payments(self):
+#         """
+#         Override the payment creation process to include SoD and bank acceptance checks before any payment is created.
+#         This is a critical extension point because it is the entry point for payment registration from the invoice form.
+#         """
+#         # SoD Check: Only Finance can register payments
+#         if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+#             raise AccessError(
+#                 "Only Finance can register payments for invoices."
+#             )
+
+#         # Bank Acceptance Check: Ensure all related sale orders have bank acceptance before allowing payment registration
+#         for move in self.invoice_ids:
+#             if move.move_type == 'out_invoice' and move.state == 'posted':
+#                 sale_orders = (
+#                     move.invoice_line_ids
+#                     .mapped('sale_line_ids')
+#                     .mapped('order_id')
+#                 )
+#                 if sale_orders.filtered(lambda o: o.clm_state != 'paid' and not o.clm_bank_acceptance):
+#                     refs = ', '.join(sale_orders.mapped('name'))
+#                     raise UserError(
+#                         "⛔  Payment Registration Blocked — Bank Acceptance Required\n\n"
+#                         "The following orders have not received bank acceptance:\n"
+#                         f"{refs}\n\n"
+#                         "Record bank acceptance on the sale order before registering payment."
+#                     )
+
+#         # If all checks pass, proceed with the original payment creation logic
+#         return super()._create_payments()
