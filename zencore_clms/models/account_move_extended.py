@@ -581,10 +581,16 @@ class AccountMoveExtended(models.Model):
                 .mapped('sale_line_ids')
                 .mapped('order_id')
             )
-            if sale_orders.clm_state == 'bucket4':
+            if sale_orders.clm_state != 'bucket4':
                 raise UserError(
-                    "Payment registration blocked — invoice is in Bucket 4 stage.\n\n"
-                    "Please move the order out of Bucket 4 before registering payment."
+                    "⛔  Payment Registration Blocked — Bank Acceptance Required\n\n"
+                    "Payment can only be registered after Bank Acceptance is confirmed\n"
+                    "and the order reaches Bucket 4.\n\n"
+                    "Blocked Orders:\n"
+                    "Resolution:\n"
+                    "  1. Open the sale order.\n"
+                    "  2. Click '🏦 Bank Acceptance' button (CCM or Finance).\n"
+                    "  3. Return here to register payment."
                 )
                 
         return super().action_register_payment()

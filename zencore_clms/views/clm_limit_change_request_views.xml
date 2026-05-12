@@ -132,7 +132,7 @@
                             nolabel="1"
                             readonly="state != 'draft'"
                             placeholder="Provide business justification for this limit change request..."
-                            width="100%"
+                            width="100"
                         />
                     </group>
 
