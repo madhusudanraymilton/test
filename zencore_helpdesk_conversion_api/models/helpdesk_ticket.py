@@ -1,0 +1,303 @@
+"""
+zencore_helpdesk_conversion_api — helpdesk_ticket.py
+
+Sections covered:
+    1 — Suppress all outbound email from the chatter thread.
+    3 — Forward assigned-user replies to an external API.
+    4 — Always include parent_message_id in every outbound payload.
+    5 — Send a lightweight (no-thread) notification to the portal user
+        whenever the assigned user posts a reply.
+"""
+
+import logging
+
+import requests
+
+from odoo import models
+
+_logger = logging.getLogger(__name__)
+
+
+class HelpdeskTicket(models.Model):
+    _inherit = 'helpdesk.ticket'
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # SECTION 1 — Suppress Odoo's outbound email for all chatter messages.
+    #
+    # How Odoo normally works:
+    #   message_post()  →  _notify_thread()  →  _notify_thread_by_email()
+    #                                         →  _notify_thread_by_inbox()
+    #                                         →  push notifications, etc.
+    #
+    # By returning an empty dict here we stop the entire notification pipeline
+    # before any mail.mail record is created for followers.  The message itself
+    # is still persisted to mail.message — the chatter continues to work as an
+    # internal audit log.
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _notify_thread(self, message, msg_vals=False, **kwargs):
+        """
+        Override: suppress ALL outbound email / push / inbox notifications
+        that Odoo would normally dispatch to thread followers.
+
+        Chatter remains a read-only internal log.
+        """
+        return {}
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # SECTION 3 + 4 + 5 — Intercept message_post.
+    #
+    # message_post() is the single entry-point for every chatter message in
+    # Odoo.  We call super() first so the message is saved to the DB, then
+    # inspect the author to decide whether to forward externally.
+    #
+    # Author detection logic:
+    #   - External inbound (controller) → sudo() env → author = OdooBot (uid=1)
+    #     → NOT the assigned user → NO forward triggered.
+    #   - Assigned agent posting via the Odoo UI → author = agent's partner_id
+    #     → matches ticket.user_id.partner_id → forward IS triggered.
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def message_post(self, **kwargs):
+        """
+        Override: after persisting the chatter message, check if the author is
+        the ticket's assigned user.  If so:
+          - Forward the full payload to the external API  (Sections 3 + 4).
+          - Email a lightweight notification to the portal user  (Section 5).
+        """
+        message = super().message_post(**kwargs)
+
+        assigned_partner_id = (
+            self.user_id.partner_id.id
+            if self.user_id and self.user_id.partner_id
+            else False
+        )
+
+        if assigned_partner_id and message.author_id.id == assigned_partner_id:
+            self._forward_to_external_api(message)     # Sections 3 + 4
+            self._notify_portal_user_on_reply()        # Section 5
+
+        return message
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # SECTION 3 + 4 — Forward payload to external system.
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _forward_to_external_api(self, message):
+        """
+        POST the reply payload to the URL stored in ir.config_parameter.
+
+        Config keys (set via Settings → Technical → Parameters):
+            zencore_helpdesk.external_api_url   (required)
+            zencore_helpdesk.outbound_api_key   (optional — sent as X-API-Key)
+
+        Section 4: parent_message_id is always included.
+        Failures are swallowed — the chatter post must never be blocked.
+        """
+        ICP = self.env['ir.config_parameter'].sudo()
+        external_url = ICP.get_param('zencore_helpdesk.external_api_url', default=False)
+        api_key = ICP.get_param('zencore_helpdesk.outbound_api_key', default=False)
+
+        if not external_url:
+            _logger.warning(
+                "[Zencore] 'zencore_helpdesk.external_api_url' is not set. "
+                "Skipping outbound forward for ticket id=%s.",
+                self.id,
+            )
+            return
+
+        # ── Section 4: resolve parent_message_id ──────────────────────────────
+        parent_message_id = message.parent_id.id if message.parent_id else None
+
+        payload = {
+            "ticket_id":        self.id,
+            "ticket_name":      self.name or "",
+            "message_id":       message.id,
+            "author":           message.author_id.name or "",
+            "body":             message.body or "",
+            "date":             (
+                message.date.strftime('%Y-%m-%d %H:%M:%S')
+                if message.date else ""
+            ),
+            "parent_message_id": parent_message_id,
+        }
+
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["X-API-Key"] = api_key
+
+        try:
+            resp = requests.post(
+                external_url,
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+            resp.raise_for_status()
+            _logger.info(
+                "[Zencore] Forwarded message_id=%s (ticket_id=%s) → HTTP %s",
+                message.id, self.id, resp.status_code,
+            )
+
+        except requests.exceptions.Timeout:
+            _logger.error(
+                "[Zencore] Timeout forwarding message_id=%s for ticket_id=%s to '%s'.",
+                message.id, self.id, external_url,
+            )
+        except requests.exceptions.ConnectionError as exc:
+            _logger.error(
+                "[Zencore] Connection error forwarding message_id=%s for ticket_id=%s: %s",
+                message.id, self.id, exc,
+            )
+        except requests.exceptions.HTTPError as exc:
+            _logger.error(
+                "[Zencore] HTTP error forwarding message_id=%s for ticket_id=%s: %s",
+                message.id, self.id, exc,
+            )
+        except Exception as exc:  # noqa: BLE001
+            _logger.error(
+                "[Zencore] Unexpected error forwarding message_id=%s for ticket_id=%s: %s",
+                message.id, self.id, exc,
+            )
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # SECTION 5 — Lightweight portal-user notification on outbound reply.
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _notify_portal_user_on_reply(self):
+        """
+        Send a plain, no-thread notification email to ticket.partner_id.
+
+        Rules enforced:
+          - Uses mail.mail.sudo().create().send() — NOT message_post.
+          - reply_to is explicitly blanked so the user cannot reply into
+            the Odoo mail thread.
+          - The mail.template record (defined in mail_template_data.xml) is
+            used to render subject + body so admins can adjust copy in the UI.
+          - Falls back to hardcoded strings if the template is missing.
+        """
+        if not self.partner_id or not self.partner_id.email:
+            _logger.warning(
+                "[Zencore] ticket_id=%s has no partner email. "
+                "Skipping portal notification.",
+                self.id,
+            )
+            return
+
+        subject, body_html = self._render_notification_template(
+            'zencore_helpdesk_conversion_api.mail_template_outbound_notify_portal',
+            fallback_subject="New Reply on Your Ticket #%s" % self.id,
+            fallback_body=(
+                "<p>You have received a new reply on your ticket.</p>"
+                "<p>Please log in to the portal to review the latest conversation.</p>"
+            ),
+        )
+
+        mail_values = {
+            'subject':    subject,
+            'body_html':  body_html,
+            'email_to':   self.partner_id.email,
+            'email_from': self.env.company.email or 'noreply@example.com',
+            'reply_to':   False,   # Prevent reply-to-thread
+            'auto_delete': True,
+        }
+
+        self._send_mail_no_thread(mail_values, context_label="portal notification")
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # SECTION 2 (helper) — Lightweight assigned-user notification on inbound.
+    #
+    # Called from the controller (controllers/main.py) after a successful
+    # inbound chatter post.
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _notify_assigned_user_on_inbound(self):
+        """
+        Send a plain, no-thread notification email to ticket.user_id.
+
+        Same pattern as _notify_portal_user_on_reply — mail.mail only,
+        no message_post, no reply-to.
+        """
+        if not self.user_id or not self.user_id.email:
+            _logger.warning(
+                "[Zencore] ticket_id=%s has no assigned user email. "
+                "Skipping agent notification.",
+                self.id,
+            )
+            return
+
+        subject, body_html = self._render_notification_template(
+            'zencore_helpdesk_conversion_api.mail_template_inbound_notify_agent',
+            fallback_subject="New Message on Ticket #%s" % self.id,
+            fallback_body=(
+                "<p>You have received a new message on Ticket #%s.</p>"
+                "<p>Please log in to Odoo to review and respond.</p>" % self.id
+            ),
+        )
+
+        mail_values = {
+            'subject':    subject,
+            'body_html':  body_html,
+            'email_to':   self.user_id.email,
+            'email_from': self.env.company.email or 'noreply@example.com',
+            'reply_to':   False,
+            'auto_delete': True,
+        }
+
+        self._send_mail_no_thread(mail_values, context_label="agent notification")
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Private utilities
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _render_notification_template(
+        self, xml_id, fallback_subject, fallback_body
+    ):
+        """
+        Attempt to render a mail.template by xml_id against this ticket record.
+
+        Returns (subject, body_html) tuple.
+        Falls back to the provided strings if the template is not found or
+        rendering fails.
+        """
+        try:
+            template = self.env.ref(xml_id, raise_if_not_found=False)
+            if template:
+                # generate_email renders Jinja2 expressions in subject/body
+                rendered = template.generate_email(
+                    self.id, fields=['subject', 'body_html']
+                )
+                return (
+                    rendered.get('subject', fallback_subject),
+                    rendered.get('body_html', fallback_body),
+                )
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning(
+                "[Zencore] Could not render template '%s' for ticket_id=%s: %s. "
+                "Using fallback.",
+                xml_id, self.id, exc,
+            )
+        return fallback_subject, fallback_body
+
+    def _send_mail_no_thread(self, mail_values, context_label="notification"):
+        """
+        Create and immediately send a mail.mail record.
+
+        This is the ONLY sanctioned way to send emails in this module.
+        It deliberately avoids message_post to prevent chatter attachment
+        and to bypass Odoo's outbound-thread machinery (Section 1).
+        """
+        try:
+            mail = self.env['mail.mail'].sudo().create(mail_values)
+            mail.send()
+            _logger.info(
+                "[Zencore] Sent %s to '%s' for ticket_id=%s.",
+                context_label,
+                mail_values.get('email_to'),
+                self.id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            _logger.error(
+                "[Zencore] Failed to send %s for ticket_id=%s: %s",
+                context_label, self.id, exc,
+            )
