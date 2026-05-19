@@ -20,9 +20,25 @@
     'data': [
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',
+        # 'views/assets.xml',
     ],
+    "assets": {
+        'web.assets_backend': [
+            "zencore_helpdesk_conversion_api/static/src/js/chat_reply_service.js",
+            "zencore_helpdesk_conversion_api/static/src/js/remove_default_reply.js",
+            "zencore_helpdesk_conversion_api/static/src/js/message_reply_action.js",
+            "zencore_helpdesk_conversion_api/static/src/js/composer_patch.js",
+            "zencore_helpdesk_conversion_api/static/src/xml/composer_reply.xml",
+        ],
+    },
     'installable': True,
     'application': False,
     'auto_install': False,
     'license': 'LGPL-3',
 }
+
+
+
+
+
+
