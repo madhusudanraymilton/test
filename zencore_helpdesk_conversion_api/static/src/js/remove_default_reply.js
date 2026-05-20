@@ -1,25 +1,18 @@
 /** @odoo-module **/
 
-import { patch } from "@web/core/utils/patch";
-import { Message } from "@mail/core/common/message";
+import { registry } from "@web/core/registry";
 
-patch(Message.prototype, {
+const messageActions = registry.category("mail.message/actions");
 
-    computeActions() {
-
-        const result =
-            super.computeActions(...arguments);
-
-        if (!this.messageActions) {
-            return result;
-        }
-
-        this.messageActions.actions =
-            this.messageActions.actions.filter(
-                (action) => action.id !== "reply"
-            );
-
-        return result;
-    },
-
-});
+for (const id of ["reply-to", "reply", "reply-to-message"]) {
+    if (messageActions.contains(id)) {
+        messageActions.add(
+            id,
+            {
+                ...messageActions.get(id),
+                condition: () => false,
+            },
+            { force: true },
+        );
+    }
+}

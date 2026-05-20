@@ -1,271 +1,71 @@
 // // =============================================================================
-// // Zencore Helpdesk Messenger — Layout Overrides
-// //
-// // PURPOSE:
-// //   Replicate the Chat Window self-authored layout for outbound messages
-// //   inside the standard Chatter widget.  Odoo scopes that CSS to
-// //   .o-mail-ChatWindow, which is never present in the Chatter context.
-// //
-// // BUBBLE COLOURS (o-green / o-blue) are NOT overridden here.
-// // They are already defined in Odoo 19's:
-// //   @mail/core/common/message/message.scss
-// //   @mail/core/common/message/message.dark.scss
-// //
-// // CSS HOOKS used here:
-// //   .o-zencore-messenger-msg   → every message in a helpdesk.ticket thread
-// //   .o-zencore-outbound        → agent (right-aligned, green bubble)
-// //   .o-zencore-inbound         → customer/portal (left-aligned, blue bubble)
+// // Zencore Helpdesk Messenger - Layout Overrides
 // // =============================================================================
 
-
-// // ── Outbound (Agent) — mirror .o-mail-ChatWindow .o-mail-Message.o-selfAuthored
-// // =============================================================================
-// // Odoo's SCSS applies the flex-reverse layout only inside .o-mail-ChatWindow.
-// // We replicate those same rules here, scoped to our custom class instead,
-// // so the chatter gets the same visual result.
-
-// .o-mail-Message.o-zencore-outbound {
-
-//     // Root container (no display:flex in core, but included for completeness)
-//     flex-direction: row-reverse;
-
-//     // Core row: moves the avatar sidebar from left to right
-//     .o-mail-Message-core {
-//         flex-direction: row-reverse;
-//     }
-
-//     // Text content row: moves quick-action buttons to the left of the bubble
-//     .o-mail-Message-textContent {
-//         flex-direction: row-reverse;
-//     }
-
-//     // Header: right-justify author name + timestamp
-//     .o-mail-Message-header {
-//         justify-content: flex-end;
-//     }
-
-//     // Author name: hide on outbound (agent knows their own name)
-//     .o-mail-Message-author {
-//         display: none;
-//     }
-
-//     // Sidebar: pin avatar to top-right of bubble
-//     .o-mail-Message-sidebar {
-//         align-self: flex-start;
-//     }
-// }
-
-
-// // ── Inbound (Customer) — explicit left alignment
-// // =============================================================================
-
-// .o-mail-Message.o-zencore-inbound {
-
-//     flex-direction: row;
-
-//     .o-mail-Message-core {
-//         flex-direction: row;
-//     }
-
-//     // Sidebar: pin avatar to top-left of bubble
-//     .o-mail-Message-sidebar {
-//         align-self: flex-start;
-//     }
-// }
-
-
-// // ── All Messenger Messages — shared spacing + width cap
-// // =============================================================================
-
-// .o-mail-Message.o-zencore-messenger-msg {
-
-//     // Tighter vertical gap (default chatter has generous padding between messages)
-//     &:not(.o-squashed) {
-//         margin-top: 0.3rem;
-//         margin-bottom: 0;
-//     }
-
-//     // Limit bubble width to 75% — key to the chat-window aesthetic
-//     // Targets the inner text container that wraps the bubble div
-//     .o-discuss-text-body {
-//         max-width: 75%;
-//     }
-
-//     // Small top padding on avatars so they align with bubble top
-//     .o-mail-Message-avatarContainer {
-//         margin-top: 0.1rem;
-//     }
-// }
-
-
-// // ── Container background — scoped via :has()
-// // =============================================================================
-// // Applied when the Thread container holds at least one messenger message.
-// // This gives the whole chatter a chat-room background.
-// // The :has() selector is supported in all modern browsers (2025+).
-// // Remove this block if you need to support older environments.
-
-// .o-mail-Thread:has(.o-zencore-messenger-msg) {
-//     background-color: #f0f2f5;   // WhatsApp-like light grey
-//     border-radius: 0.5rem;
+// .o-zencore-helpdesk-thread.o-mail-Thread {
+//     background-color: #171818;
+//     border-radius: 8px;
 //     padding: 0.5rem 0;
 // }
 
-// // Dark mode override (Odoo adds .o_dark to <html>)
-// .o_dark .o-mail-Thread:has(.o-zencore-messenger-msg) {
-//     background-color: #0b141a;   // WhatsApp dark background
+// .o-zencore-helpdesk-thread .o-mail-Message {
+//     margin-top: 0.25rem;
+//     margin-bottom: 0;
 // }
 
-// /* Outbound (agent messages) */
-// .o-mail-Message.o-selfAuthored.o-zencore-messenger-msg {
+// .o-zencore-helpdesk-thread .o-mail-Message .o-mail-Message-core {
+//     align-items: flex-start;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message .o-discuss-text-body {
+//     width: 75%;
+//     max-width: 680px;
+//     overflow-wrap: anywhere;
+// }
+
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored {
 //     flex-direction: row-reverse;
 // }
 
-// .o-mail-Message.o-selfAuthored.o-zencore-messenger-msg .o-mail-Message-core {
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-core,
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-textContent {
 //     flex-direction: row-reverse;
 // }
 
-// .o-mail-Message.o-selfAuthored .o-mail-Message-header {
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-header {
 //     justify-content: flex-end;
 // }
 
-// .o-mail-Message.o-selfAuthored .o-mail-Message-author {
+// .o-zencore-helpdesk-thread .o-mail-Message.o-selfAuthored .o-mail-Message-author {
 //     display: none;
 // }
 
-// /* Inbound (customer messages) */
-// .o-mail-Message:not(.o-selfAuthored).o-zencore-messenger-msg {
+// .o-zencore-helpdesk-thread .o-mail-Message:not(.o-selfAuthored) {
 //     flex-direction: row;
 // }
 
-// /* Shared */
-// .o-mail-Message.o-zencore-messenger-msg {
-//     margin-top: 0.3rem;
+// .o-zencore-helpdesk-thread .o-mail-Composer-coreHeader > .text-truncate {
+//     border-left: 3px solid var(--o-brand-primary);
+//     background: rgba(0, 0, 0, 0.04);
+//     border-radius: 6px;
+//     margin-bottom: 0.25rem;
 // }
 
-// .o-mail-Message.o-zencore-messenger-msg .o-mail-Message-body,
-// .o-mail-Message.o-zencore-messenger-msg .o-discuss-text-body {
-//     max-width: 100%;
+// .o_dark .o-zencore-helpdesk-thread.o-mail-Thread {
+//     background-color: #121416;
 // }
 
-// .o-mail-Message.o-zencore-messenger-msg .o-mail-Message-avatarContainer {
-//     margin-top: 0.1rem;
+// .o_dark .o-zencore-helpdesk-thread .o-mail-Composer-coreHeader > .text-truncate {
+//     background: rgba(255, 255, 255, 0.08);
 // }
 
-// =============================================================================
-// Zencore Helpdesk Messenger — Layout Overrides
-//
-// PURPOSE:
-//   Replicate the Chat Window self-authored layout for outbound messages
-//   inside the standard Chatter widget.  Odoo scopes that CSS to
-//   .o-mail-ChatWindow, which is never present in the Chatter context.
-//
-// BUBBLE COLOURS (o-green / o-blue) are NOT overridden here.
-// They are already defined in Odoo 19's:
-//   @mail/core/common/message/message.scss
-//   @mail/core/common/message/message.dark.scss
-//
-// CSS HOOKS used here:
-//   .o-zencore-messenger-msg   → every message in a helpdesk.ticket thread
-//   .o-zencore-outbound        → agent (right-aligned, green bubble)
-//   .o-zencore-inbound         → customer/portal (left-aligned, blue bubble)
-// =============================================================================
-
-
-// ── Outbound (Agent) — mirror .o-mail-ChatWindow .o-mail-Message.o-selfAuthored
-// =============================================================================
-// Odoo's SCSS applies the flex-reverse layout only inside .o-mail-ChatWindow.
-// We replicate those same rules here, scoped to our custom class instead,
-// so the chatter gets the same visual result.
-
-.o-mail-Message.o-zencore-outbound {
-
-    // Root container (no display:flex in core, but included for completeness)
-    flex-direction: row-reverse;
-
-    // Core row: moves the avatar sidebar from left to right
-    .o-mail-Message-core {
-        flex-direction: row-reverse;
+// Hide Odoo's original follower-recipient UI on helpdesk chatter.
+// This module sends explicit one-way notification emails instead.
+.o-zencore-helpdesk-chatter {
+    .o-mail-Chatter-topbar .o-mail-Followers,
+    .o-mail-Chatter-topbar .o-mail-Chatter-fileUploader,
+    .o-mail-Chatter-top > t > .d-flex.py-1.ps-3,
+    .o-mail-Chatter-top > .d-flex.py-1.ps-3 {
+        display: none !important;
     }
-
-    // Text content row: moves quick-action buttons to the left of the bubble
-    .o-mail-Message-textContent {
-        flex-direction: row-reverse;
-    }
-
-    // Header: right-justify author name + timestamp
-    .o-mail-Message-header {
-        justify-content: flex-end;
-    }
-
-    // Author name: hide on outbound (agent knows their own name)
-    .o-mail-Message-author {
-        display: none;
-    }
-
-    // Sidebar: pin avatar to top-right of bubble
-    .o-mail-Message-sidebar {
-        align-self: flex-start;
-    }
-}
-
-
-// ── Inbound (Customer) — explicit left alignment
-// =============================================================================
-
-.o-mail-Message.o-zencore-inbound {
-
-    flex-direction: row;
-
-    .o-mail-Message-core {
-        flex-direction: row;
-    }
-
-    // Sidebar: pin avatar to top-left of bubble
-    .o-mail-Message-sidebar {
-        align-self: flex-start;
-    }
-}
-
-
-// ── All Messenger Messages — shared spacing + width cap
-// =============================================================================
-
-.o-mail-Message.o-zencore-messenger-msg {
-
-    // Tighter vertical gap (default chatter has generous padding between messages)
-    &:not(.o-squashed) {
-        margin-top: 0.3rem;
-        margin-bottom: 0;
-    }
-
-    // Limit bubble width to 75% — key to the chat-window aesthetic
-    // Targets the inner text container that wraps the bubble div
-    .o-discuss-text-body {
-        max-width: 75%;
-    }
-
-    // Small top padding on avatars so they align with bubble top
-    .o-mail-Message-avatarContainer {
-        margin-top: 0.1rem;
-    }
-}
-
-
-// ── Container background — scoped via :has()
-// =============================================================================
-// Applied when the Thread container holds at least one messenger message.
-// This gives the whole chatter a chat-room background.
-// The :has() selector is supported in all modern browsers (2025+).
-// Remove this block if you need to support older environments.
-
-.o-mail-Thread:has(.o-zencore-messenger-msg) {
-    // background-color: #151515;   // WhatsApp-like light grey
-    border-radius: 0.5rem;
-    padding: 0.5rem 0;
-}
-
-// Dark mode override (Odoo adds .o_dark to <html>)
-.o_dark .o-mail-Thread:has(.o-zencore-messenger-msg) {
-    background-color: #0b141a;   // WhatsApp dark background
 }

@@ -370,6 +370,10 @@ class HelpdeskTicket(models.Model):
         """
         return {}
 
+    def _get_allowed_message_params(self):
+        """Allow Odoo's mail controller to forward reply parent_id on tickets."""
+        return super()._get_allowed_message_params() | {'parent_id'}
+
     # ──────────────────────────────────────────────────────────────────────────
     # SECTION 3 + 4 + 5 — Intercept message_post.
     #
@@ -400,7 +404,18 @@ class HelpdeskTicket(models.Model):
           - Forward the full payload to the external API  (Sections 3 + 4).
           - Email a lightweight notification to the portal user  (Section 5).
         """
+        requested_parent_id = kwargs.get('parent_id')
+        context_parent_id = self._zencore_resolve_reply_parent_id_from_context()
+        if context_parent_id and not requested_parent_id:
+            kwargs['parent_id'] = context_parent_id
+            requested_parent_id = context_parent_id
+
         message = super().message_post(**kwargs)
+
+        # Normal posts must stay root messages. Only the explicit Zencore reply
+        # context or a deliberate parent_id kwarg may create a thread relation.
+        if not requested_parent_id and message.parent_id:
+            message.sudo().write({'parent_id': False})
 
         assigned_partner_id = (
             self.user_id.partner_id.id
@@ -410,9 +425,50 @@ class HelpdeskTicket(models.Model):
 
         if assigned_partner_id and message.author_id.id == assigned_partner_id:
             self._forward_to_external_api(message)     # Sections 3 + 4
+
+        if self._zencore_is_internal_public_comment(message):
             self._notify_portal_user_on_reply()        # Section 5
 
         return message
+
+    def _zencore_is_internal_public_comment(self, message):
+        """True for an internal user's Send Message, false for notes/system/inbound."""
+        if message.message_type != 'comment' or not message.author_id:
+            return False
+        mt_note = self.env.ref('mail.mt_note', raise_if_not_found=False)
+        if mt_note and message.subtype_id.id == mt_note.id:
+            return False
+        return any(not user.share for user in message.author_id.user_ids)
+
+    def _zencore_resolve_reply_parent_id_from_context(self):
+        """Return the selected customer message id stored by the Reply button."""
+        raw_parent_id = self.env.context.get('zencore_reply_parent_id')
+        if not raw_parent_id:
+            return False
+        try:
+            parent_id = int(raw_parent_id)
+        except (TypeError, ValueError):
+            _logger.warning(
+                "[Zencore] Invalid zencore_reply_parent_id=%s. Ignoring.",
+                raw_parent_id,
+            )
+            return False
+
+        ticket = self[:1]
+        parent_msg = self.env['mail.message'].sudo().browse(parent_id)
+        if (
+            not ticket
+            or not parent_msg.exists()
+            or parent_msg.model != 'helpdesk.ticket'
+            or parent_msg.res_id != ticket.id
+        ):
+            _logger.warning(
+                "[Zencore] Reply parent message_id=%s is not valid for ticket_id=%s. Ignoring.",
+                parent_id,
+                ticket.id if ticket else False,
+            )
+            return False
+        return parent_msg.id
 
     # ──────────────────────────────────────────────────────────────────────────
     # SECTION 3 + 4 — Forward payload to external system.

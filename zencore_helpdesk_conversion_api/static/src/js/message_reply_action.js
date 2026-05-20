@@ -1,83 +1,82 @@
-// /** @odoo-module **/
-
-// import { registerMessageAction } from "@mail/core/common/message_actions";
-// import { _t } from "@web/core/l10n/translation";
-
-// registerMessageAction("zencore-reply", {
-
-//     condition: ({ message }) => {
-//         return (
-//             message &&
-//             message.message_type === "comment"
-//         );
-//     },
-
-//     icon: "fa fa-reply",
-
-//     title: () => _t("Reply"),
-
-//     sequence: 20,
-
-//     onSelected: ({ message, owner }) => {
-
-//         const chatReply =
-//             owner.env.services.chatReply;
-
-//         if (!chatReply) {
-//             console.error("chatReply service missing");
-//             return;
-//         }
-
-//         chatReply.replyMessage = {
-//             id: message.id,
-//             body: message.inlineBody,
-//             authorName: message.authorName,
-//         };
-
-//         console.log("Reply selected:", message.id);
-//     },
-// });
 /** @odoo-module **/
 
-import { registerMessageAction } from "@mail/core/common/message_actions";
+import { toRaw } from "@odoo/owl";
+
 import { _t } from "@web/core/l10n/translation";
+import { registry } from "@web/core/registry";
+import { clearReplyParentId, setReplyParentId } from "@zencore_helpdesk_conversion_api/js/reply_parent_state";
 
-registerMessageAction("zencore_reply", {
+const messageActions = registry.category("mail.message/actions");
+const originalReplyAction = messageActions.contains("reply-to")
+    ? messageActions.get("reply-to")
+    : {};
 
-    condition: ({ message }) => {
+function isHelpdeskCustomerMessage({ message, thread }) {
+    const rawMessage = toRaw(message);
+    const rawThread = toRaw(thread || rawMessage?.thread);
+    return (
+        rawMessage &&
+        rawThread?.model === "helpdesk.ticket" &&
+        rawMessage.message_type === "comment" &&
+        !rawMessage.isSelfAuthored
+    );
+}
 
-        return (
-            message &&
-            message.message_type === "comment" &&
-            !message.isSelfAuthored
-        );
+async function selectHelpdeskReply({ message: msg, owner, thread: thr }) {
+    const message = toRaw(msg);
+    const thread = toRaw(thr || message?.thread);
+    const composer = thread?.composer;
+
+    if (!thread || !composer) {
+        console.error("[Zencore] Reply failed: missing thread/composer for message", message?.id);
+        return;
+    }
+
+    const shouldClearReply = message.eq?.(composer.replyToMessage);
+    composer.replyToMessage = shouldClearReply ? undefined : message;
+    if (shouldClearReply) {
+        clearReplyParentId(composer);
+    } else {
+        setReplyParentId(composer, message.id);
+    }
+
+    owner.env.inChatter?.toggleComposer("message", { force: true });
+    if (!shouldClearReply) {
+        composer.replyToMessage = message;
+        setReplyParentId(composer, message.id);
+    }
+    if (!composer.isFocused) {
+        composer.autofocus++;
+    }
+}
+
+messageActions.add(
+    "reply-to",
+    {
+        ...originalReplyAction,
+        condition: (params) => {
+            if (isHelpdeskCustomerMessage(params)) {
+                return true;
+            }
+            return originalReplyAction.condition?.(params) ?? false;
+        },
+        icon: "fa fa-reply",
+        name: _t("Reply"),
+        onSelected: (params) => {
+            if (isHelpdeskCustomerMessage(params)) {
+                return selectHelpdeskReply(params);
+            }
+            return originalReplyAction.onSelected?.(params);
+        },
+        sequence: (params) => {
+            if (isHelpdeskCustomerMessage(params)) {
+                return 20;
+            }
+            const originalSequence = originalReplyAction.sequence;
+            return typeof originalSequence === "function"
+                ? originalSequence(params)
+                : originalSequence ?? 20;
+        },
     },
-
-    icon: "fa fa-reply",
-
-    title: () => _t("Reply"),
-
-    sequence: 100,
-
-    onSelected: ({ message, owner }) => {
-
-        const replyService =
-            owner.env.services.chatReply;
-
-        replyService.replyMessage = {
-            id: message.id,
-            body: message.inlineBody,
-            authorName: message.authorName,
-        };
-
-        /*
-        Activate Send Message tab automatically
-        */
-        const chatter =
-            owner.props.thread?.composer;
-
-        if (chatter) {
-            chatter.type = "comment";
-        }
-    },
-});
+    { force: true }
+);
