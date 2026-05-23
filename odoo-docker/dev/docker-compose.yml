@@ -1,0 +1,36 @@
+services:
+
+  postgres_dev:
+    image: postgres:17
+    container_name: postgres_dev
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  odoo_dev:
+    image: odoo:19.0
+    container_name: odoo_dev
+    depends_on:
+      - postgres_dev
+    restart: always
+    ports:
+      - "${ODOO_PORT}:8069"
+      - "${LONGPOLLING_PORT}:8072"
+    environment:
+      HOST: postgres_dev
+      USER: ${POSTGRES_USER}
+      PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - odoo_dev_data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+      - ./logs:/var/log/odoo
+
+volumes:
+  odoo_dev_data:
+  db_data:
