@@ -408,12 +408,13 @@ class SaleOrderExtended(models.Model):
 
     clm_state = fields.Selection(
         selection=[
-            ('pi',      'Proforma Invoice'),
-            ('bucket1', 'Bucket 1'),
-            ('bucket2', 'Bucket 2'),
-            ('bucket3', 'Bucket 3'),
-            ('bucket4', 'Bucket 4'),
-            ('paid',    'Paid'),
+            ('pi',                  'Proforma Invoice'),
+            ('partially_delivered', 'Partially Delivered'),
+            ('fully_delivered',     'Fully Delivered'),
+            ('partially_invoiced',  'Partially Invoiced'),
+            ('fully_invoiced',      'Fully Invoiced'),
+            ('partially_paid',      'Partially Paid'),
+            ('fully_paid',          'Fully Paid'),
         ],
         string='CLM Stage',
         default='pi',
