@@ -522,7 +522,7 @@ class ResPartnerExtended(models.Model):
 
     def action_clm_new_limit_request(self):
         self.ensure_one()
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_ccm'):
+        if not self.env.user.has_group('zencore_groups.group_zencore_clm_ccm'):
             raise AccessError("Only CCM can submit limit change requests.")
         return {
             'type': 'ir.actions.act_window',
@@ -550,7 +550,7 @@ class ResPartnerExtended(models.Model):
 
     def action_clm_approve_limit_request(self):
         self.ensure_one()
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+        if not self.env.user.has_group('zencore_groups.group_zencore_clm_finance'):
             raise AccessError("Only Finance can approve limit change requests.")
         pending = self.clm_limit_request_ids.filtered(lambda r: r.state == 'pending_fm')
         if not pending:
@@ -566,7 +566,7 @@ class ResPartnerExtended(models.Model):
 
     def action_clm_reject_limit_request(self):
         self.ensure_one()
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+        if not self.env.user.has_group('zencore_groups.group_zencore_clm_finance'):
             raise AccessError("Only Finance can reject limit change requests.")
         pending = self.clm_limit_request_ids.filtered(lambda r: r.state == 'pending_fm')
         if not pending:

@@ -36,7 +36,7 @@
                         string="Submit for FM Approval"
                         class="btn-primary"
                         invisible="state != 'draft'"
-                        groups="zencore_clms.group_zencore_clm_ccm"
+                        groups="zencore_groups.group_zencore_clm_ccm"
                     />
 
                     <!-- CCM: draft → cancelled -->
@@ -45,7 +45,7 @@
                         type="object"
                         string="Cancel Request"
                         invisible="state != 'draft'"
-                        groups="zencore_clms.group_zencore_clm_ccm"
+                        groups="zencore_groups.group_zencore_clm_ccm"
                         confirm="Cancel this draft? The request cannot be reopened."
                     />
 
@@ -56,7 +56,7 @@
                         string="✔ Approve"
                         class="btn-success"
                         invisible="state != 'pending_fm'"
-                        groups="zencore_clms.group_zencore_clm_finance"
+                        groups="zencore_groups.group_zencore_clm_finance"
                         confirm="Approve? All proposed limits will be applied to the customer immediately."
                     />
 
@@ -67,7 +67,7 @@
                         string="✗ Reject"
                         class="btn-danger"
                         invisible="state != 'pending_fm'"
-                        groups="zencore_clms.group_zencore_clm_finance"
+                        groups="zencore_groups.group_zencore_clm_finance"
                         confirm="Reject this request? This action is permanent."
                     />
 

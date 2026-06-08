@@ -315,7 +315,7 @@ class ClmLimitChangeRequest(models.Model):
         initiated_by set to current user for full audit trail.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_ccm',
+            'zencore_groups.group_zencore_clm_ccm',
             'create limit change requests',
         )
         for vals in vals_list:
@@ -342,7 +342,7 @@ class ClmLimitChangeRequest(models.Model):
         Schedules a mail.activity on the first Finance Manager found.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_ccm',
+            'zencore_groups.group_zencore_clm_ccm',
             'submit limit change requests',
         )
         for rec in self:
@@ -393,7 +393,7 @@ class ClmLimitChangeRequest(models.Model):
 
             # Notify Finance Manager
             finance_group = self.env.ref(
-                'zencore_clms.group_zencore_clm_finance',
+                'zencore_groups.group_zencore_clm_finance',
                 raise_if_not_found=False,
             )
             if finance_group:
@@ -423,7 +423,7 @@ class ClmLimitChangeRequest(models.Model):
         Posts approval note on both the request and the partner chatter.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_finance',
+            'zencore_groups.group_zencore_clm_finance',
             'approve limit change requests',
         )
         for rec in self:
@@ -497,7 +497,7 @@ class ClmLimitChangeRequest(models.Model):
         Terminal state — the limit is NOT changed. Record cannot be reopened.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_finance',
+            'zencore_groups.group_zencore_clm_finance',
             'reject limit change requests',
         )
         for rec in self:
@@ -544,7 +544,7 @@ class ClmLimitChangeRequest(models.Model):
         Releases the bucket slot immediately so a new request can be created.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_ccm',
+            'zencore_groups.group_zencore_clm_ccm',
             'cancel limit change requests',
         )
         for rec in self:
@@ -586,7 +586,7 @@ class ClmLimitChangeRequest(models.Model):
         Any failure on one record rolls back the entire transaction.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_finance',
+            'zencore_groups.group_zencore_clm_finance',
             'bulk approve limit change requests',
         )
         pending = self.filtered(lambda r: r.state == 'pending_fm')
@@ -640,7 +640,7 @@ class ClmLimitChangeRequest(models.Model):
         Non-pending records are passed to the wizard but silently excluded by it.
         """
         self._assert_group(
-            'zencore_clms.group_zencore_clm_finance',
+            'zencore_groups.group_zencore_clm_finance',
             'bulk reject limit change requests',
         )
         pending = self.filtered(lambda r: r.state == 'pending_fm')

@@ -18,7 +18,7 @@
                     class="oe_stat_button"
                     icon="fa-file-text-o"
                     invisible="clm_request_total_count == 0"
-                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
                     <field
                         name="clm_request_total_count"
@@ -33,7 +33,7 @@
                     class="oe_stat_button"
                     icon="fa-hourglass-half"
                     invisible="clm_request_pending_count == 0"
-                    groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_ccm"
+                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_ccm"
                 >
                     <field
                         name="clm_request_pending_count"
@@ -48,7 +48,7 @@
                     class="oe_stat_button"
                     icon="fa-check-circle"
                     invisible="clm_request_approved_count == 0"
-                    groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
                     <field
                         name="clm_request_approved_count"
@@ -63,7 +63,7 @@
                     class="oe_stat_button"
                     icon="fa-times-circle"
                     invisible="clm_request_rejected_count == 0"
-                    groups="zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
                     <field
                         name="clm_request_rejected_count"
@@ -97,7 +97,7 @@
                 <page
                     string="Credit Management"
                     name="clm_credit"
-                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance,zencore_clms.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
 
                     <!-- Hidden stat fields consumed by smart buttons -->
@@ -289,7 +289,7 @@
                     <group string="Active Limit Change Requests">
 
                         <!-- CCM: New request button — available for ALL partner types -->
-                        <div class="mb-2" groups="zencore_clms.group_zencore_clm_ccm">
+                        <div class="mb-2" groups="zencore_groups.group_zencore_clm_ccm">
                             <button
                                 name="action_clm_new_limit_request"
                                 type="object"
@@ -305,7 +305,7 @@
                         -->
                         <div class="alert alert-info small mb-2" role="alert"
                              invisible="not child_ids"
-                             groups="zencore_clms.group_zencore_clm_ccm">
+                             groups="zencore_groups.group_zencore_clm_ccm">
                             <strong>Note:</strong> A limit change request on this record
                             updates <em>this partner's own</em> bucket limits (shown in
                             Individual Credit Limits above). To change a child member's
@@ -313,7 +313,7 @@
                         </div>
 
                         <!-- Finance: no active requests hint -->
-                        <div class="text-muted small mb-2" invisible="clm_request_pending_count != 0 or clm_request_total_count == 0" groups="zencore_clms.group_zencore_clm_finance">
+                        <div class="text-muted small mb-2" invisible="clm_request_pending_count != 0 or clm_request_total_count == 0" groups="zencore_groups.group_zencore_clm_finance">
                             No pending limit change requests for this customer.
                         </div>
 

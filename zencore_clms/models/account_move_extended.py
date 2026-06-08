@@ -569,7 +569,7 @@ class AccountMoveExtended(models.Model):
         SoD: Only Finance can register payments.
         Allowed even when customer is frozen (SRS §6.2).
         """
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+        if not self.env.user.has_group('zencore_groups.group_zencore_clm_finance'):
             raise AccessError(
                 "Only Finance can register payments for invoices."
             )
@@ -672,7 +672,7 @@ class AccountPaymentExtended(models.Model):
         if not self.env.su and not self.env.context.get('clm_skip_sod_check'):
             customer_payments = self.filtered(lambda p: p.partner_type == 'customer')
             if customer_payments:
-                if not self.env.user.has_group('zencore_clms.group_zencore_clm_finance'):
+                if not self.env.user.has_group('zencore_groups.group_zencore_clm_finance'):
                     raise AccessError(
                         "Only Finance can register and post customer payments."
                     )

@@ -9,11 +9,11 @@
     <!-- ════════════════════════════════════════════════════════════════════
          MODULE CATEGORY — groups appear under this in Settings → Users
     ════════════════════════════════════════════════════════════════════ -->
-    <record id="module_category_zencore_clm" model="ir.module.category">
+    <!-- <record id="module_category_zencore_clm" model="ir.module.category">
         <field name="name">Zencore CLM</field>
         <field name="description">Zencore CLM Security Roles</field>
         <field name="sequence">25</field>
-    </record>
+    </record> -->
 
     <!-- ════════════════════════════════════════════════════════════════════
          PRIVILEGES — ONE per group so roles are NOT mutually exclusive.
@@ -21,7 +21,7 @@
          A user can hold any combination of these roles simultaneously.
     ════════════════════════════════════════════════════════════════════ -->
 
-    <record id="privilege_zencore_clm_salesperson" model="res.groups.privilege">
+    <!-- <record id="privilege_zencore_clm_salesperson" model="res.groups.privilege">
         <field name="name">Salesperson</field>
         <field name="category_id" ref="module_category_zencore_clm"/>
     </record>
@@ -49,13 +49,13 @@
     <record id="privilege_zencore_clm_finance" model="res.groups.privilege">
         <field name="name">Finance</field>
         <field name="category_id" ref="module_category_zencore_clm"/>
-    </record>
+    </record> -->
 
     <!-- ════════════════════════════════════════════════════════════════════
          GROUPS — Each bound to its own privilege (independent checkboxes)
     ════════════════════════════════════════════════════════════════════ -->
 
-    <record id="group_zencore_clm_salesperson" model="res.groups">
+    <!-- <record id="group_zencore_clm_salesperson" model="res.groups">
         <field name="name">Salesperson</field>
         <field name="privilege_id" ref="privilege_zencore_clm_salesperson"/>
     </record>
@@ -83,7 +83,7 @@
     <record id="group_zencore_clm_finance" model="res.groups">
         <field name="name">Finance</field>
         <field name="privilege_id" ref="privilege_zencore_clm_finance"/>
-    </record>
+    </record> -->
 
 
     <!-- ══════════════════════════════════════════════════════════════════════

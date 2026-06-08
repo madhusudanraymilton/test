@@ -637,8 +637,8 @@ class SaleOrderExtended(models.Model):
         Freeze: Block creation if customer group is frozen (SRS §6.2).
         """
         if not (
-            self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson')
-            or self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager')
+            self.env.user.has_group('zencore_groups.group_zencore_clm_salesperson')
+            or self.env.user.has_group('zencore_groups.group_zencore_clm_sales_manager')
         ):
             raise AccessError(
                 "Only Salesperson or Sales Manager can create quotations."
@@ -658,7 +658,7 @@ class SaleOrderExtended(models.Model):
         SoD: Only Sales Manager can confirm a Sales Order.
         Freeze: Block confirmation if customer group is frozen (SRS §6.2).
         """
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_sales_manager'):
+        if not self.env.user.has_group('zencore_groups.group_zencore_clm_sales_manager'):
             raise AccessError("Only Sales Manager can confirm a Sales Order.")
         for order in self:
             order._clm_check_group_freeze('Sales Order Confirmation')
@@ -669,7 +669,7 @@ class SaleOrderExtended(models.Model):
         SoD: Only TDO can create invoices (SRS §10).
         No freeze check — invoice creation is ALLOWED even when frozen (SRS §6.2).
         """
-        if not self.env.user.has_group('zencore_clms.group_zencore_clm_tdo'):
+        if not self.env.user.has_group('zencore_groups.group_zencore_clm_tdo'):
             raise AccessError(
                 "Only TDO (Territory/Technical Delivery Officer) can create invoices."
             )
@@ -686,8 +686,8 @@ class SaleOrderExtended(models.Model):
         SoD: CCM or Salesperson may record.
         """
         if not (
-            self.env.user.has_group('zencore_clms.group_zencore_clm_ccm')
-            or self.env.user.has_group('zencore_clms.group_zencore_clm_salesperson')
+            self.env.user.has_group('zencore_groups.group_zencore_clm_ccm')
+            or self.env.user.has_group('zencore_groups.group_zencore_clm_salesperson')
         ):
             raise AccessError(
                 "Only CCM or Salesperson can record Customer Acceptance."
@@ -716,8 +716,8 @@ class SaleOrderExtended(models.Model):
         SoD: CCM or Finance may record.
         """
         if not (
-            self.env.user.has_group('zencore_clms.group_zencore_clm_ccm')
-            or self.env.user.has_group('zencore_clms.group_zencore_clm_finance')
+            self.env.user.has_group('zencore_groups.group_zencore_clm_ccm')
+            or self.env.user.has_group('zencore_groups.group_zencore_clm_finance')
         ):
             raise AccessError(
                 "Only CCM or Finance can record Bank Acceptance."

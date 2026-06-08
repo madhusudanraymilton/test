@@ -39,7 +39,7 @@ class StockPickingExtended(models.Model):
             ):
                 # Gate 1: SoD — Warehouse only for customer deliveries
                 if not self.env.user.has_group(
-                    'zencore_clms.group_zencore_clm_warehouse'
+                    'zencore_groups.group_zencore_clm_warehouse'
                 ):
                     raise AccessError(
                         "Only Warehouse staff can validate customer deliveries."

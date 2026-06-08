@@ -31,7 +31,7 @@
                     class="btn-primary"
                     invisible="not clm_show_customer_acceptance_btn"
                     confirm="Confirm that the customer has accepted the documents? This will move the order to Bucket 3."
-                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_salesperson"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_salesperson"
                 />
 
                 <!--
@@ -46,7 +46,7 @@
                     class="btn-primary"
                     invisible="not clm_show_bank_acceptance_btn"
                     confirm="Confirm that the bank has accepted the documents? This will move the order to Bucket 4."
-                    groups="zencore_clms.group_zencore_clm_ccm,zencore_clms.group_zencore_clm_finance"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance"
                 />
 
             </xpath>
