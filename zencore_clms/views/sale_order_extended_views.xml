@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!--
+        sale.order — CLM Extension Views (v2.0)
+
+        Changes from v1.x:
+        ──────────────────
+        - Removed Customer Acceptance and Bank Acceptance BUTTONS from SO header.
+          Per SRS §4.1/§4.2: acceptance fields are on Customer Invoice (account.move),
+          not on the sale order. The invoice-level acceptance buttons are in
+          account_move_extended_views.xml.
+
+        - CLM Credit Control tab now shows INFORMATIONAL ALERTS about invoice
+          acceptance states (read-only summary, drives user to open the invoice).
+
+        - clm_show_customer_acceptance_btn / clm_show_bank_acceptance_btn are now
+          purely informational (do linked invoices need acceptance?) — not action triggers.
+
+        - clm_state statusbar retained (operational stage, SRS §2.2).
+    -->
+
     <record id="view_order_form_clm_statusbar" model="ir.ui.view">
         <field name="name">sale.order.form.clm.statusbar</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
 
-            <!-- ── 1. Replace default Odoo status bar with CLM stage bar ── -->
+            <!-- ── 1. Replace default Odoo status bar with CLM operational stage bar ── -->
             <xpath expr="//header/field[@name='state'][@widget='statusbar']" position="replace">
                 <field name="state" invisible="1"/>
                 <field
@@ -16,81 +35,82 @@
                 />
             </xpath>
 
-            <!-- ── 2. Acceptance buttons in header ── -->
-            <xpath expr="//header/button[@name='action_confirm']" position="after">
-
-                <!--
-                    Customer Acceptance — visible only in Bucket 2
-                    Allowed even when frozen (SRS §6.2)
-                    SoD: CCM or Salesperson
-                -->
-                <button
-                    name="action_clm_customer_acceptance"
-                    type="object"
-                    string="✔ Customer Acceptance"
-                    class="btn-primary"
-                    invisible="not clm_show_customer_acceptance_btn"
-                    confirm="Confirm that the customer has accepted the documents? This will move the order to Bucket 3."
-                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_salesperson"
-                />
-
-                <!--
-                    Bank Acceptance — visible only in Bucket 3
-                    Allowed even when frozen (SRS §6.2)
-                    SoD: CCM or Finance
-                -->
-                <button
-                    name="action_clm_bank_acceptance"
-                    type="object"
-                    string="🏦 Bank Acceptance"
-                    class="btn-primary"
-                    invisible="not clm_show_bank_acceptance_btn"
-                    confirm="Confirm that the bank has accepted the documents? This will move the order to Bucket 4."
-                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance"
-                />
-
-            </xpath>
-
-            <!-- ── 3. CLM Credit Control tab ── -->
+            <!-- ── 2. CLM Credit Control tab ── -->
             <xpath expr="//page[@name='order_lines']" position="after">
                 <page string="Credit Control" name="clm_info">
-                    <group>
-                        <group string="CLM Stage Information">
-                            <field name="clm_state" readonly="1"/>
-                            <field name="clm_customer_acceptance" readonly="1"/>
-                            <field name="clm_bank_acceptance" readonly="1"/>
+
+                    <!-- Hidden visibility fields -->
+                    <field name="clm_show_customer_acceptance_btn" invisible="1"/>
+                    <field name="clm_show_bank_acceptance_btn"     invisible="1"/>
+                    <field name="clm_show_payment_action"          invisible="1"/>
+
+                    <!-- ════════════════════════════════════════════════════
+                         A — ACCEPTANCE STATUS ALERTS
+                         These are INFORMATIONAL only. Actual acceptance
+                         buttons are on the linked Invoice(s).
+                    ════════════════════════════════════════════════════ -->
+
+                    <!--
+                        Invoices pending customer acceptance.
+                        Guide user to open the invoice.
+                    -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not clm_show_customer_acceptance_btn">
+                        <strong>⏳ Customer Acceptance Pending</strong><br/>
+                        One or more linked invoices are awaiting Customer Acceptance.<br/>
+                        Open the related invoice(s) and click the
+                        <strong>✔ Customer Acceptance</strong> button.
+                    </div>
+
+                    <!--
+                        Customer accepted; awaiting bank acceptance.
+                    -->
+                    <div class="alert alert-info" role="alert"
+                         invisible="not clm_show_bank_acceptance_btn">
+                        <strong>⏳ Bank Acceptance Pending</strong><br/>
+                        Customer Acceptance is confirmed on one or more invoices,
+                        but Bank Acceptance is still outstanding.<br/>
+                        Open the related invoice(s) and click the
+                        <strong>🏦 Bank Acceptance</strong> button.
+                    </div>
+
+                    <!--
+                        Bank accepted — Finance can register payment.
+                    -->
+                    <div class="alert alert-success" role="alert"
+                         invisible="not clm_show_payment_action">
+                        <strong>✅ Payment Ready</strong><br/>
+                        Bank Acceptance is confirmed on one or more invoices.
+                        Finance can now register payment on the related invoice(s).
+                    </div>
+
+                    <!-- Fully paid -->
+                    <div class="alert alert-primary" role="alert"
+                         invisible="clm_state != 'fully_paid'">
+                        <strong>💰 Fully Paid</strong><br/>
+                        All invoices for this order have been settled.
+                        Exposure cleared from all credit buckets.
+                    </div>
+
+                    <!-- ════════════════════════════════════════════════════
+                         B — CLM STAGE INFORMATION
+                    ════════════════════════════════════════════════════ -->
+
+                    <group string="CLM Operational Stage (SRS §2)">
+                        <group>
+                            <field name="clm_state"
+                                   readonly="1"
+                                   string="Current Stage"/>
+                        </group>
+                        <group>
+                            <!-- Note: acceptance flags live on invoices now -->
+                            <div class="text-muted small">
+                                Customer Acceptance and Bank Acceptance are tracked
+                                per invoice (SRS §4). Open the related invoice(s)
+                                to view or record acceptance.
+                            </div>
                         </group>
                     </group>
-
-                    <!-- Payment ready: bank acceptance confirmed, order in Bucket 4 -->
-                    <div
-                        class="alert alert-success"
-                        invisible="not clm_show_payment_action"
-                        role="alert"
-                    >
-                        <strong>✅ Payment Ready:</strong>
-                        Bank acceptance is confirmed. Finance may now register payment on the related invoice.
-                    </div>
-
-                    <!-- Payment locked: waiting for bank acceptance -->
-                    <div
-                        class="alert alert-warning"
-                        invisible="clm_show_payment_action or clm_state in ('paid', 'pi', 'bucket1')"
-                        role="alert"
-                    >
-                        <strong>🔒 Payment Locked:</strong>
-                        Payment registration is available only after bank acceptance is recorded (SRS §4.3).
-                    </div>
-
-                    <!-- Paid confirmation -->
-                    <div
-                        class="alert alert-info"
-                        invisible="clm_state != 'paid'"
-                        role="alert"
-                    >
-                        <strong>💰 Paid:</strong>
-                        This order has been fully settled. Exposure cleared from all buckets.
-                    </div>
 
                 </page>
             </xpath>
