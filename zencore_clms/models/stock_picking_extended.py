@@ -32,6 +32,7 @@ class StockPickingExtended(models.Model):
         All other picking types (purchase receipts, internal moves, returns)
         fall through to super() without any CLM restriction.
         """
+
         for picking in self:
             if (
                 picking.picking_type_code == 'outgoing'
@@ -49,23 +50,45 @@ class StockPickingExtended(models.Model):
 
         return super().button_validate()
 
+    # def _action_done(self):
+    #     """
+    #     Internal post-validation hook. Fires after all backorder interactions.
+
+    #     No SoD check here — called by Odoo internals (backorder wizard,
+    #     scheduler, purchase receipt confirmation).
+    #     Only outgoing sale-linked pickings trigger CLM stage transitions.
+    #     """
+    #     result = super()._action_done()
+
+    #     for picking in self.filtered(
+    #         lambda p: (
+    #             p.picking_type_code == 'outgoing'
+    #             and p.state == 'done'
+    #             and p.sale_id
+    #         )
+    #     ):
+    #         picking.sale_id._clm_move_to_fully_delivered()
+
+    #     return result
+
     def _action_done(self):
-        """
-        Internal post-validation hook. Fires after all backorder interactions.
+        res = super()._action_done()
 
-        No SoD check here — called by Odoo internals (backorder wizard,
-        scheduler, purchase receipt confirmation).
-        Only outgoing sale-linked pickings trigger CLM stage transitions.
-        """
-        result = super()._action_done()
 
-        for picking in self.filtered(
-            lambda p: (
-                p.picking_type_code == 'outgoing'
-                and p.state == 'done'
-                and p.sale_id
-            )
-        ):
-            picking.sale_id._clm_move_to_bucket1()
+        for picking in self.filtered(lambda p: p.sale_id and p.picking_type_code == 'outgoing'):
+            order = picking.sale_id
 
-        return result
+            
+
+            total = sum(picking.mapped('product_uom_qty'))
+            done = sum(picking.mapped('quantity_done'))
+
+            # FULL DELIVERY
+            if done >= total:
+                order._clm_move_to_fully_delivered()
+
+            # PARTIAL DELIVERY
+            elif done > 0:
+                order._clm_move_to_partially_delivered()
+
+        return res
