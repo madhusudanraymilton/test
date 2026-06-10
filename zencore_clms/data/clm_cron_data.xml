@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        CLM Bucket 5 Overdue Recompute Cron
+        ─────────────────────────────────────
+        WHY this cron is necessary:
+          clm_bucket_4_balance and clm_bucket_5_balance are non-stored computed
+          fields. The SQL in _compute_clm_balances uses CURRENT_DATE to determine
+          whether a bank-accepted invoice is in Bucket 4 (not overdue) or Bucket 5
+          (overdue). This boundary crosses automatically in the DB as calendar days
+          advance, BUT the ORM only recomputes a non-stored field when one of its
+          @api.depends triggers fires.
+
+          Without a cron, Bucket 4→5 reclassification only happens when the user
+          opens a form that causes the compute to run (e.g., opening the partner
+          record or an invoice). Automated daily detection requires this scheduled
+          action to invalidate and recompute the balance fields on partners with
+          bank-accepted invoices that are approaching or past their due date.
+
+        Schedule: daily at 01:00 (off-peak, before business opens).
+
+        Model called: clm.limit.change.request is a dummy target; the actual
+        recompute is triggered via the ORM model method on res.partner.
+        We call a dedicated server action on res.partner directly.
+    -->
+
+    <record id="ir_cron_clm_bucket5_recompute" model="ir.cron">
+        <field name="name">CLM: Daily Bucket 4/5 Overdue Boundary Recompute</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">
+# Recompute balance fields on all partners that have at least one
+# posted bank-accepted invoice with a due date within the next 30 days
+# or already past due. This ensures Bucket 4 → Bucket 5 reclassification
+# surfaces without waiting for a user to open the partner form.
+#
+# Partners are resolved via direct SQL (no ORM read_group) to avoid
+# loading all partner records into memory.
+env.cr.execute("""
+    SELECT DISTINCT am.partner_id
+    FROM account_move am
+    WHERE am.move_type       = 'out_invoice'
+      AND am.state           = 'posted'
+      AND am.clm_bank_acceptance = TRUE
+      AND am.payment_state   NOT IN ('paid', 'in_payment', 'reversed')
+      AND am.invoice_date_due IS NOT NULL
+      AND am.invoice_date_due BETWEEN CURRENT_DATE - INTERVAL '1 day'
+                                  AND CURRENT_DATE + INTERVAL '30 days'
+""")
+partner_ids = [row[0] for row in env.cr.fetchall()]
+
+if partner_ids:
+    partners = env['res.partner'].browse(partner_ids)
+    # Invalidate ORM cache so next access re-runs the SQL compute
+    partners.invalidate_recordset([
+        'clm_bucket_4_balance',
+        'clm_bucket_5_balance',
+        'clm_is_frozen',
+        'bucket_freeze_active',
+    ])
+    # Force eager recompute by reading the field (triggers _compute_clm_balances)
+    _ = partners.mapped('clm_bucket_5_balance')
+    env.cr.execute('SELECT 1')  # flush after compute
+        </field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">1</field>
+        <field name="priority">10</field>
+    </record>
+
+</odoo>

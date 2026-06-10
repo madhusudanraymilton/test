@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        account.move — CLM Acceptance Extension (v1.0)
+
+        BUG 3 FIX: This file was entirely absent from the manifest.
+        account_move_extended.py defined clm_customer_acceptance,
+        clm_bank_acceptance, and their action methods, but no view
+        ever exposed them — making Bucket 2 → 3 → 4 transitions
+        completely unreachable from the UI.
+
+        What this file adds:
+        ─────────────────────
+        A. Two action buttons in the invoice form header:
+             ✔ Customer Acceptance  (CCM / Salesperson, after posting)
+             🏦 Bank Acceptance     (CCM / Finance, after customer acceptance)
+
+        B. A dedicated "CLM Acceptance" page in the invoice notebook:
+             - Acceptance status display (read-only Boolean toggles)
+             - Contextual alert banners guiding the user to the next step
+             - Bucket exposure impact summary for user education
+
+        Visibility rules mirror SRS §4.1 / §4.2:
+          Customer Acceptance button: visible on posted out_invoice
+            where clm_customer_acceptance is still False and invoice is outstanding.
+          Bank Acceptance button: visible after customer acceptance is confirmed,
+            before bank acceptance, while invoice is outstanding.
+    -->
+
+    <record id="view_move_form_clm_acceptance" model="ir.ui.view">
+        <field name="name">account.move.form.clm.acceptance</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 A — HEADER BUTTONS
+                 Injected after Register Payment so the CLM buttons appear
+                 in the expected flow order:
+                   Confirm → Register Payment → ✔ Customer → 🏦 Bank
+                 The invisible attribute ensures they only render on
+                 posted customer invoices that are still outstanding.
+            ══════════════════════════════════════════════════════════════ -->
+            <xpath expr="//header/button[@name='action_register_payment']"
+                   position="after">
+
+                <!--
+                    SRS §4.1 — Customer Acceptance
+                    Visible: posted out_invoice, not yet accepted, still outstanding.
+                    SoD: CCM or Salesperson (enforced in action method + groups attr).
+                    Confirm dialog prevents accidental clicks — this is irreversible.
+                -->
+                <button
+                    name="action_clm_customer_acceptance"
+                    type="object"
+                    string="✔ Customer Acceptance"
+                    class="btn-primary"
+                    invisible="not clm_show_customer_acceptance_btn"
+                    groups="zencore_groups.group_zencore_clm_ccm,
+                            zencore_groups.group_zencore_clm_salesperson"
+                    confirm="Record Customer Acceptance on this invoice?
+This confirms the customer has received and accepted the goods/services.
+This action cannot be undone."
+                />
+
+                <!--
+                    SRS §4.2 — Bank Acceptance
+                    Visible: posted out_invoice, customer accepted, bank not yet accepted.
+                    SoD: CCM or Finance (enforced in action method + groups attr).
+                -->
+                <button
+                    name="action_clm_bank_acceptance"
+                    type="object"
+                    string="🏦 Bank Acceptance"
+                    class="btn-primary"
+                    invisible="not clm_show_bank_acceptance_btn"
+                    groups="zencore_groups.group_zencore_clm_ccm,
+                            zencore_groups.group_zencore_clm_finance"
+                    confirm="Record Bank Acceptance on this invoice?
+This confirms the bank has processed the LC/acceptance documents.
+This action cannot be undone."
+                />
+
+            </xpath>
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 B — CLM ACCEPTANCE TAB
+                 Added after the standard "Other Info" page.
+                 Only visible on customer invoices (move_type = 'out_invoice').
+                 Groups: all CLM roles with any read access to invoices.
+            ══════════════════════════════════════════════════════════════ -->
+            <xpath expr="//notebook/page[@name='other_info']" position="after">
+
+                <page
+                    string="CLM Acceptance"
+                    name="clm_acceptance"
+                    invisible="move_type != 'out_invoice'"
+                    groups="zencore_groups.group_zencore_clm_ccm,
+                            zencore_groups.group_zencore_clm_finance,
+                            zencore_groups.group_zencore_clm_salesperson,
+                            zencore_groups.group_zencore_clm_sales_manager,
+                            zencore_groups.group_zencore_clm_tdo"
+                >
+
+                    <!-- Compute visibility fields — consumed by alerts below -->
+                    <field name="clm_show_customer_acceptance_btn" invisible="1"/>
+                    <field name="clm_show_bank_acceptance_btn"     invisible="1"/>
+                    <field name="clm_payment_locked"               invisible="1"/>
+
+                    <!-- ════════════════════════════════════════════════════
+                         CONTEXTUAL ALERT BANNERS
+                         One banner per state — at most one will be visible
+                         at any time on a given invoice.
+                    ════════════════════════════════════════════════════ -->
+
+                    <!-- Draft or cancelled invoice — no CLM action possible -->
+                    <div class="alert alert-secondary" role="alert"
+                         invisible="state not in ('draft', 'cancel') or move_type != 'out_invoice'">
+                        <strong>ℹ Invoice not yet posted.</strong>
+                        CLM Acceptance tracking begins after the invoice is confirmed/posted.
+                    </div>
+
+                    <!-- Posted, awaiting customer acceptance (Bucket 2) -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="state != 'posted'
+                                    or not clm_show_customer_acceptance_btn
+                                    or payment_state in ('paid', 'in_payment', 'reversed')">
+                        <strong>⏳ Awaiting Customer Acceptance (Bucket 2)</strong><br/>
+                        This invoice is posted and outstanding but Customer Acceptance
+                        has not been recorded yet.<br/>
+                        Click <strong>✔ Customer Acceptance</strong> in the header
+                        once the customer has confirmed receipt of goods/services.
+                    </div>
+
+                    <!-- Customer accepted, awaiting bank acceptance (Bucket 3) -->
+                    <div class="alert alert-info" role="alert"
+                         invisible="state != 'posted'
+                                    or not clm_show_bank_acceptance_btn
+                                    or payment_state in ('paid', 'in_payment', 'reversed')">
+                        <strong>⏳ Awaiting Bank Acceptance (Bucket 3)</strong><br/>
+                        Customer Acceptance is confirmed.<br/>
+                        Click <strong>🏦 Bank Acceptance</strong> in the header
+                        once the bank has processed the LC or acceptance documents.
+                    </div>
+
+                    <!-- Bank accepted, payment can now be registered (Bucket 4) -->
+                    <div class="alert alert-success" role="alert"
+                         invisible="not clm_bank_acceptance
+                                    or payment_state in ('paid', 'in_payment', 'reversed')">
+                        <strong>✅ Both Acceptances Confirmed (Bucket 4)</strong><br/>
+                        Customer Acceptance and Bank Acceptance are both recorded.<br/>
+                        Finance can now register payment on this invoice (SRS §4.3).
+                    </div>
+
+                    <!-- Payment locked banner (for Finance) -->
+                    <div class="alert alert-danger" role="alert"
+                         invisible="not clm_payment_locked
+                                    or state != 'posted'
+                                    or payment_state in ('paid', 'in_payment', 'reversed')"
+                         groups="zencore_groups.group_zencore_clm_finance">
+                        <strong>⛔ Payment Registration Locked (SRS §4.3)</strong><br/>
+                        Both Customer Acceptance and Bank Acceptance must be confirmed
+                        before payment can be registered on this invoice.
+                    </div>
+
+                    <!-- Fully paid -->
+                    <div class="alert alert-primary" role="alert"
+                         invisible="payment_state not in ('paid', 'in_payment')">
+                        <strong>💰 Invoice Settled</strong><br/>
+                        This invoice is fully paid. Exposure has been removed from
+                        Bucket 4 (or Bucket 5 if overdue) on the customer credit profile.
+                    </div>
+
+                    <!-- ════════════════════════════════════════════════════
+                         ACCEPTANCE FIELDS (read-only toggles)
+                    ════════════════════════════════════════════════════ -->
+                    <group string="Acceptance Status (SRS §4)">
+                        <group>
+                            <field
+                                name="clm_customer_acceptance"
+                                readonly="1"
+                                widget="boolean_toggle"
+                                string="Customer Acceptance Recorded"
+                            />
+                            <field
+                                name="clm_bank_acceptance"
+                                readonly="1"
+                                widget="boolean_toggle"
+                                string="Bank Acceptance Recorded"
+                            />
+                        </group>
+                        <group>
+                            <field
+                                name="clm_payment_locked"
+                                readonly="1"
+                                widget="boolean_toggle"
+                                string="Payment Registration Locked"
+                            />
+                        </group>
+                    </group>
+
+                    <!-- ════════════════════════════════════════════════════
+                         BUCKET EXPOSURE REFERENCE
+                         Helps users understand how this invoice's outstanding
+                         balance moves between credit buckets.
+                    ════════════════════════════════════════════════════ -->
+                    <group string="Credit Bucket Exposure Reference">
+                        <div class="text-muted o_field_widget">
+                            <p>
+                                This invoice's outstanding balance
+                                (<code>amount_residual</code>) is tracked in exactly
+                                one credit bucket at any time:
+                            </p>
+                            <ul>
+                                <li>
+                                    <strong>Bucket 2</strong> — Invoice posted,
+                                    no Customer Acceptance yet
+                                </li>
+                                <li>
+                                    <strong>Bucket 3</strong> — Customer Acceptance
+                                    recorded, Bank Acceptance pending
+                                </li>
+                                <li>
+                                    <strong>Bucket 4</strong> — Bank Acceptance
+                                    confirmed, payment due date not yet passed
+                                </li>
+                                <li>
+                                    <strong>Bucket 5</strong> — Bank Acceptance
+                                    confirmed AND due date has passed (Overdue —
+                                    monitoring only, no freeze trigger)
+                                </li>
+                                <li>
+                                    <strong>Cleared</strong> — Invoice fully paid
+                                    or reversed
+                                </li>
+                            </ul>
+                            <p>
+                                Balance transitions are computed automatically.
+                                No manual bucket assignment is required.
+                            </p>
+                        </div>
+                    </group>
+
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

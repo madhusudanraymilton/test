@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ZENCORE UNIVERSAL SECURITY GROUPS
+        ══════════════════════════════════════════════════════════════════════
+        This file is the single source of truth for all Zencore role groups.
+
+        HOW TO USE IN OTHER MODULES:
+        ─────────────────────────────
+        1. Add 'zencore_groups' to your module's depends list.
+        2. Reference groups as: zencore_groups.group_zencore_clm_<role>
+
+        Example (Python):
+            self.env.user.has_group('zencore_groups.group_zencore_clm_finance')
+
+        Example (XML view):
+            <button groups="zencore_groups.group_zencore_clm_ccm"/>
+
+        Example (ir.model.access.csv):
+            access_id,...,zencore_groups.group_zencore_clm_warehouse,...
+
+        SoD ENFORCEMENT MAP (SRS §10):
+        ─────────────────────────────────────────────────────────────────────
+        Role            Permitted Operations
+        ─────────────────────────────────────────────────────────────────────
+        Salesperson     Create quotations (PI stage)
+        Sales Manager   Confirm sale orders (SO confirmation)
+        CCM             Credit limit requests, customer/bank acceptance
+        Warehouse       Validate outgoing deliveries
+        TDO             Create and post customer invoices
+        Finance         Post payments, approve limit change requests
+        ─────────────────────────────────────────────────────────────────────
+
+        PRIVILEGE MODEL (Odoo 19):
+        ─────────────────────────────
+        Each role uses res.groups.privilege for independent checkbox assignment.
+        Roles are NOT mutually exclusive — a user can hold multiple roles.
+    ══════════════════════════════════════════════════════════════════════ -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         MODULE CATEGORY
+         Displayed as the section header in Settings → Users & Companies → Users
+    ══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="module_category_zencore_clm" model="ir.module.category">
+        <field name="name">Zencore CLM</field>
+        <field name="description">
+            Security roles for Zencore Credit Limit Management and related modules.
+        </field>
+        <field name="sequence">25</field>
+    </record>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         PRIVILEGES — One per role (Odoo 19 independent checkbox model)
+         Each privilege = one toggle in Settings → Users.
+         Bound 1-to-1 with a group below.
+    ══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="privilege_zencore_clm_salesperson" model="res.groups.privilege">
+        <field name="name">Salesperson</field>
+        <field name="category_id" ref="module_category_zencore_clm"/>
+    </record>
+
+    <record id="privilege_zencore_clm_sales_manager" model="res.groups.privilege">
+        <field name="name">Sales Manager</field>
+        <field name="category_id" ref="module_category_zencore_clm"/>
+    </record>
+
+    <record id="privilege_zencore_clm_ccm" model="res.groups.privilege">
+        <field name="name">CCM</field>
+        <field name="category_id" ref="module_category_zencore_clm"/>
+    </record>
+
+    <record id="privilege_zencore_clm_warehouse" model="res.groups.privilege">
+        <field name="name">Warehouse</field>
+        <field name="category_id" ref="module_category_zencore_clm"/>
+    </record>
+
+    <record id="privilege_zencore_clm_tdo" model="res.groups.privilege">
+        <field name="name">TDO</field>
+        <field name="category_id" ref="module_category_zencore_clm"/>
+    </record>
+
+    <record id="privilege_zencore_clm_finance" model="res.groups.privilege">
+        <field name="name">Finance Manager</field>
+        <field name="category_id" ref="module_category_zencore_clm"/>
+    </record>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         GROUPS — Each bound to its own privilege.
+         External IDs (prefixed zencore_groups.*) used in:
+           - ir.model.access.csv  → group_id:id column
+           - Python               → has_group('zencore_groups.group_*')
+           - XML views            → groups="zencore_groups.group_*"
+           - ir.rule              → groups eval
+    ══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="group_zencore_clm_salesperson" model="res.groups">
+        <field name="name">Salesperson</field>
+        <field name="privilege_id" ref="privilege_zencore_clm_salesperson"/>
+        <field name="comment">
+            Can create quotations (Proforma Invoice stage).
+            Cannot confirm sale orders — Sales Manager required for that.
+        </field>
+    </record>
+
+    <record id="group_zencore_clm_sales_manager" model="res.groups">
+        <field name="name">Sales Manager</field>
+        <field name="privilege_id" ref="privilege_zencore_clm_sales_manager"/>
+        <field name="comment">
+            Can confirm sale orders (triggers PI → SO state).
+            Read-only access on CLM limit requests and deliveries.
+        </field>
+    </record>
+
+    <record id="group_zencore_clm_ccm" model="res.groups">
+        <field name="name">CCM</field>
+        <field name="privilege_id" ref="privilege_zencore_clm_ccm"/>
+        <field name="comment">
+            Credit &amp; Collections Manager.
+            Creates and submits limit change requests.
+            Records customer acceptance (Bucket 2 → 3).
+            Records bank acceptance (Bucket 3 → 4) jointly with Finance.
+        </field>
+    </record>
+
+    <record id="group_zencore_clm_warehouse" model="res.groups">
+        <field name="name">Warehouse</field>
+        <field name="privilege_id" ref="privilege_zencore_clm_warehouse"/>
+        <field name="comment">
+            Validates outgoing customer deliveries (triggers PI → Bucket 1).
+            No access to invoicing, payments, or limit management.
+        </field>
+    </record>
+
+    <record id="group_zencore_clm_tdo" model="res.groups">
+        <field name="name">TDO</field>
+        <field name="privilege_id" ref="privilege_zencore_clm_tdo"/>
+        <field name="comment">
+            Territory / Technical Delivery Officer.
+            Creates and posts customer invoices (triggers Bucket 1 → 2).
+            Cannot register payments — Finance handles that.
+        </field>
+    </record>
+
+    <record id="group_zencore_clm_finance" model="res.groups">
+        <field name="name">Finance</field>
+        <field name="privilege_id" ref="privilege_zencore_clm_finance"/>
+        <field name="comment">
+            Finance Manager.
+            Posts customer payments (triggers Bucket 4 → Paid).
+            Approves or rejects limit change requests (CCM → FM workflow).
+            Records bank acceptance jointly with CCM.
+        </field>
+    </record>
+
+</odoo>
