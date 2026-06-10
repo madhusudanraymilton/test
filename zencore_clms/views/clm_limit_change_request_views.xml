@@ -143,6 +143,7 @@
                             name="fm_comment"
                             nolabel="1"
                             readonly="state != 'pending_fm'"
+                            group="zencore_groups.group_zencore_clm_finance"
                             placeholder="Required for rejection. Optional for approval."
                         />
                     </group>

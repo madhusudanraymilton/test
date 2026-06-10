@@ -116,7 +116,7 @@
         • SQL constraint added for clm_bucket_5_limit >= 0
         • Daily cron added for automatic Bucket 4 → 5 overdue boundary detection
     """,
-    'author': 'Zencore',
+    'author': 'Madhusudan Ray',
     'website': 'https://zencoreltd.com',
     'category': 'msa',
     'depends': [
@@ -141,7 +141,7 @@
         # Without this, Bucket 4→5 transition only occurs when a form is
         # opened (CURRENT_DATE evaluated at compute time). The cron forces
         # daily recompute so overdue exposure surfaces automatically.
-        'data/clm_cron_data.xml',
+        # 'data/clm_cron_data.xml',
 
         # Views
         'views/res_partner_extended_views.xml',
@@ -150,6 +150,7 @@
         # Acceptance on invoices, making Bucket 2→3→4 transitions unreachable.
         'views/account_move_extended_views.xml',
         'views/clm_limit_change_request_views.xml',
+        
     ],
     'installable': True,
     'application': False,

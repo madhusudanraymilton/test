@@ -974,11 +974,41 @@ class SaleOrderExtended(models.Model):
 
     # ── Invoice Stage Updater (called by account_move_extended.action_post) ───
 
+    # def _clm_update_invoice_stage(self):
+    #     """
+    #     Called when any invoice linked to this SO is posted.
+    #     Determines whether the SO should move to partially_invoiced or fully_invoiced
+    #     based on Odoo's computed invoice_status field.
+    #     """
+    #     for order in self:
+    #         posted_invoices = order.invoice_ids.filtered(
+    #             lambda i: i.move_type == 'out_invoice' and i.state == 'posted'
+    #         )
+    #         if not posted_invoices:
+    #             continue
+
+    #         # Odoo's invoice_status:
+    #         #   'invoiced'   → all delivered quantities have been invoiced
+    #         #   'to invoice' → some delivered quantities remain to invoice
+    #         #   'nothing'    → nothing to invoice (typically before delivery)
+    #         if order.invoice_status == 'invoiced':
+    #             order._clm_set_stage('fully_invoiced', trigger='All Deliveries Fully Invoiced')
+    #         else:
+    #             order._clm_set_stage('partially_invoiced', trigger='Invoice Posted (Partial)')
+
     def _clm_update_invoice_stage(self):
         """
         Called when any invoice linked to this SO is posted.
         Determines whether the SO should move to partially_invoiced or fully_invoiced
         based on Odoo's computed invoice_status field.
+
+        FIX: invalidate invoice_status cache before reading it.
+        This method is called from within the same ORM transaction as action_post().
+        Without invalidation, invoice_status may reflect the pre-post stale state,
+        causing incorrect stage advancement.
+
+        Also invalidates qty_invoiced on order lines because invoice_status depends on
+        it, and its value changes when invoice lines are posted within the same transaction.
         """
         for order in self:
             posted_invoices = order.invoice_ids.filtered(
@@ -987,22 +1017,74 @@ class SaleOrderExtended(models.Model):
             if not posted_invoices:
                 continue
 
-            # Odoo's invoice_status:
-            #   'invoiced'   → all delivered quantities have been invoiced
-            #   'to invoice' → some delivered quantities remain to invoice
-            #   'nothing'    → nothing to invoice (typically before delivery)
+            # Force ORM to re-read these computed fields from DB after the post flush.
+            # Without this, invoice_status may still show the pre-post cached value.
+            order.order_line.invalidate_recordset(['qty_invoiced'])
+            order.invalidate_recordset(['invoice_status'])
+
             if order.invoice_status == 'invoiced':
-                order._clm_set_stage('fully_invoiced', trigger='All Deliveries Fully Invoiced')
+                order._clm_set_stage(
+                    'fully_invoiced',
+                    trigger='All Deliveries Fully Invoiced',
+                )
             else:
-                order._clm_set_stage('partially_invoiced', trigger='Invoice Posted (Partial)')
+                order._clm_set_stage(
+                    'partially_invoiced',
+                    trigger='Invoice Posted (Partial)',
+                )
 
     # ── Payment Stage Updater (called by AccountPaymentExtended.action_post) ──
 
+    # def _clm_update_payment_stage(self):
+    #     """
+    #     Called after a payment is posted and reconciled.
+    #     Checks ALL posted customer invoices for this SO to determine
+    #     whether to move to partially_paid or fully_paid.
+    #     """
+    #     for order in self:
+    #         invoices = order.invoice_ids.filtered(
+    #             lambda i: i.move_type == 'out_invoice' and i.state == 'posted'
+    #         )
+    #         if not invoices:
+    #             continue
+
+    #         # Invalidate stale cache — payment_state recomputed after flush_all()
+    #         invoices.invalidate_recordset(['payment_state', 'amount_residual'])
+
+    #         all_paid = all(
+    #             inv.payment_state in ('paid', 'in_payment') for inv in invoices
+    #         )
+    #         any_paid = any(
+    #             inv.payment_state in ('paid', 'in_payment') for inv in invoices
+    #         )
+
+    #         if all_paid:
+    #             order._clm_set_stage('fully_paid', trigger='All Invoices Fully Paid')
+    #         elif any_paid:
+    #             order._clm_set_stage('partially_paid', trigger='Invoice Partially Paid')
+
     def _clm_update_payment_stage(self):
         """
-        Called after a payment is posted and reconciled.
+        Called after a payment is fully reconciled with invoices.
         Checks ALL posted customer invoices for this SO to determine
-        whether to move to partially_paid or fully_paid.
+        whether to advance to partially_paid or fully_paid.
+
+        BUG FIX: include payment_state='partial' in the any_paid check.
+        ────────────────────────────────────────────────────────────────
+        Odoo payment_state values on account.move (out_invoice):
+        'not_paid'   → no payment received
+        'partial'    → some amount received, balance still outstanding
+        'in_payment' → payment posted, bank clearing still pending
+        'paid'       → fully reconciled
+
+        The original check only covered ('paid', 'in_payment').
+        A partial payment sets payment_state='partial' — this was not in the
+        any_paid set, so partial payments produced zero stage movement.
+        The stage stayed at fully_invoiced even after Finance recorded payment.
+
+        Correct logic:
+        all_paid : ALL invoices in ('paid', 'in_payment')      → fully_paid
+        any_paid : ANY invoice in ('paid', 'in_payment', 'partial') → partially_paid
         """
         for order in self:
             invoices = order.invoice_ids.filtered(
@@ -1011,20 +1093,29 @@ class SaleOrderExtended(models.Model):
             if not invoices:
                 continue
 
-            # Invalidate stale cache — payment_state recomputed after flush_all()
+            # Invalidate stale ORM cache — payment_state has changed since last read
             invoices.invalidate_recordset(['payment_state', 'amount_residual'])
 
             all_paid = all(
-                inv.payment_state in ('paid', 'in_payment') for inv in invoices
+                inv.payment_state in ('paid', 'in_payment')
+                for inv in invoices
             )
+            # FIX: 'partial' means a real payment has been received (balance remains)
             any_paid = any(
-                inv.payment_state in ('paid', 'in_payment') for inv in invoices
+                inv.payment_state in ('paid', 'in_payment', 'partial')
+                for inv in invoices
             )
 
             if all_paid:
-                order._clm_set_stage('fully_paid', trigger='All Invoices Fully Paid')
+                order._clm_set_stage(
+                    'fully_paid',
+                    trigger='All Invoices Fully Paid',
+                )
             elif any_paid:
-                order._clm_set_stage('partially_paid', trigger='Invoice Partially Paid')
+                order._clm_set_stage(
+                    'partially_paid',
+                    trigger='Partial Payment Received',
+                )
 
     # ─────────────────────────────────────────────────────────────────────────
     # AUDIT LOGGING — Chatter note on every CLM stage transition

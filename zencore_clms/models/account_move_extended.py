@@ -1455,20 +1455,64 @@ class AccountPaymentExtended(models.Model):
 
     _inherit = 'account.payment'
 
+    # def action_post(self):
+    #     """
+    #     SoD: Finance posts customer payments (interactive sessions only).
+    #     Post-action: detect paid invoices → update SO operational stage.
+    #     """
+    #     if not self.env.su and not self.env.context.get('clm_skip_sod_check'):
+    #         customer_payments = self.filtered(lambda p: p.partner_type == 'customer')
+    #         if customer_payments:
+    #             if not self.env.user.has_group('zencore_groups.group_zencore_clm_finance'):
+    #                 raise AccessError(
+    #                     "Only Finance can register and post customer payments."
+    #                 )
+
+    #     customer_payments = self.filtered(lambda p: p.partner_type == 'customer')
+
+    #     result = super().action_post()
+
+    #     # Force all deferred reconciliation / recompute OPs to complete.
+    #     # Without this, reconciled_invoice_ids is empty and payment_state is stale.
+    #     self.env.flush_all()
+
+    #     for payment in customer_payments:
+    #         # Clear stale ORM cache — must read from DB after flush_all()
+    #         payment.invalidate_recordset(['reconciled_invoice_ids'])
+
+    #         invoices = payment.reconciled_invoice_ids.filtered(
+    #             lambda m: m.move_type == 'out_invoice'
+    #         )
+    #         if not invoices:
+    #             continue
+
+    #         invoices.invalidate_recordset(['payment_state', 'amount_residual'])
+
+    #         sale_orders = (
+    #             invoices.invoice_line_ids
+    #             .mapped('sale_line_ids')
+    #             .mapped('order_id')
+    #             .filtered(lambda o: o.state not in ('cancel', 'draft'))
+    #         )
+    #         if sale_orders:
+    #             sale_orders._clm_update_payment_stage()
+
+    #     return result
+
     def action_post(self):
         """
         SoD: Finance posts customer payments (interactive sessions only).
         Post-action: detect paid invoices → update SO operational stage.
         """
+        # Compute once — used in both the SoD check and the post-action loop
+        customer_payments = self.filtered(lambda p: p.partner_type == 'customer')
+
         if not self.env.su and not self.env.context.get('clm_skip_sod_check'):
-            customer_payments = self.filtered(lambda p: p.partner_type == 'customer')
             if customer_payments:
                 if not self.env.user.has_group('zencore_groups.group_zencore_clm_finance'):
                     raise AccessError(
                         "Only Finance can register and post customer payments."
                     )
-
-        customer_payments = self.filtered(lambda p: p.partner_type == 'customer')
 
         result = super().action_post()
 
@@ -1477,7 +1521,6 @@ class AccountPaymentExtended(models.Model):
         self.env.flush_all()
 
         for payment in customer_payments:
-            # Clear stale ORM cache — must read from DB after flush_all()
             payment.invalidate_recordset(['reconciled_invoice_ids'])
 
             invoices = payment.reconciled_invoice_ids.filtered(

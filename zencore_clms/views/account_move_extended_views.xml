@@ -57,8 +57,7 @@
                     string="✔ Customer Acceptance"
                     class="btn-primary"
                     invisible="not clm_show_customer_acceptance_btn"
-                    groups="zencore_groups.group_zencore_clm_ccm,
-                            zencore_groups.group_zencore_clm_salesperson"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_salesperson"
                     confirm="Record Customer Acceptance on this invoice?
 This confirms the customer has received and accepted the goods/services.
 This action cannot be undone."
@@ -75,14 +74,15 @@ This action cannot be undone."
                     string="🏦 Bank Acceptance"
                     class="btn-primary"
                     invisible="not clm_show_bank_acceptance_btn"
-                    groups="zencore_groups.group_zencore_clm_ccm,
-                            zencore_groups.group_zencore_clm_finance"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance"
                     confirm="Record Bank Acceptance on this invoice?
 This confirms the bank has processed the LC/acceptance documents.
 This action cannot be undone."
                 />
 
             </xpath>
+
+            
 
             <!-- ══════════════════════════════════════════════════════════════
                  B — CLM ACCEPTANCE TAB
@@ -96,11 +96,7 @@ This action cannot be undone."
                     string="CLM Acceptance"
                     name="clm_acceptance"
                     invisible="move_type != 'out_invoice'"
-                    groups="zencore_groups.group_zencore_clm_ccm,
-                            zencore_groups.group_zencore_clm_finance,
-                            zencore_groups.group_zencore_clm_salesperson,
-                            zencore_groups.group_zencore_clm_sales_manager,
-                            zencore_groups.group_zencore_clm_tdo"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_salesperson,zencore_groups.group_zencore_clm_sales_manager,zencore_groups.group_zencore_clm_tdo"
                 >
 
                     <!-- Compute visibility fields — consumed by alerts below -->

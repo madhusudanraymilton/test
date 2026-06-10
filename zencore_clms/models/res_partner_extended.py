@@ -640,25 +640,25 @@ class ResPartnerExtended(models.Model):
         tracking=True,
     )
     clm_bucket_1_limit = fields.Monetary(
-        string='Bucket 1 Limit (Delivered, Not Invoiced)',
+        string='Bucket 1 Limit',
         currency_field='currency_id',
         default=0.0,
         tracking=True,
     )
     clm_bucket_2_limit = fields.Monetary(
-        string='Bucket 2 Limit (Invoiced, Awaiting Customer Acceptance)',
+        string='Bucket 2 Limit',
         currency_field='currency_id',
         default=0.0,
         tracking=True,
     )
     clm_bucket_3_limit = fields.Monetary(
-        string='Bucket 3 Limit (Customer Accepted, Awaiting Bank Acceptance)',
+        string='Bucket 3 Limit',
         currency_field='currency_id',
         default=0.0,
         tracking=True,
     )
     clm_bucket_4_limit = fields.Monetary(
-        string='Bucket 4 Limit (Bank Accepted, Payment Pending)',
+        string='Bucket 4 Limit',
         currency_field='currency_id',
         default=0.0,
         tracking=True,
@@ -666,7 +666,7 @@ class ResPartnerExtended(models.Model):
     # BUG 2 FIX: field was missing — referenced by ClmLimitChangeRequest but
     # never declared, causing AttributeError on any Bucket 5 LCR.
     clm_bucket_5_limit = fields.Monetary(
-        string='Bucket 5 Limit (Overdue — Monitoring Only)',
+        string='Bucket 5 Limit',
         currency_field='currency_id',
         default=0.0,
         tracking=True,
@@ -756,7 +756,7 @@ class ResPartnerExtended(models.Model):
     clm_agg_bucket_3_limit   = fields.Monetary(string='Aggregated Bucket 3 Limit',            compute='_compute_clm_aggregated', currency_field='currency_id')
     clm_agg_bucket_4_limit   = fields.Monetary(string='Aggregated Bucket 4 Limit',            compute='_compute_clm_aggregated', currency_field='currency_id')
     # BUG 6 FIX: field was missing from aggregation
-    clm_agg_bucket_5_limit   = fields.Monetary(string='Aggregated Bucket 5 Limit (Overdue)',  compute='_compute_clm_aggregated', currency_field='currency_id')
+    clm_agg_bucket_5_limit   = fields.Monetary(string='Aggregated Bucket 5 Limit',  compute='_compute_clm_aggregated', currency_field='currency_id')
 
     clm_agg_proforma_balance = fields.Monetary(string='Aggregated Proforma Balance',          compute='_compute_clm_aggregated', currency_field='currency_id')
     clm_agg_bucket_1_balance = fields.Monetary(string='Aggregated Bucket 1 Balance',          compute='_compute_clm_aggregated', currency_field='currency_id')
@@ -764,7 +764,7 @@ class ResPartnerExtended(models.Model):
     clm_agg_bucket_3_balance = fields.Monetary(string='Aggregated Bucket 3 Balance',          compute='_compute_clm_aggregated', currency_field='currency_id')
     clm_agg_bucket_4_balance = fields.Monetary(string='Aggregated Bucket 4 Balance',          compute='_compute_clm_aggregated', currency_field='currency_id')
     # BUG 6 FIX: field was missing from aggregation
-    clm_agg_bucket_5_balance = fields.Monetary(string='Aggregated Bucket 5 Balance (Overdue)', compute='_compute_clm_aggregated', currency_field='currency_id')
+    clm_agg_bucket_5_balance = fields.Monetary(string='Aggregated Bucket 5 Balance', compute='_compute_clm_aggregated', currency_field='currency_id')
 
     clm_group_is_frozen = fields.Boolean(
         string='Group Frozen (any member)',
@@ -817,14 +817,28 @@ class ResPartnerExtended(models.Model):
     # WRITE PROTECTION — Limit fields only writable via LCR workflow
     # ─────────────────────────────────────────────────────────────────────────
 
+    # def write(self, vals):
+    #     protected = _CLM_LIMIT_FIELDS & set(vals.keys())
+    #     if protected and not self.env.context.get('clm_bypass_limit_protection'):
+    #         raise AccessError(
+    #             "Direct editing of credit limits is not permitted.\n"
+    #             "Submit a Limit Change Request through the CCM → FM approval workflow.\n"
+    #             "Fields blocked: %s" % ', '.join(sorted(protected))
+    #         )
+    #     return super().write(vals)
+
     def write(self, vals):
         protected = _CLM_LIMIT_FIELDS & set(vals.keys())
-        if protected and not self.env.context.get('clm_bypass_limit_protection'):
-            raise AccessError(
-                "Direct editing of credit limits is not permitted.\n"
-                "Submit a Limit Change Request through the CCM → FM approval workflow.\n"
-                "Fields blocked: %s" % ', '.join(sorted(protected))
-            )
+        if protected:
+            # Allow:  (a) superuser/sudo() calls — self.env.su is True
+            #         (b) explicit workflow bypass — clm_bypass_limit_protection=True
+            # Block:  all other direct writes to enforce the LCR approval workflow
+            if not self.env.su and not self.env.context.get('clm_bypass_limit_protection'):
+                raise AccessError(
+                    "Direct editing of credit limits is not permitted.\n"
+                    "Submit a Limit Change Request through the CCM → FM approval workflow.\n"
+                    "Fields blocked: %s" % ', '.join(sorted(protected))
+                )
         return super().write(vals)
 
     # ─────────────────────────────────────────────────────────────────────────

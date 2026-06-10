@@ -18,9 +18,7 @@
                     class="oe_stat_button"
                     icon="fa-file-text-o"
                     invisible="clm_request_total_count == 0"
-                    groups="zencore_groups.group_zencore_clm_ccm,
-                            zencore_groups.group_zencore_clm_finance,
-                            zencore_groups.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
                     <field name="clm_request_total_count" widget="statinfo" string="All Requests"/>
                 </button>
@@ -31,8 +29,7 @@
                     class="oe_stat_button"
                     icon="fa-hourglass-half"
                     invisible="clm_request_pending_count == 0"
-                    groups="zencore_groups.group_zencore_clm_finance,
-                            zencore_groups.group_zencore_clm_ccm"
+                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_ccm"
                 >
                     <field name="clm_request_pending_count" widget="statinfo" string="Pending FM"/>
                 </button>
@@ -43,8 +40,7 @@
                     class="oe_stat_button"
                     icon="fa-check-circle"
                     invisible="clm_request_approved_count == 0"
-                    groups="zencore_groups.group_zencore_clm_finance,
-                            zencore_groups.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
                     <field name="clm_request_approved_count" widget="statinfo" string="Approved"/>
                 </button>
@@ -55,8 +51,7 @@
                     class="oe_stat_button"
                     icon="fa-times-circle"
                     invisible="clm_request_rejected_count == 0"
-                    groups="zencore_groups.group_zencore_clm_finance,
-                            zencore_groups.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
                     <field name="clm_request_rejected_count" widget="statinfo" string="Rejected"/>
                 </button>
@@ -91,9 +86,7 @@
                 <page
                     string="Credit Management"
                     name="clm_credit"
-                    groups="zencore_groups.group_zencore_clm_ccm,
-                            zencore_groups.group_zencore_clm_finance,
-                            zencore_groups.group_zencore_clm_sales_manager"
+                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
                 >
 
                     <!-- Stat fields consumed by smart buttons -->
@@ -145,7 +138,7 @@
                             <field
                                 name="clm_bucket_5_limit"
                                 readonly="1"
-                                string="Bucket 5 Limit (Overdue — Monitoring Only)"
+                                string="Bucket 5 Limit"
                             />
                         </group>
 

@@ -4,6 +4,8 @@ access_clm_lcr_ccm,clm lcr ccm,model_clm_limit_change_request,zencore_groups.gro
 access_clm_lcr_finance,clm lcr finance,model_clm_limit_change_request,zencore_groups.group_zencore_clm_finance,1,1,0,0
 access_clm_lcr_sales_manager,clm lcr sales manager,model_clm_limit_change_request,zencore_groups.group_zencore_clm_sales_manager,1,0,0,0
 
+
+
 access_sale_order_salesperson,sale order salesperson,sale.model_sale_order,zencore_groups.group_zencore_clm_salesperson,1,1,1,0
 access_sale_order_sales_manager,sale order sales manager,sale.model_sale_order,zencore_groups.group_zencore_clm_sales_manager,1,1,0,0
 access_sale_order_ccm,sale order ccm,sale.model_sale_order,zencore_groups.group_zencore_clm_ccm,1,1,0,0
@@ -12,7 +14,12 @@ access_sale_order_tdo,sale order tdo,sale.model_sale_order,zencore_groups.group_
 
 access_account_move_tdo,account move tdo,account.model_account_move,zencore_groups.group_zencore_clm_tdo,1,1,1,0
 access_account_move_finance,account move finance,account.model_account_move,zencore_groups.group_zencore_clm_finance,1,1,0,0
-access_account_move_ccm,account move ccm,account.model_account_move,zencore_groups.group_zencore_clm_ccm,1,0,0,0
+access_account_move_ccm,account move ccm,account.model_account_move,zencore_groups.group_zencore_clm_ccm,1,1,0,0
+access_account_move_salesperson,account move salesperson,account.model_account_move,zencore_groups.group_zencore_clm_salesperson,1,1,0,0
+access_account_move_sales_manager,account move sales manager,account.model_account_move,zencore_groups.group_zencore_clm_sales_manager,1,0,0,0
+
+access_account_payment_finance,account payment finance,account.model_account_payment,zencore_groups.group_zencore_clm_finance,1,1,1,0
+access_account_payment_tdo,account payment tdo,account.model_account_payment,zencore_groups.group_zencore_clm_tdo,1,0,0,0
 
 access_res_partner_ccm,res partner ccm,base.model_res_partner,zencore_groups.group_zencore_clm_ccm,1,1,0,0
 access_res_partner_finance,res partner finance,base.model_res_partner,zencore_groups.group_zencore_clm_finance,1,0,0,0
