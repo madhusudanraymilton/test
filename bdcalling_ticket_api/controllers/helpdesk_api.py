@@ -30,7 +30,9 @@ Error codes
 500  INTERNAL_ERROR      – unexpected server error
 """
 
+import hmac
 import logging
+from mimetypes import guess_type
 
 from odoo.exceptions import AccessError
 from odoo.http import request, route, Controller
@@ -55,9 +57,9 @@ _VALID_SORT_DIRS   = ('asc', 'desc')
 
 class HelpdeskStudentAPIController(Controller):
 
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # 1. LIST  ─  GET /api/v1/helpdesk/tickets?email=student@example.com
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
     @route(
         '/api/v1/helpdesk/tickets',
@@ -67,6 +69,7 @@ class HelpdeskStudentAPIController(Controller):
         csrf=False,
         save_session=False,
     )
+
     # @require_api_key
     def list_student_tickets(self, **params):
         """
@@ -223,3 +226,119 @@ class HelpdeskStudentAPIController(Controller):
             )
             return error_response(500, 'INTERNAL_ERROR',
                                   'An unexpected error occurred. Please try again.')
+
+    # -----------------------------------------------------------------------
+    # 3. ATTACHMENT DOWNLOAD
+    #    GET /api/v1/helpdesk/attachments/<attachment_id>/download
+    # -----------------------------------------------------------------------
+
+    @route(
+        '/api/v1/helpdesk/attachments/<int:attachment_id>/download',
+        type='http',
+        auth='public',
+        methods=['GET'],
+        csrf=False,
+        save_session=False,
+    )
+    def download_attachment(self, attachment_id: int, **params):
+        """
+        Browser-friendly attachment download endpoint.
+
+        Why this route exists
+        ---------------------
+        A normal browser/mobile deep link cannot send custom request headers,
+        including ``X-Odoo-Database``. The API now returns URLs like:
+
+            /api/v1/helpdesk/attachments/25/download?access_token=xxx&download=true&db=my_db
+
+        The ``db`` query parameter lets Odoo select the correct database in a
+        multi-database deployment, while the ``access_token`` protects the
+        file.  Once validated, the file is streamed directly using Odoo's
+        binary helper.  Avoiding a redirect to ``/web/content`` means the
+        download remains reliable for API and multi-database clients.
+        """
+        try:
+            access_token = (params.get('access_token') or '').strip()
+
+            if not access_token:
+                return error_response(
+                    403,
+                    'MISSING_ACCESS_TOKEN',
+                    'Attachment access_token is required.',
+                )
+
+            attachment = (
+                request.env['ir.attachment']
+                .sudo()
+                .browse(attachment_id)
+                .exists()
+            )
+
+            if not attachment:
+                return error_response(
+                    404,
+                    'ATTACHMENT_NOT_FOUND',
+                    f'Attachment {attachment_id} does not exist.',
+                )
+
+            stored_token = attachment.access_token
+
+            if not stored_token:
+                try:
+                    generated_tokens = attachment.generate_access_token()
+                    stored_token = (
+                        generated_tokens[0]
+                        if generated_tokens
+                        else attachment.access_token
+                    )
+                except Exception as exc:
+                    _logger.exception(
+                        'Could not generate access token for attachment=%s: %s',
+                        attachment_id,
+                        exc,
+                    )
+                    return error_response(
+                        500,
+                        'TOKEN_GENERATION_FAILED',
+                        'Could not prepare attachment download token.',
+                    )
+
+            if not stored_token or not hmac.compare_digest(
+                str(stored_token),
+                str(access_token),
+            ):
+                return error_response(
+                    403,
+                    'INVALID_ACCESS_TOKEN',
+                    'Attachment access_token is invalid.',
+                )
+
+            # A DOCX is internally a ZIP archive.  When Odoo has no MIME type
+            # (or only detects it as application/zip), browsers/API clients
+            # may handle its bytes as an archive or text instead of a Word
+            # document.  The filename is the most reliable source here.
+            download_mimetype = (
+                guess_type(attachment.name or '')[0]
+                or attachment.mimetype
+                or 'application/octet-stream'
+            )
+
+            stream = request.env['ir.binary']._get_stream_from(
+                attachment,
+                field_name='raw',
+                filename=attachment.name,
+                mimetype=download_mimetype,
+            )
+            return stream.get_response(as_attachment=True)
+
+        except Exception as exc:
+            _logger.exception(
+                'Unexpected error in download_attachment attachment_id=%s: %s',
+                attachment_id,
+                exc,
+            )
+            return error_response(
+                500,
+                'INTERNAL_ERROR',
+                'An unexpected error occurred while downloading attachment.',
+            )
