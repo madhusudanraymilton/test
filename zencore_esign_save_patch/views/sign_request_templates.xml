@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Odoo's backend Sign viewer always loads /origin, including after a request
+        is signed. The original attachment is a reusable template and must remain
+        unchanged; show the immutable completed attachment for signed requests.
+    -->
+    <template id="zencore_sign_items_view_completed_document" inherit_id="sign.items_view">
+        <xpath expr="//input[@id='o_sign_input_attachment_location']" position="attributes">
+            <attribute name="t-attf-value">/sign/download/{{sign_request.id}}/{{sign_request.access_token}}/{{ 'completed' if sign_request.state == 'signed' else 'origin' }}</attribute>
+        </xpath>
+    </template>
+</odoo>
