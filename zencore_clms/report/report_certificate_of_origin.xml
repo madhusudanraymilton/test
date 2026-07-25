@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- 
+       Certificate of Origin — zencore_clms module
+       Model   : account.move
+       Module  : zencore_clms
+       LC link : so.clm_lc_id  (zencore.lc via SaleOrderLcExtended)
+
+       VARIABLE MAPPING
+       ─────────────────────────────────────────────────────────────────────
+       move    = account.move                   (the posted invoice)
+       so      = move.invoice_line_ids
+                   .mapped('sale_line_ids.order_id')[:1]
+       lc      = so.clm_lc_id                  (zencore.lc record)
+       company = move.company_id               (res.company)
+
+       Fields used
+       ─────────────────────────────────────────────────────────────────────
+       move.name                  → CO Reference / CI No. / Challan No.
+       move.invoice_date          → Date / CI Date / Challan Date
+       lc.lc_number                → Export LC Number (zencore.lc)
+       lc.lc_date                  → Export LC Date   (zencore.lc)
+       lc.customer_lc_number       → LC Number  (zencore.lc)
+       lc.customer_lc_date         → LC Date    (zencore.lc)
+       company.street             → factory address line 1
+       company.street2            → factory address line 2 (if set)
+       company.city               → factory city
+       company.zip                → factory postal code
+       company.country_id.name    → factory country
+       company.name               → legal entity name
+       company.phone / .email     → contact
+       company.x_authorised_signature → Binary image on res.company
+
+       NOTE: lc_export_number and lc_export_date have been added as Char /
+         Date fields on the zencore.lc model (zencore_lc module). See
+         zencore_lc/models/zencore_lc.py.
+   -->
+
+  <!-- 
+       REPORT ACTION — bound to account.move
+   -->
+  <record id="action_report_certificate_of_origin" model="ir.actions.report">
+    <field name="name">Certificate of Origin</field>
+    <field name="model">account.move</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">zencore_clms.report_certificate_of_origin</field>
+    <field name="report_file">zencore_clms.report_certificate_of_origin</field>
+    <!-- Hidden from the invoice Print menu: only "LC Document Set" should
+         appear there. This report is still generated as part of the
+         combined LC Document Set PDF (see report_lc_document_set.xml). -->
+    <field name="binding_model_id" eval="False"/>
+    <field name="binding_type">report</field>
+  </record>
+
+  <!-- 
+       STYLES — mirrors zencore_clms delivery challan / commercial invoice theme
+   -->
+  <template id="report_certificate_of_origin_style">
+    <style>
+      @page {
+        size: A4;
+        margin: 2cm 2cm 2cm 2cm;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: '72', 'Roboto', 'DejaVu Sans', sans-serif;
+        font-size: 9pt;
+        color: #32363A;
+        background: #FFFFFF;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* ── Header  */
+      .header-wrap {
+        display: table;
+        width: 100%;
+        background: #FFFFFF;
+        border-bottom: 3pt solid #0070F2;
+        padding: 12pt 2cm 10pt 2cm;
+      }
+      .header-left  { display: table-cell; vertical-align: middle; width: 55%; }
+      .header-right { display: table-cell; vertical-align: middle; width: 45%; text-align: right; }
+      .co-name    { font-size: 13pt; font-weight: bold; color: #32363A; margin-bottom: 3pt; }
+      .co-addr    { font-size: 8pt; color: #6A6D70; line-height: 1.7; }
+      .co-contact { font-size: 7.5pt; color: #6A6D70; margin-top: 2pt; }
+      .doc-title  { font-size: 18pt; font-weight: 300; color: #0070F2; letter-spacing: 0.5pt; line-height: 1.2; }
+      .doc-sub    { font-size: 7.5pt; color: #6A6D70; margin-top: 2pt; }
+
+      /* ── Body padding  */
+      .body { padding: 12pt 2cm; }
+
+      /* ── Card wrapper  */
+      .card {
+        border: 1pt solid #E0E0E0;
+        border-radius: 6pt;
+        overflow: hidden;
+        background: #FFFFFF;
+        margin-bottom: 12pt;
+      }
+      .card-header {
+        background: #F5F6F7;
+        border-bottom: 1pt solid #E0E0E0;
+        border-left: 2px solid #0070F2;
+        padding: 5pt 10pt;
+        font-size: 8pt;
+        font-weight: 600;
+        color: #32363A;
+        letter-spacing: 0.3pt;
+      }
+
+      /* ── 2-column reference grid (display:table rows)  */
+      .ref-grid { display: table; width: 100%; border-collapse: collapse; }
+      .ref-row  { display: table-row; }
+      .ref-lbl {
+        display: table-cell;
+        width: 21%;
+        background: #F5F6F7;
+        border-right: 1pt solid #E0E0E0;
+        border-bottom: 1pt solid #E0E0E0;
+        padding: 4pt 8pt;
+        font-size: 8pt;
+        font-weight: 600;
+        color: #6A6D70;
+        vertical-align: top;
+      }
+      .ref-val {
+        display: table-cell;
+        width: 29%;
+        background: #FFFFFF;
+        border-right: 1pt solid #E0E0E0;
+        border-bottom: 1pt solid #E0E0E0;
+        padding: 4pt 8pt;
+        font-size: 8pt;
+        color: #32363A;
+        vertical-align: top;
+      }
+      .ref-val.no-right  { border-right: none; }
+      .ref-row.last-row .ref-lbl,
+      .ref-row.last-row .ref-val { border-bottom: none; }
+
+      /* ── Declaration card  */
+      .decl-card {
+        border: 1pt solid #E0E0E0;
+        border-radius: 6pt;
+        overflow: hidden;
+        background: #FFFFFF;
+        margin-bottom: 12pt;
+      }
+      .decl-card-header {
+        background: #F5F6F7;
+        border-bottom: 1pt solid #E0E0E0;
+        border-left: 2px solid #0070F2;
+        padding: 5pt 10pt;
+        font-size: 8pt;
+        font-weight: 600;
+        color: #32363A;
+        letter-spacing: 0.3pt;
+      }
+      .decl-body {
+        padding: 14pt 12pt;
+        font-size: 8.5pt;
+        line-height: 1.8;
+        color: #32363A;
+      }
+      .decl-body .ref    { font-weight: 700; color: #0070F2; }
+      .decl-body .origin { font-weight: 700; color: #32363A; }
+
+      /* ── Bottom two-panel (Place of Manufacture + Signature)  */
+      .bottom-wrap { display: table; width: 100%; margin-bottom: 4pt; }
+      .bottom-left {
+        display: table-cell;
+        width: 55%;
+        vertical-align: top;
+        background: #F5F6F7;
+        border: 1pt solid #E0E0E0;
+        border-right: none;
+        border-radius: 6pt 0 0 6pt;
+        padding: 12pt 14pt;
+        font-size: 7.5pt;
+        color: #6A6D70;
+        line-height: 1.6;
+      }
+      .bottom-left .section-title {
+        font-size: 8pt;
+        font-weight: 700;
+        color: #32363A;
+        letter-spacing: 0.3pt;
+        margin-bottom: 4pt;
+      }
+      .bottom-left .section-gap { margin-top: 14pt; }
+      .bottom-right {
+        display: table-cell;
+        width: 45%;
+        vertical-align: bottom;
+        text-align: center;
+        background: #FFFFFF;
+        border: 1pt solid #E0E0E0;
+        border-radius: 0 6pt 6pt 0;
+        padding: 10pt 14pt;
+        min-height: 80pt;
+      }
+      .sig-image  { max-height: 50pt; max-width: 160pt; margin-bottom: 4pt; display: block; margin-left: auto; margin-right: auto; }
+      .sig-line   { border-bottom: 1.5pt solid #0070F2; width: 160pt; margin: 0 auto 4pt auto; }
+      .sig-title  { font-size: 9pt; font-weight: 600; color: #32363A; }
+      .sig-behalf { font-size: 8pt; color: #6A6D70; }
+
+      /* ── Spacer (replaces &#160; nbsp entities which mis-encode to
+             "Â" under some PDF renderers)  */
+      .sp { display: inline-block; width: 4pt; }
+
+
+      /* ── Footer  */
+      .doc-footer {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        display: table;
+        width: 100%;
+        background: #F5F6F7;
+        border-top: 1pt solid #E0E0E0;
+        padding: 4pt 2cm;
+        font-size: 7pt;
+        color: #6A6D70;
+      }
+      .doc-footer-left  { display: table-cell; vertical-align: middle; text-align: left; }
+      .doc-footer-right { display: table-cell; vertical-align: middle; text-align: right; }
+    </style>
+  </template>
+
+  <!-- 
+       DOCUMENT TEMPLATE — callable from LC Document Set
+   -->
+  <template id="report_certificate_of_origin_document">
+    <t t-set="so"      t-value="move.invoice_line_ids.filtered(lambda l: l.sale_line_ids).mapped('sale_line_ids.order_id')[:1]"/>
+    <t t-set="lc"      t-value="so.clm_lc_id"/>
+    <t t-set="company" t-value="move.company_id"/>
+
+    <div class="page co-page">
+
+      <!--  1. HEADER  -->
+      <div class="header-wrap">
+        <div class="header-left">
+          <div class="co-name"><t t-esc="company.name"/></div>
+          <div class="co-addr">
+            <t t-esc="company.street or ''"/><br/>
+            <t t-esc="(company.city or '') + (', ' + company.country_id.name if company.country_id else '')"/>
+          </div>
+          <div class="co-contact">
+            T:<span class="sp"/><t t-esc="company.phone or ''"/><span class="sp"/><span class="sp"/><span class="sp"/>E:<span class="sp"/><t t-esc="company.email or ''"/>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="doc-title">CERTIFICATE<br/>OF ORIGIN</div>
+          <div class="doc-sub">LC DOCUMENT SET</div>
+        </div>
+      </div>
+
+      <div class="body">
+
+        <!--  2. DOCUMENT REFERENCES  -->
+        <div class="card">
+          <div class="card-header">DOCUMENT REFERENCES</div>
+          <div class="ref-grid">
+
+            <!-- Row 1: CO Reference + Date -->
+            <div class="ref-row">
+              <div class="ref-lbl">Certificate of Origin Reference</div>
+              <div class="ref-val"><strong><t t-esc="move.name"/></strong></div>
+              <div class="ref-lbl">Date</div>
+              <div class="ref-val no-right">
+                <t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+              </div>
+            </div>
+
+            <!-- Row 2: LC Number + LC Date  (from zencore.lc via so.clm_lc_id) -->
+            <div class="ref-row">
+              <div class="ref-lbl">LC Number</div>
+              <div class="ref-val">
+                <t t-if="lc and lc.customer_lc_number">
+                  <t t-esc="lc.customer_lc_number"/>
+                </t>
+                <t t-else="">—</t>
+              </div>
+              <div class="ref-lbl">LC Date</div>
+              <div class="ref-val no-right">
+                <t t-if="lc and lc.customer_lc_date">
+                  <t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                </t>
+                <t t-else="">—</t>
+              </div>
+            </div>
+
+            <!-- Row 3: Export LC No. + Export LC Date (from zencore.lc) -->
+            <div class="ref-row">
+              <div class="ref-lbl">Export LC No.</div>
+              <div class="ref-val">
+                <t t-if="lc and lc.customer_lc_number">
+                  <t t-esc="lc.customer_lc_number"/>
+                </t>
+                <t t-else="">—</t>
+              </div>
+              <div class="ref-lbl">Export LC Date</div>
+              <div class="ref-val no-right">
+                <t t-if="lc and lc.customer_lc_date">
+                  <t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                </t>
+                <t t-else="">—</t>
+              </div>
+            </div>
+
+            <!-- Row 4: Commercial Invoice No. + CI Date -->
+            <div class="ref-row">
+              <div class="ref-lbl">Commercial Invoice No.</div>
+              <div class="ref-val"><t t-esc="move.name"/></div>
+              <div class="ref-lbl">Commercial Invoice Date</div>
+              <div class="ref-val no-right">
+                <t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+              </div>
+            </div>
+
+            <!-- Row 5: Delivery Challan No. + Challan Date -->
+            <div class="ref-row last-row">
+              <div class="ref-lbl">Delivery Challan No.</div>
+              <div class="ref-val"><t t-esc="move.name"/></div>
+              <div class="ref-lbl">Challan Date</div>
+              <div class="ref-val no-right">
+                <t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ 3. DECLARATION OF ORIGIN ══════════════════════════════ -->
+        <div class="decl-card">
+          <div class="decl-card-header">DECLARATION OF ORIGIN</div>
+          <div class="decl-body">
+            We hereby certify that the Yarn supplied against
+            LC No.<span class="sp"/><span class="ref">
+              <t t-esc="lc.customer_lc_number if lc else ''"/>
+            </span><span class="sp"/>
+            dated<span class="sp"/><span class="ref">
+              <t t-if="lc and lc.customer_lc_date">
+                <t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+              </t>
+            </span>,
+            against Export LC No.<span class="sp"/><span class="ref">
+              <t t-esc="lc.customer_lc_number if lc else ''"/>
+            </span><span class="sp"/>
+            dated<span class="sp"/><span class="ref">
+              <t t-if="lc and lc.customer_lc_date">
+                <t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+              </t>
+            </span>,
+            under Commercial Invoice No.<span class="sp"/><span class="ref"><t t-esc="move.name"/></span><span class="sp"/>
+            dated<span class="sp"/><span class="ref">
+              <t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+            </span>,
+            and Delivery Challan No.<span class="sp"/><span class="ref"><t t-esc="move.name"/></span><span class="sp"/>
+            dated<span class="sp"/><span class="ref">
+              <t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+            </span><span class="sp"/>
+            is of <span class="origin">Bangladesh Origin</span>, and has been manufactured
+            entirely at our factory located at<span class="sp"/>
+            <span class="ref">
+              <t t-esc="company.street or ''"/>
+              <t t-if="company.street2">, <t t-esc="company.street2"/></t>
+              <t t-if="company.city">, <t t-esc="company.city"/></t>
+              <t t-if="company.zip"> — <t t-esc="company.zip"/></t>
+              <t t-if="company.country_id">, <t t-esc="company.country_id.name"/></t>
+            </span>.
+          </div>
+        </div>
+
+        <!--  4. PLACE OF MANUFACTURE + SIGNATURE  -->
+        <div class="bottom-wrap">
+
+          <!-- Left: Place of Manufacture / Country of Origin -->
+          <div class="bottom-left">
+            <div class="section-title">PLACE OF MANUFACTURE</div>
+            <t t-esc="company.street or ''"/>
+            <t t-if="company.street2"><br/><t t-esc="company.street2"/></t>
+            <t t-if="company.city"><br/><t t-esc="company.city"/></t>
+            <t t-if="company.zip"> — <t t-esc="company.zip"/></t>
+            <t t-if="company.country_id"><br/><t t-esc="company.country_id.name"/></t>
+
+            <div class="section-gap">
+              <div class="section-title">COUNTRY OF ORIGIN</div>
+              <t t-esc="company.country_id.name if company.country_id else ''"/>
+            </div>
+          </div>
+
+          <!-- Right: Authorised Signature -->
+          <div class="bottom-right">
+
+              <div style="height:50pt; margin-bottom:4pt;"></div>
+
+              <div class="sig-line"></div>
+
+              <div class="sig-title">Authorized Signature</div>
+
+              <div class="sig-behalf">
+                  <span>On behalf of</span>
+                  <span style="display:inline-block; width:6px;"></span>
+                  <span>
+                      <t t-esc="company.name"/>
+                  </span>
+              </div>
+
+          </div>
+        </div>
+
+      </div><!-- /body -->
+
+      <!-- ══ FOOTER  -->
+      <div class="doc-footer">
+        <div class="doc-footer-left">
+          <strong><t t-esc="company.name"/></strong><span class="sp"/><span class="sp"/>|<span class="sp"/><span class="sp"/>Certificate of Origin — LC Document Set<span class="sp"/><span class="sp"/>|<span class="sp"/><span class="sp"/>CONFIDENTIAL
+        </div>
+        <div class="doc-footer-right">
+          Page<span class="sp"/><span class="page"/><span class="sp"/>of<span class="sp"/><span class="topage"/>
+        </div>
+      </div>
+
+    </div><!-- /page -->
+  </template>
+
+  <!-- 
+       STANDALONE REPORT TEMPLATE (direct print from invoice)
+   -->
+  <template id="report_certificate_of_origin">
+    <t t-call="web.html_container">
+      <t t-call="zencore_clms.report_certificate_of_origin_style"/>
+      <t t-foreach="docs" t-as="doc">
+        <t t-set="move" t-value="doc"/>
+        <t t-call="zencore_clms.report_certificate_of_origin_document"/>
+      </t>
+    </t>
+  </template>
+
+</odoo>

@@ -1,0 +1,866 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+
+
+  <!-- ── Tight Paperformat: removes Odoo default top blank space ───────── -->
+
+  <record id="paperformat_proforma_invoice_tight" model="report.paperformat">
+    <field name="name">Proforma Invoice Tight A4</field>
+    <field name="default" eval="False"/>
+    <field name="format">A4</field>
+    <field name="page_height">0</field>
+    <field name="page_width">0</field>
+    <field name="orientation">Portrait</field>
+    <field name="margin_top">2</field>
+    <field name="margin_bottom">6</field>
+    <field name="margin_left">6</field>
+    <field name="margin_right">6</field>
+    <field name="header_line" eval="False"/>
+    <field name="header_spacing">0</field>
+    <field name="dpi">90</field>
+  </record>
+
+  <template id="report_proforma_invoice_style">
+    <style>
+      @page {
+        size: A4;
+        margin: 0.2cm 0.6cm 0.6cm 0.6cm;
+      }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body,
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    font-family: '72', 'Roboto', 'DejaVu Sans', sans-serif;
+    font-size: 9pt;
+    color: #32363A;
+    background: #FFFFFF;
+  }
+
+  .page,
+  .article,
+  .o_report_layout_standard {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .page {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── Header  */
+  .header-wrap {
+    display: table;
+    width: 100%;
+    background: #FFFFFF;
+    border-bottom: 3pt solid #0070F2;
+    padding: 2pt 8pt 6pt 8pt;
+    margin-top: 0 !important;
+  }
+
+  .header-left  {
+    display: table-cell;
+    vertical-align: middle;
+    width: 55%;
+  }
+
+  .header-right {
+    display: table-cell;
+    vertical-align: middle;
+    width: 45%;
+    text-align: right;
+  }
+
+  .co-name {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #32363A;
+    margin-bottom: 3pt;
+  }
+
+  .co-addr {
+    font-size: 8pt;
+    color: #6A6D70;
+    line-height: 1.7;
+  }
+
+  .co-contact {
+    font-size: 7.5pt;
+    color: #6A6D70;
+    margin-top: 2pt;
+  }
+
+  .doc-title {
+    font-size: 18pt;
+    font-weight: 300;
+    color: #0070F2;
+    letter-spacing: 0.5pt;
+  }
+
+  /* ── Body padding  */
+  .body {
+    padding: 8pt 8pt 0 8pt;
+  }
+
+  /* ── Two-column row  */
+  .two-col {
+    display: table;
+    width: 100%;
+    margin-bottom: 12pt;
+  }
+
+  .col-left {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+    padding-right: 6pt;
+  }
+
+  .col-right {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+    padding-left: 6pt;
+  }
+
+  /* ── Card  */
+  .card {
+    border: 1pt solid #E0E0E0;
+    border-radius: 6pt;
+    overflow: hidden;
+    background: #FFFFFF;
+  }
+
+  .card-header {
+    background: #F5F6F7;
+    border-bottom: 1pt solid #E0E0E0;
+    padding: 5pt 10pt;
+    font-size: 8pt;
+    font-weight: 600;
+    color: #32363A;
+    letter-spacing: 0.3pt;
+  }
+
+  .card-body {
+    padding: 9pt 11pt;
+  }
+
+  .buyer-name {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #32363A;
+    margin-bottom: 3pt;
+  }
+
+  .buyer-addr {
+    font-size: 8pt;
+    color: #6A6D70;
+    line-height: 1.8;
+  }
+
+  /* ── KV rows  */
+  .kv-row {
+    display: table;
+    width: 100%;
+    border-bottom: 1pt solid #E0E0E0;
+  }
+
+  .kv-row:last-child {
+    border-bottom: none;
+  }
+
+  .kv-label {
+    display: table-cell;
+    width: 42%;
+    background: #F5F6F7;
+    border-right: 1pt solid #E0E0E0;
+    padding: 4pt 8pt;
+    font-size: 8pt;
+    font-weight: 600;
+    color: #6A6D70;
+    vertical-align: top;
+  }
+
+  .kv-value {
+    display: table-cell;
+    background: #FFFFFF;
+    padding: 4pt 8pt;
+    font-size: 8pt;
+    color: #32363A;
+    vertical-align: top;
+  }
+
+  /* ── Section card  */
+  .sec-card {
+    border: 1pt solid #E0E0E0;
+    border-radius: 6pt;
+    overflow: hidden;
+    background: #FFFFFF;
+    margin-bottom: 12pt;
+  }
+
+  .sec-card-header {
+    background: #F5F6F7;
+    border-bottom: 1pt solid #E0E0E0;
+    border-left: 2px solid #0070F2;
+    padding: 5pt 10pt;
+    font-size: 8pt;
+    font-weight: 600;
+    color: #32363A;
+    letter-spacing: 0.3pt;
+  }
+
+  /* ── Goods table  */
+  .goods-card {
+    border: 1pt solid #E0E0E0;
+    border-radius: 6pt;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .goods-card-header {
+    background: #F5F6F7;
+    border-bottom: 1pt solid #E0E0E0;
+    border-left: 2px solid #0070F2;
+    padding: 5pt 10pt;
+    font-size: 8pt;
+    font-weight: 600;
+    color: #32363A;
+    letter-spacing: 0.3pt;
+  }
+
+  table.goods {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    table-layout: fixed;
+  }
+
+  table.goods thead th {
+    background: #F5F6F7;
+    color: #32363A;
+    font-weight: 600;
+    font-size: 8pt;
+    padding: 5pt 8pt;
+    border-bottom: 2pt solid #0070F2;
+    border-right: 1pt solid #E0E0E0;
+    text-align: left;
+  }
+
+  table.goods thead th:last-child {
+    border-right: none;
+  }
+
+  table.goods thead th.right {
+    text-align: right;
+  }
+
+  table.goods tbody tr:nth-child(even) {
+    background: #F5F6F7;
+  }
+
+  table.goods tbody tr:nth-child(odd) {
+    background: #FFFFFF;
+  }
+
+  table.goods tbody td {
+    padding: 4pt 8pt;
+    border-bottom: 1pt solid #E0E0E0;
+    border-right: 1pt solid #E0E0E0;
+    vertical-align: middle;
+  }
+
+  table.goods tbody td:last-child {
+    border-right: none;
+  }
+
+  table.goods tbody td.right {
+    text-align: right;
+  }
+
+  table.goods tfoot td {
+    background: #EBF4FF;
+    padding: 5pt 8pt;
+    font-weight: 700;
+    font-size: 9pt;
+    border-top: 2pt solid #0070F2;
+    border-right: 1pt solid #E0E0E0;
+    color: #32363A;
+  }
+
+  table.goods tfoot td:last-child {
+    border-right: none;
+  }
+
+  table.goods tfoot td.right {
+    text-align: right;
+  }
+
+  table.goods tfoot td.blue {
+    color: #0070F2;
+    text-align: right;
+  }
+
+  /* ── Amount in words  */
+  .amount-words {
+    background: #EBF4FF;
+    border: 1pt solid #B3D4FF;
+    border-top: none;
+    border-radius: 0 0 6pt 6pt;
+    padding: 5pt 10pt;
+    margin-bottom: 12pt;
+  }
+
+  .amount-words .lbl {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #6A6D70;
+    margin-bottom: 1pt;
+  }
+
+  .amount-words .val {
+    font-size: 8.5pt;
+    color: #32363A;
+  }
+
+  /* ── Signature  */
+  .sig-wrap {
+    display: table;
+    width: 100%;
+    margin-bottom: 4pt;
+  }
+
+  .sig-left {
+    display: table-cell;
+    width: 55%;
+    vertical-align: middle;
+    background: #F5F6F7;
+    border: 1pt solid #E0E0E0;
+    border-right: none;
+    border-radius: 6pt 0 0 6pt;
+    padding: 12pt 14pt;
+    font-size: 7.5pt;
+    color: #6A6D70;
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .sig-right {
+    display: table-cell;
+    width: 45%;
+    vertical-align: bottom;
+    text-align: center;
+    background: #FFFFFF;
+    border: 1pt solid #E0E0E0;
+    border-radius: 0 6pt 6pt 0;
+    padding: 10pt 14pt;
+    min-height: 80pt;
+  }
+
+  .sig-image {
+    max-height: 50pt;
+    max-width: 160pt;
+    margin-bottom: 4pt;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .sig-line {
+    border-bottom: 1.5pt solid #0070F2;
+    width: 160pt;
+    margin: 0 auto 4pt auto;
+  }
+
+  .sig-title {
+    font-size: 9pt;
+    font-weight: 600;
+    color: #32363A;
+  }
+
+  .sig-behalf {
+    font-size: 8pt;
+    color: #6A6D70;
+  }
+
+  /* ── Footer  */
+  .doc-footer {
+    display: table;
+    width: 100%;
+    background: #F5F6F7;
+    border-top: 1pt solid #E0E0E0;
+    padding: 4pt 8pt;
+    font-size: 7pt;
+    color: #6A6D70;
+    margin-top: 8pt;
+  }
+
+  .doc-footer-left {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: left;
+  }
+
+  .doc-footer-right {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+  }
+    </style>
+
+
+  </template>
+
+  <!--  Report action  -->
+
+  <record id="action_report_proforma_invoice" model="ir.actions.report">
+    <field name="name">Proforma Invoice</field>
+    <field name="model">sale.order</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">zencore_clms.report_proforma_invoice</field>
+    <field name="report_file">zencore_clms.report_proforma_invoice</field>
+    <field name="binding_model_id" ref="sale.model_sale_order"/>
+    <field name="binding_type">report</field>
+    <field name="paperformat_id" ref="zencore_clms.paperformat_proforma_invoice_tight"/>
+  </record>
+
+  <!-- ── Main template  -->
+
+  <template id="report_proforma_invoice">
+    <t t-call="web.html_container">
+      <t t-call="zencore_clms.report_proforma_invoice_style"/>
+
+
+      <t t-foreach="docs" t-as="so">
+        <t t-set="company" t-value="so.company_id"/>
+
+     
+        <t t-set="eff_bank" t-value="so.pi_bank_id   or company.x_bene_bank_id"/>
+        <t t-set="eff_branch" t-value="so.pi_bank_branch or company.x_bene_bank_branch"/>
+
+        <div class="page">
+
+          <!-- ══ 1. HEADER  -->
+          <div class="header-wrap">
+            <div class="header-left">
+              <div class="co-name">
+                <t t-esc="company.name"/>
+              </div>
+
+              <div class="co-addr">
+                <t t-esc="company.street"/>
+                <br/>
+                <t t-esc="company.city + ', ' + company.country_id.name"/>
+              </div>
+
+              <div class="co-contact">
+                <span>T: </span>
+                <span>
+                  <t t-esc="company.phone or ''"/>
+                </span>
+                <span style="display:inline-block; width:12pt;"></span>
+                <span>E: </span>
+                <span>
+                  <t t-esc="company.email or ''"/>
+                </span>
+              </div>
+            </div>
+
+            <div class="header-right">
+              <div class="doc-title">PROFORMA INVOICE</div>
+            </div>
+          </div>
+
+          <div class="body">
+
+            <!-- ══ 2. BUYER | DOCUMENT REFERENCE  -->
+            <div class="two-col">
+
+              <div class="col-left">
+                <div class="card">
+                  <div class="card-header">BUYER / CONSIGNEE</div>
+                  <div class="card-body">
+                    <div class="buyer-name">
+                      <t t-esc="so.partner_id.name"/>
+                    </div>
+                    <div class="buyer-addr">
+                      <t t-esc="so.partner_id.street or ''"/>
+                      <br/>
+                      <t t-esc="(so.partner_id.city or '') + (', ' + so.partner_id.state_id.name if so.partner_id.state_id else '') + (', ' + so.partner_id.country_id.name if so.partner_id.country_id else '')"/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-right">
+                <div class="card">
+                  <div class="card-header">DOCUMENT REFERENCE</div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">PI Number</div>
+                    <div class="kv-value">
+                      <strong>
+                        <t t-esc="so.name"/>
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">PI Date</div>
+                    <div class="kv-value">
+                      <t t-esc="so.date_order" t-options='{"widget": "date", "format": "dd-MMM-yyyy"}'/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Validity</div>
+                    <div class="kv-value">
+                      <t t-if="so.validity_date">
+                        <t t-esc="so.validity_date" t-options='{"widget": "date", "format": "dd-MMM-yyyy"}'/>
+                      </t>
+                      <t t-else="">—</t>
+                    </div>
+                  </div>
+
+
+                  <div class="kv-row">
+                    <div class="kv-label">Contact</div>
+                    <div class="kv-value">
+                      <t t-esc="so.user_id.name"/>
+                      <t t-if="so.user_id.partner_id.phone">
+                        <br/>
+                        <span>Phone: </span>
+                        <span>
+                          <t t-esc="so.user_id.partner_id.phone"/>
+                        </span>
+                      </t>
+                      <t t-if="so.team_id">
+                        <br/>
+                        <t t-esc="so.team_id.name"/>
+                      </t>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ═ 3. GOODS TABLE  -->
+            <div class="goods-card">
+              <div class="goods-card-header">GOODS</div>
+
+              <table class="goods">
+                <thead>
+                  <tr>
+                    <th style="width:50%;">Product</th>
+                    <th style="width:10%;">HS Code</th>
+                    <th class="right" style="width:10%;">
+                Price (<t t-esc="so.currency_id.name"/>
+/KG)
+                    </th>
+                    <th class="right" style="width:12%;">Quantity (KG)</th>
+                    <th class="right" style="width:18%;">
+                Total Price (<t t-esc="so.currency_id.name"/>
+)
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <t t-foreach="so.order_line" t-as="line">
+                    <t t-if="not line.display_type">
+                      <tr>
+                        <!-- Product -->
+                        <td>
+                          <t t-esc="line.product_id.display_name or line.name"/>
+                        </td>
+
+                        <!-- HS Code from product.template -->
+                        <td>
+                          <t t-set="product_tmpl" t-value="line.product_id.product_tmpl_id if line.product_id else False"/>
+
+                          <t t-esc="product_tmpl.hs_code if product_tmpl and 'hs_code' in product_tmpl._fields and product_tmpl.hs_code else ''"/>
+                        </td>
+
+                        <!-- Price / KG -->
+                        <td class="right">
+                          <t t-esc="'{:,.2f}'.format(line.price_unit or 0.0)"/>
+                        </td>
+
+                        <!-- Quantity KG -->
+                        <td class="right">
+                          <t t-esc="'{:,.2f}'.format(line.product_uom_qty or 0.0)"/>
+                        </td>
+
+                        <!-- Total Price -->
+                        <td class="right">
+                          <t t-esc="'{:,.2f}'.format(line.price_subtotal or 0.0)"/>
+                        </td>
+                      </tr>
+                    </t>
+                  </t>
+                </tbody>
+
+                <tfoot>
+                  <tr>
+                    <td colspan="3" class="right">
+                      <strong>TOTAL</strong>
+                    </td>
+
+                    <td class="right">
+                      <strong>
+                        <t t-esc="'{:,.2f}'.format(sum(so.order_line.filtered(lambda l: not l.display_type).mapped('product_uom_qty')) or 0.0)"/>
+                      </strong>
+                    </td>
+
+                    <td class="right">
+                      <strong>
+                        <t t-esc="'{:,.2f}'.format(sum(so.order_line.filtered(lambda l: not l.display_type).mapped('price_subtotal')) or 0.0)"/>
+                      </strong>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            
+            <div class="amount-words">
+              <div class="lbl">Amount in Words:</div>
+              <div class="val">
+                <t t-esc="so.currency_id.amount_to_text(so.amount_total)"/>
+              </div>
+            </div>
+
+            <!-- ══ 5. PRODUCT &amp; DELIVERY | PAYMENT DETAILS  -->
+            <div class="two-col">
+
+              <div class="col-left">
+                <div class="sec-card">
+                  <div class="sec-card-header">PRODUCT &amp; DELIVERY DETAILS</div>
+
+                  <!--
+                FIX: Type now comes from so.pi_product_type_id (dedicated config),
+                not from product category.
+              -->
+                  <div class="kv-row">
+                    <div class="kv-label">Type</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_product_type_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <!--
+                FIX: Country of Origin now comes from so.pi_country_of_origin_id
+                (per-order res.country field), not hardcoded company country.
+              -->
+                  <div class="kv-row">
+                    <div class="kv-label">Country of Origin</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_country_of_origin_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Terms of Delivery</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_terms_of_delivery_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Time of Delivery</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_time_of_delivery_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Place of Delivery</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_place_of_delivery_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Delivery Terms</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_delivery_terms_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Packing</div>
+                    <div class="kv-value">
+                      <t t-esc="so.pi_packing_id.name or ''"/>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="col-right">
+                <div class="sec-card">
+                  <div class="sec-card-header">PAYMENT DETAILS</div>
+
+                  <!--
+                Method of Payment: uses the existing payment_term_id field
+                from the sale order (Other Info tab) per requirement.
+              -->
+                  <div class="kv-row">
+                    <div class="kv-label">Method of Payment</div>
+                    <div class="kv-value">
+                      <t t-esc="so.preferred_payment_method_line_id.name or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Beneficiary</div>
+                    <div class="kv-value">
+                      <t t-esc="company.name"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Factory Address</div>
+                    <div class="kv-value">
+                      <t t-if="company.street">
+                        <t t-esc="company.street"/>
+                      </t>
+
+                      <t t-if="company.street2">
+                        <br/>
+                        <t t-esc="company.street2"/>
+                      </t>
+                    </div>
+                  </div>
+
+                  <!--
+                FIX: BIN now comes from company.x_bin_no (new dedicated field),
+                not company.vat.
+              -->
+                  <div class="kv-row">
+                    <div class="kv-label">Beneficiary BIN</div>
+                    <div class="kv-value">
+                      <t t-esc="so.partner_id.vat or ''"/>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Beneficiary ERC</div>
+                    <div class="kv-value">
+                      <t t-esc="company.x_erc_no or ''"/>
+                    </div>
+                  </div>
+
+                  <!--
+                FIX: Bank info now comes from res.bank (via Many2one).
+                eff_bank resolves: order-level override → company default.
+                bank name: eff_bank.name
+                branch:    eff_branch (char on company / order override)
+                address:   eff_bank.street, city, country
+                swift:     eff_bank.bic  (standard Odoo field)
+              -->
+                  <div class="kv-row">
+                    <div class="kv-label">Beneficiary Bank</div>
+                    <div class="kv-value">
+                      <t t-if="eff_bank">
+                        <t t-esc="eff_bank.name"/>
+                        <t t-if="eff_branch">
+                          <br/>
+                          <t t-esc="eff_branch"/>
+                        </t>
+                      </t>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Bank Address</div>
+                    <div class="kv-value">
+                      <t t-if="eff_bank">
+                        <t t-set="bank_addr_parts" t-value="[p for p in [eff_bank.street, eff_bank.city, eff_bank.country] if p]"/>
+                        <t t-esc="', '.join(bank_addr_parts)"/>
+                      </t>
+                    </div>
+                  </div>
+
+                  <div class="kv-row">
+                    <div class="kv-label">Swift Code</div>
+                    <div class="kv-value">
+                      <t t-esc="eff_bank.bic or '' if eff_bank else ''"/>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ══ 6. SIGNATURE ═══════════════════════════════════════ -->
+            <div class="sig-wrap">
+              <div class="sig-left">
+            Subject to standard terms and conditions.
+                <br/>
+                <br/>
+
+            The following clauses must appear on LC conditions:
+                <br/>
+            1) If payment is not made by the maturity date, the applicant shall be liable to pay interest at the rate of 16% per annum for the period of delay.
+                <br/>
+            2) The full negotiated value shall be paid fully. The buyer shall be entitled to avail the Cash Incentive Facility.
+                <br/>
+            Reimbursement in US Dollar by FDD drawn on Bangladesh Bank.
+              </div>
+
+              <div class="sig-right">
+                <!-- <t t-if="company.x_authorised_signature">
+                  <img t-att-src="image_data_uri(company.x_authorised_signature)" class="sig-image" alt="Authorized Signature"/>
+                </t> -->
+
+                <div class="sig-line"/>
+                <div class="sig-title">Authorized Signature</div>
+                <div class="sig-behalf">
+              On behalf of <t t-esc="company.name"/>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ══ FOOTER ═══════════════════════════════════════════════ -->
+          <div class="doc-footer">
+            <div class="doc-footer-left">
+              <strong>
+                <t t-esc="company.name"/>
+              </strong>
+              <span> | Proforma Invoice | CONFIDENTIAL</span>
+            </div>
+
+            <div class="doc-footer-right">
+              <span>Page </span>
+              <span class="page"/>
+              <span> of </span>
+              <span class="topage"/>
+            </div>
+          </div>
+
+        </div>
+      </t>
+    </t>
+
+
+  </template>
+
+</odoo>

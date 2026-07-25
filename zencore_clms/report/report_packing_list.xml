@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Packing List report action.
+         Not bound to Print menu directly; it is included inside LC Document Set. -->
+    <record id="action_report_packing_list" model="ir.actions.report">
+        <field name="name">Packing List</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">zencore_clms.report_packing_list</field>
+        <field name="report_file">zencore_clms.report_packing_list</field>
+        <field name="binding_model_id" eval="False"/>
+        <field name="binding_type">report</field>
+        <!-- <field name="paperformat_id" ref="base.paperformat_a4"/> -->
+    </record>
+
+    <template id="report_packing_list_style">
+        <style>
+            @page {
+                size: A4;
+                margin: 2cm 2cm 2cm 2cm;
+            }
+
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+
+            body {
+                font-family: '72', 'Roboto', 'DejaVu Sans', sans-serif;
+                font-size: 9pt;
+                color: #32363A;
+                background: #FFFFFF;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .pl-page .header-wrap {
+                display: table;
+                width: 100%;
+                background: #FFFFFF;
+                border-bottom: 3pt solid #0070F2;
+                padding: 12pt 2cm 10pt 2cm;
+            }
+            .pl-page .header-left  { display: table-cell; vertical-align: middle; width: 55%; }
+            .pl-page .header-right { display: table-cell; vertical-align: middle; width: 45%; text-align: right; }
+            .pl-page .co-name    { font-size: 13pt; font-weight: bold; color: #32363A; margin-bottom: 3pt; }
+            .pl-page .co-addr    { font-size: 8pt; color: #6A6D70; line-height: 1.7; }
+            .pl-page .co-contact { font-size: 7.5pt; color: #6A6D70; margin-top: 2pt; }
+            .pl-page .doc-title  { font-size: 18pt; font-weight: 300; color: #0070F2; letter-spacing: 0.5pt; line-height: 1.2; }
+            .pl-page .doc-sub    { font-size: 7.5pt; color: #6A6D70; margin-top: 2pt; letter-spacing: 0.5pt; }
+
+            .pl-page .body { padding: 12pt 2cm; }
+
+            .pl-page .two-col   { display: table; width: 100%; margin-bottom: 12pt; }
+            .pl-page .col-left  { display: table-cell; width: 50%; vertical-align: top; padding-right: 6pt; }
+            .pl-page .col-right { display: table-cell; width: 50%; vertical-align: top; padding-left: 6pt; }
+
+            .pl-page .card {
+                border: 1pt solid #E0E0E0;
+                border-radius: 6pt;
+                overflow: hidden;
+                background: #FFFFFF;
+            }
+            .pl-page .card-header {
+                background: #F5F6F7;
+                border-bottom: 1pt solid #E0E0E0;
+                padding: 5pt 10pt;
+                font-size: 8pt;
+                font-weight: 600;
+                color: #32363A;
+                letter-spacing: 0.3pt;
+                text-transform: uppercase;
+            }
+            .pl-page .card-body { padding: 9pt 11pt; }
+            .pl-page .buyer-name { font-size: 10pt; font-weight: 600; color: #32363A; margin-bottom: 3pt; }
+            .pl-page .buyer-addr { font-size: 8pt; color: #6A6D70; line-height: 1.8; }
+            .pl-page .buyer-meta { font-size: 8pt; color: #32363A; line-height: 1.7; margin-top: 4pt; }
+
+            .pl-page .kv-row {
+                display: table;
+                width: 100%;
+                border-bottom: 1pt solid #E0E0E0;
+            }
+            .pl-page .kv-row:last-child { border-bottom: none; }
+            .pl-page .kv-label {
+                display: table-cell;
+                width: 42%;
+                background: #F5F6F7;
+                border-right: 1pt solid #E0E0E0;
+                padding: 4pt 8pt;
+                font-size: 8pt;
+                font-weight: 600;
+                color: #6A6D70;
+                vertical-align: top;
+            }
+            .pl-page .kv-value {
+                display: table-cell;
+                background: #FFFFFF;
+                padding: 4pt 8pt;
+                font-size: 8pt;
+                color: #32363A;
+                vertical-align: top;
+            }
+
+            .pl-page .sec-card {
+                border: 1pt solid #E0E0E0;
+                border-radius: 6pt;
+                overflow: hidden;
+                background: #FFFFFF;
+                margin-bottom: 12pt;
+            }
+            .pl-page .sec-card-header {
+                background: #F5F6F7;
+                border-bottom: 1pt solid #E0E0E0;
+                border-left: 2px solid #0070F2;
+                padding: 5pt 10pt;
+                font-size: 8pt;
+                font-weight: 600;
+                color: #32363A;
+                letter-spacing: 0.3pt;
+                text-transform: uppercase;
+            }
+
+            .pl-page .goods-card {
+                border: 1pt solid #E0E0E0;
+                border-radius: 6pt;
+                overflow: hidden;
+                margin-bottom: 12pt;
+            }
+            .pl-page .goods-card-header {
+                background: #F5F6F7;
+                border-bottom: 1pt solid #E0E0E0;
+                border-left: 2px solid #0070F2;
+                padding: 5pt 10pt;
+                font-size: 8pt;
+                font-weight: 600;
+                color: #32363A;
+                letter-spacing: 0.3pt;
+                text-transform: uppercase;
+            }
+            .pl-page table.goods { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+            .pl-page table.goods thead th {
+                background: #F5F6F7;
+                color: #32363A;
+                font-weight: 600;
+                font-size: 8pt;
+                padding: 5pt 8pt;
+                border-bottom: 2pt solid #0070F2;
+                border-right: 1pt solid #E0E0E0;
+                text-align: left;
+            }
+            .pl-page table.goods thead th:last-child { border-right: none; }
+            .pl-page table.goods thead th.center { text-align: center; }
+            .pl-page table.goods thead th.right  { text-align: right; }
+            .pl-page table.goods tbody tr:nth-child(even) { background: #F5F6F7; }
+            .pl-page table.goods tbody tr:nth-child(odd)  { background: #FFFFFF; }
+            .pl-page table.goods tbody td {
+                padding: 4pt 8pt;
+                border-bottom: 1pt solid #E0E0E0;
+                border-right: 1pt solid #E0E0E0;
+                vertical-align: middle;
+            }
+            .pl-page table.goods tbody td:last-child { border-right: none; }
+            .pl-page table.goods tbody td.center { text-align: center; }
+            .pl-page table.goods tbody td.right  { text-align: right; }
+            .pl-page table.goods tfoot td {
+                background: #EBF4FF;
+                padding: 5pt 8pt;
+                font-weight: 700;
+                font-size: 9pt;
+                border-top: 2pt solid #0070F2;
+                border-right: 1pt solid #E0E0E0;
+                color: #32363A;
+            }
+            .pl-page table.goods tfoot td:last-child { border-right: none; }
+            .pl-page table.goods tfoot td.center { text-align: center; }
+            .pl-page table.goods tfoot td.blue   { color: #0070F2; text-align: right; }
+
+            .pl-page table.shipment { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+            .pl-page table.shipment td {
+                border: 1pt solid #E0E0E0;
+                padding: 4pt 8pt;
+                vertical-align: top;
+            }
+            .pl-page table.shipment td.lbl {
+                width: 17%;
+                background: #F5F6F7;
+                font-size: 8pt;
+                font-weight: 600;
+                color: #6A6D70;
+            }
+            .pl-page table.shipment td.val { width: 33%; }
+
+            .pl-page .sig-wrap  { display: table; width: 100%; margin-bottom: 4pt; }
+            .pl-page .sig-left  {
+                display: table-cell; width: 55%; vertical-align: middle;
+                background: #F5F6F7;
+                border: 1pt solid #E0E0E0;
+                border-right: none;
+                border-radius: 6pt 0 0 6pt;
+                padding: 12pt 14pt;
+                font-size: 7.5pt; color: #6A6D70; font-style: italic; line-height: 1.6;
+            }
+            .pl-page .sig-right {
+                display: table-cell; width: 45%; vertical-align: bottom; text-align: center;
+                background: #FFFFFF;
+                border: 1pt solid #E0E0E0;
+                border-radius: 0 6pt 6pt 0;
+                padding: 10pt 14pt;
+                min-height: 80pt;
+            }
+            .pl-page .sig-line   { border-bottom: 1.5pt solid #0070F2; width: 160pt; margin: 32pt auto 4pt auto; }
+            .pl-page .sig-title  { font-size: 9pt; font-weight: 600; color: #32363A; }
+            .pl-page .sig-behalf { font-size: 8pt; color: #6A6D70; }
+
+            .pl-page .doc-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                display: table;
+                width: 100%;
+                background: #F5F6F7;
+                border-top: 1pt solid #E0E0E0;
+                padding: 4pt 2cm;
+                font-size: 7pt; color: #6A6D70;
+            }
+            .pl-page .doc-footer-left  { display: table-cell; vertical-align: middle; text-align: left; }
+            .pl-page .doc-footer-right { display: table-cell; vertical-align: middle; text-align: right; }
+            .pl-page .sp { display: inline-block; width: 4px; }
+            .pl-page .sp-md { display: inline-block; width: 8px; }
+        </style>
+    </template>
+
+    <template id="report_packing_list_document">
+        <t t-set="partner" t-value="move.partner_id"/>
+        <t t-set="so" t-value="move.invoice_line_ids.filtered(lambda l: l.sale_line_ids).mapped('sale_line_ids.order_id')[:1]"/>
+        <t t-set="lc" t-value="so.clm_lc_id if so and 'clm_lc_id' in so._fields and so.clm_lc_id else False"/>
+        <t t-set="company" t-value="move.company_id"/>
+        <t t-set="product_lines" t-value="move.invoice_line_ids.filtered(lambda l: l.display_type == 'product')"/>
+        <t t-set="total_qty" t-value="sum(product_lines.mapped('quantity'))"/>
+
+        <div class="page pl-page">
+
+            <div class="header-wrap">
+                <div class="header-left">
+                    <div class="co-name"><t t-esc="company.name"/></div>
+                    <div class="co-addr">
+                        <t t-esc="company.street or ''"/>
+                        <t t-if="company.street2"><br/><t t-esc="company.street2"/></t>
+                        <br/>
+                        <t t-esc="(company.city or '') + ((' — ' + company.zip) if company.zip else '') + (', ' + company.country_id.name if company.country_id else '')"/>
+                    </div>
+                    <div class="co-contact">
+                        <span>T:</span><span class="sp"/><t t-esc="company.phone or ''"/>
+                        <span class="sp-md"/><span class="sp-md"/>
+                        <span>E:</span><span class="sp"/><t t-esc="company.email or ''"/>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="doc-title">PACKING LIST</div>
+                    <div class="doc-sub">LC DOCUMENT SET</div>
+                </div>
+            </div>
+
+            <div class="body">
+
+                <div class="two-col">
+                    <div class="col-left">
+                        <div class="card">
+                            <div class="card-header">BUYER / CONSIGNEE</div>
+                            <div class="card-body">
+                                <div class="buyer-name"><t t-esc="partner.name or ''"/></div>
+                                <div class="buyer-addr">
+                                    <t t-if="partner.street"><t t-esc="partner.street"/></t>
+                                    <t t-if="partner.street2"><br/><t t-esc="partner.street2"/></t>
+                                    <t t-if="partner.city or partner.zip"><br/><t t-esc="(partner.city or '') + ((' ' + partner.zip) if partner.zip else '')"/></t>
+                                    <t t-if="partner.country_id"><span>, </span><t t-esc="partner.country_id.name"/></t>
+                                </div>
+                                <div class="buyer-meta">
+                                    <t t-if="'customer_irc' in partner._fields and partner.customer_irc">
+                                        <strong>IRC No:</strong><span class="sp"/><t t-esc="partner.customer_irc"/><br/>
+                                    </t>
+                                    <t t-if="partner.vat">
+                                        <strong>TIN:</strong><span class="sp"/><t t-esc="partner.vat"/><br/>
+                                    </t>
+                                    <t t-if="'customer_atn' in partner._fields and partner.customer_atn">
+                                        <strong>ATN:</strong><span class="sp"/><t t-esc="partner.customer_atn"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                    <div class="col-right">
+                        <div class="card">
+                            <div class="card-header">DOCUMENT REFERENCE</div>
+                            <div class="kv-row">
+                                <div class="kv-label">Invoice No</div>
+                                <div class="kv-value"><strong><t t-esc="move.name"/></strong></div>
+                            </div>
+                            <div class="kv-row">
+                                <div class="kv-label">Invoice Date</div>
+                                <div class="kv-value">
+                                    <t t-if="move.invoice_date"><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                                    <t t-if="not move.invoice_date">—</t>
+                                </div>
+                            </div>
+                            <div class="kv-row">
+                                <div class="kv-label">PI / SO No</div>
+                                <div class="kv-value">
+                                    <t t-if="so"><t t-esc="so.name"/></t>
+                                    <t t-if="not so">—</t>
+                                </div>
+                            </div>
+                            <div class="kv-row">
+                                <div class="kv-label">PI Date</div>
+                                <div class="kv-value">
+                                    <t t-if="so and so.date_order"><t t-esc="so.date_order" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                                    <t t-if="not so or not so.date_order">—</t>
+                                </div>
+                            </div>
+                            <div class="kv-row">
+                                <div class="kv-label">Country of Origin</div>
+                                <div class="kv-value">
+                                    <t t-if="company.country_id"><t t-esc="company.country_id.name"/></t>
+                                    <t t-if="not company.country_id">—</t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="goods-card">
+                    <div class="goods-card-header">GOODS &amp; PACKING DETAILS</div>
+                    <table class="goods">
+                        <thead>
+                            <tr>
+                                <th style="width:34%;">Item Description</th>
+                                <th class="center" style="width:14%;">Delivery Date</th>
+                                <th class="center" style="width:10%;">HS Code</th>
+                                <th class="center" style="width:12%;">Bags</th>
+                                <th class="right" style="width:15%;">Net Weight (KG)</th>
+                                <th class="right" style="width:15%;">Gross Weight (KG)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="product_lines" t-as="line">
+                                <tr>
+                                    <td><t t-esc="line.product_id.description_sale or line.name"/></td>
+                                    <td class="center">
+                                        <t t-if="move.invoice_date"><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                                    </td>
+                                    <td class="center">
+                                        <t t-if="'hs_code' in line.product_id._fields and line.product_id.hs_code"><t t-esc="line.product_id.hs_code"/></t>
+                                    </td>
+                                    <td class="center"><t t-esc="'{:,.0f}'.format(line.quantity / 50.0)"/></td>
+                                    <td class="right"><t t-esc="'{:,.0f}'.format(line.quantity)"/></td>
+                                    <td class="right"><t t-esc="'{:,.0f}'.format(line.quantity * 1.04)"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3"><strong>TOTAL</strong></td>
+                                <td class="center"><t t-esc="'{:,.0f}'.format(total_qty / 50.0)"/></td>
+                                <td class="blue"><t t-esc="'{:,.0f}'.format(total_qty)"/> KG</td>
+                                <td class="blue"><t t-esc="'{:,.0f}'.format(total_qty * 1.04)"/> KG</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="sec-card">
+                    <div class="sec-card-header">SHIPMENT DETAILS</div>
+                    <table class="shipment">
+                        <tr>
+                            <td class="lbl">Packing</td>
+                            <td class="val">Standard Bag Packing 50 Kgs./Bag</td>
+                            <td class="lbl">Commodity</td>
+                            <td class="val">Yarn</td>
+                        </tr>
+                        <tr>
+                            <td class="lbl">Proforma Invoice No.</td>
+                            <td class="val">
+                                <t t-if="so"><t t-esc="so.name"/><span class="sp-md"/>dated<span class="sp-md"/><t t-if="so.date_order"><t t-esc="so.date_order" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t></t>
+                            </td>
+                            <td class="lbl">Delivery From</td>
+                            <td class="val">
+                                <t t-esc="company.street or ''"/>
+                                <t t-if="company.street2">, <t t-esc="company.street2"/></t>
+                                <t t-if="company.city">, <t t-esc="company.city"/></t>
+                                <t t-if="company.zip"> — <t t-esc="company.zip"/></t>
+                                <t t-if="company.country_id">, <t t-esc="company.country_id.name"/></t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="lbl">LC No.</td>
+                            <td class="val">
+                                <t t-if="lc and 'customer_lc_number' in lc._fields and lc.customer_lc_number">
+                                    <t t-esc="lc.customer_lc_number"/><span class="sp-md"/>dated<span class="sp-md"/>
+                                    <t t-if="'customer_lc_date' in lc._fields and lc.customer_lc_date"><t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                                </t>
+                                <t t-if="not lc or 'customer_lc_number' not in lc._fields or not lc.customer_lc_number">—</t>
+                            </td>
+                            <td class="lbl">Export LC No.</td>
+                            <td class="val">
+                                <t t-if="lc and 'lc_number' in lc._fields and lc.lc_number">
+                                    <t t-esc="lc.lc_number"/><span class="sp-md"/>dated<span class="sp-md"/>
+                                    <t t-if="'lc_date' in lc._fields and lc.lc_date"><t t-esc="lc.lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                                </t>
+                                <t t-if="not lc or 'lc_number' not in lc._fields or not lc.lc_number">—</t>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="sig-wrap">
+                    <div class="sig-left">
+                        <strong style="font-style:normal; color:#32363A;">SHIPPING MARK</strong><br/><br/>
+                        <strong style="font-style:normal; color:#32363A;"><t t-esc="partner.name or ''"/></strong><br/>
+                        <span>L/C No.:</span><span class="sp"/>
+                        <t t-if="lc and 'customer_lc_number' in lc._fields and lc.customer_lc_number"><t t-esc="lc.customer_lc_number"/></t><br/>
+                        <span>L/C Date:</span><span class="sp"/>
+                        <t t-if="lc and 'customer_lc_date' in lc._fields and lc.customer_lc_date"><t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                    </div>
+                    <div class="sig-right">
+                        <div class="sig-line"></div>
+                        <div class="sig-title">Authorized Signature</div>
+                        <div class="sig-behalf">
+                            <span>On behalf of</span><span class="sp"/><t t-esc="company.name"/>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="doc-footer">
+                <div class="doc-footer-left">
+                    <strong><t t-esc="company.name"/></strong>
+                    <span class="sp-md"/>|<span class="sp-md"/>
+                    <span>Packing List — LC Document Set</span>
+                    <span class="sp-md"/>|<span class="sp-md"/>
+                    <span>CONFIDENTIAL</span>
+                </div>
+                <div class="doc-footer-right">
+                    <span>Page</span><span class="sp"/><span class="page"/><span class="sp"/>of<span class="sp"/><span class="topage"/>
+                </div>
+            </div>
+
+        </div>
+    </template>
+
+    <template id="report_packing_list">
+        <t t-call="web.html_container">
+            <t t-call="zencore_clms.report_packing_list_style"/>
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="move" t-value="doc"/>
+                <t t-call="zencore_clms.report_packing_list_document"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>

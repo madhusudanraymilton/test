@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!--
+    Beneficiary Certificate — zencore_clms module
+    Model   : account.move
+    Module  : zencore_clms
+
+    VARIABLE MAPPING
+    ──────────────────────────────────────────────────────────────────────
+    move    = account.move                   (the posted invoice)
+    so      = first sale.order linked to invoice lines
+    lc      = so.clm_lc_id                  (zencore.lc record)
+    company = move.company_id               (res.company)
+    partner = move.partner_id               (res.partner — Buyer/Applicant)
+
+    FIELD MAPPING (zencore_lc module)
+    ──────────────────────────────────────────────────────────────────────
+    LC Number       → lc.customer_lc_number   (customer's bank LC number)
+    LC Date         → lc.customer_lc_date     (customer's bank LC date)
+    Export LC No.   → lc.lc_number            (MSA's internal Export LC)
+    Export LC Date  → lc.lc_date              (MSA's internal LC date)
+    Buyer/Applicant → partner.name + address  (res.partner)
+    Factory address → company.street/city/zip/country_id (res.company)
+    PI No.          → so.name
+    PI Date         → so.date_order
+  -->
+
+  <!-- ── Report action  -->
+  <record id="action_report_beneficiary_certificate" model="ir.actions.report">
+    <field name="name">Beneficiary Certificate</field>
+    <field name="model">account.move</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">zencore_clms.report_beneficiary_certificate</field>
+    <field name="report_file">zencore_clms.report_beneficiary_certificate</field>
+    <!-- Hidden from the invoice Print menu: only "LC Document Set" should
+         appear there. This report is still generated as part of the
+         combined LC Document Set PDF (see report_lc_document_set.xml). -->
+    <field name="binding_model_id" eval="False"/>
+    <field name="binding_type">report</field>
+    <!-- <field name="paperformat_id" ref="base.paperformat_a4"/> -->
+  </record>
+
+  <!-- ── Styles  -->
+  <template id="report_beneficiary_certificate_style">
+    <style>
+      @page {
+        size: A4;
+        margin: 2cm 2cm 2cm 2cm;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: '72', 'Roboto', 'DejaVu Sans', sans-serif;
+        font-size: 9pt;
+        color: #32363A;
+        background: #FFFFFF;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* ── Header  */
+      .header-wrap {
+        display: table;
+        width: 100%;
+        background: #FFFFFF;
+        border-bottom: 3pt solid #0070F2;
+        padding: 12pt 2cm 10pt 2cm;
+      }
+      .header-left  { display: table-cell; vertical-align: middle; width: 55%; }
+      .header-right { display: table-cell; vertical-align: middle; width: 45%; text-align: right; }
+      .co-name    { font-size: 13pt; font-weight: bold; color: #32363A; margin-bottom: 3pt; }
+      .co-addr    { font-size: 8pt; color: #6A6D70; line-height: 1.7; }
+      .co-contact { font-size: 7.5pt; color: #6A6D70; margin-top: 2pt; }
+      .doc-title  { font-size: 18pt; font-weight: 300; color: #0070F2; letter-spacing: 0.5pt; line-height: 1.2; }
+      .doc-sub    { font-size: 7.5pt; color: #6A6D70; margin-top: 2pt; }
+
+      /* ── Body padding  */
+      .body { padding: 12pt 2cm; }
+
+      /* ── Ref card (2-column kv grid)  */
+      .ref-card {
+        border: 1pt solid #E0E0E0;
+        border-radius: 6pt;
+        overflow: hidden;
+        background: #FFFFFF;
+        margin-bottom: 18pt;
+      }
+      .ref-card-header {
+        background: #F5F6F7;
+        border-bottom: 1pt solid #E0E0E0;
+        padding: 5pt 10pt;
+        font-size: 8pt;
+        font-weight: 600;
+        color: #32363A;
+        letter-spacing: 0.3pt;
+      }
+      .ref-cols {
+        display: table;
+        width: 100%;
+      }
+      .ref-col {
+        display: table-cell;
+        width: 50%;
+        vertical-align: top;
+        border-right: 1pt solid #E0E0E0;
+      }
+      .ref-col:last-child { border-right: none; }
+      .kv-row {
+        display: table;
+        width: 100%;
+        border-bottom: 1pt solid #E0E0E0;
+      }
+      .kv-row:last-child { border-bottom: none; }
+      .kv-label {
+        display: table-cell;
+        width: 45%;
+        background: #F5F6F7;
+        border-right: 1pt solid #E0E0E0;
+        padding: 4pt 8pt;
+        font-size: 8pt;
+        font-weight: 600;
+        color: #6A6D70;
+        vertical-align: top;
+      }
+      .kv-value {
+        display: table-cell;
+        background: #FFFFFF;
+        padding: 4pt 8pt;
+        font-size: 8pt;
+        color: #32363A;
+        vertical-align: top;
+      }
+
+      /* ── "To Whom It May Concern" heading  */
+      .bc-heading {
+        text-align: center;
+        font-size: 11pt;
+        font-weight: 700;
+        color: #32363A;
+        text-decoration: underline;
+        margin-bottom: 16pt;
+        letter-spacing: 0.5pt;
+      }
+
+      /* ── Body paragraphs  */
+      .bc-body {
+        font-size: 8.5pt;
+        line-height: 1.9;
+        color: #32363A;
+        margin-bottom: 14pt;
+        text-align: justify;
+      }
+      .bc-body .ref { font-weight: 700; color: #0070F2; }
+
+      /* ── Signature  */
+      .sig-wrap  { display: table; width: 100%; margin-bottom: 4pt; margin-top: 24pt; }
+      .sig-left  {
+        display: table-cell; width: 55%; vertical-align: middle;
+        background: #F5F6F7;
+        border: 1pt solid #E0E0E0;
+        border-right: none;
+        border-radius: 6pt 0 0 6pt;
+        padding: 12pt 14pt;
+        font-size: 7.5pt; color: #6A6D70; font-style: italic; line-height: 1.6;
+      }
+      .sig-right {
+        display: table-cell; width: 45%; vertical-align: bottom; text-align: center;
+        background: #FFFFFF;
+        border: 1pt solid #E0E0E0;
+        border-radius: 0 6pt 6pt 0;
+        padding: 10pt 14pt;
+        min-height: 80pt;
+      }
+      .sig-image  { max-height: 50pt; max-width: 160pt; margin-bottom: 4pt; display: block; margin-left: auto; margin-right: auto; }
+      .sig-line   { border-bottom: 1.5pt solid #0070F2; width: 160pt; margin: 0 auto 4pt auto; }
+      .sig-title  { font-size: 9pt; font-weight: 600; color: #32363A; }
+      .sig-behalf { font-size: 8pt; color: #6A6D70; }
+
+      /* ── Spacer (replaces &#160; nbsp entities which mis-encode to
+             "Â" under some PDF renderers)  */
+      .sp { display: inline-block; width: 4pt; }
+
+      /* ── Footer  */
+      .doc-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: table;
+        width: 100%;
+        background: #F5F6F7;
+        border-top: 1pt solid #E0E0E0;
+        padding: 4pt 2cm;
+        font-size: 7pt; color: #6A6D70;
+      }
+      .doc-footer-left  { display: table-cell; vertical-align: middle; text-align: left; }
+      .doc-footer-right { display: table-cell; vertical-align: middle; text-align: right; }
+    </style>
+  </template>
+
+  <!-- ── Document template (called from LC Document Set)  -->
+  <template id="report_beneficiary_certificate_document">
+    <t t-set="so"      t-value="move.invoice_line_ids.filtered(lambda l: l.sale_line_ids).mapped('sale_line_ids.order_id')[:1]"/>
+    <t t-set="lc"      t-value="so.clm_lc_id"/>
+    <t t-set="company" t-value="move.company_id"/>
+    <t t-set="partner" t-value="move.partner_id"/>
+    <t t-set="product_lines" t-value="move.invoice_line_ids.filtered(lambda l: l.display_type == 'product')"/>
+    <t t-set="total_qty" t-value="sum(product_lines.mapped('quantity'))"/>
+
+    <div class="page bc-page">
+
+      <!-- ══ 1. HEADER  -->
+      <div class="header-wrap">
+        <div class="header-left">
+          <div class="co-name"><t t-esc="company.name"/></div>
+          <div class="co-addr">
+            <t t-esc="company.street or ''"/><br/>
+            <t t-if="company.street2"><t t-esc="company.street2"/><br/></t>
+            <t t-esc="(company.city or '') + ((' — ' + company.zip) if company.zip else '') + (', ' + company.country_id.name if company.country_id else '')"/>
+          </div>
+          <div class="co-contact">
+            T:<span class="sp"/><t t-esc="company.phone or ''"/><span class="sp"/><span class="sp"/><span class="sp"/>E:<span class="sp"/><t t-esc="company.email or ''"/>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="doc-title">BENEFICIARY<br/>CERTIFICATE</div>
+          <div class="doc-sub">LC DOCUMENT SET</div>
+        </div>
+      </div>
+
+      <div class="body">
+
+        <!-- ══ 2. DOCUMENT REFERENCE  -->
+        <div class="ref-card">
+          <div class="ref-card-header">DOCUMENT REFERENCE</div>
+          <div class="ref-cols">
+
+            <!-- Left column -->
+            <div class="ref-col">
+              <div class="kv-row">
+                <div class="kv-label">Beneficiary Certificate No</div>
+                <div class="kv-value"><strong><t t-esc="move.name"/></strong></div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Date</div>
+                <div class="kv-value">
+                  <t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                </div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Quantity Supplied</div>
+                <div class="kv-value">
+                  <t t-esc="'{:,.0f}'.format(total_qty)"/><span class="sp"/>kgs
+                </div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Proforma Invoice No</div>
+                <div class="kv-value">
+                  <t t-if="so">
+                    <t t-esc="so.name"/><span class="sp"/><span class="sp"/>dated<span class="sp"/><span class="sp"/><t t-esc="so.date_order" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                  </t>
+                </div>
+              </div>
+              <div class="kv-row">
+                <!-- LC No = customer's bank LC number -->
+                <div class="kv-label">LC No</div>
+                <div class="kv-value">
+                  <t t-if="lc and lc.customer_lc_number">
+                    <t t-esc="lc.customer_lc_number"/><span class="sp"/><span class="sp"/>dated<span class="sp"/><span class="sp"/><t t-if="lc.customer_lc_date"><t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                  </t>
+                </div>
+              </div>
+              <div class="kv-row">
+                <!-- Export LC No = MSA's internal LC (lc_number) -->
+                <div class="kv-label">Export LC No</div>
+                <div class="kv-value">
+                  <t t-if="lc and lc.lc_number">
+                    <t t-esc="lc.lc_number"/><span class="sp"/><span class="sp"/>dated<span class="sp"/><span class="sp"/><t t-if="lc.lc_date"><t t-esc="lc.lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t>
+                  </t>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="ref-col">
+              <div class="kv-row">
+                <div class="kv-label">Commercial Invoice No</div>
+                <div class="kv-value">
+                  <t t-esc="move.name"/><span class="sp"/><span class="sp"/>dated<span class="sp"/><span class="sp"/><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                </div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Truck Challan / Receipt No</div>
+                <div class="kv-value">
+                  <t t-esc="move.name"/><span class="sp"/><span class="sp"/>dated<span class="sp"/><span class="sp"/><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                </div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Delivery Challan No</div>
+                <div class="kv-value">
+                  <t t-esc="move.name"/><span class="sp"/><span class="sp"/>dated<span class="sp"/><span class="sp"/><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/>
+                </div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Buyer / Applicant</div>
+                <div class="kv-value">
+                  <strong><t t-esc="partner.name"/></strong><br/>
+                  <t t-if="partner.street"><t t-esc="partner.street"/><br/></t>
+                  <t t-if="partner.street2"><t t-esc="partner.street2"/><br/></t>
+                  <t t-if="partner.city or partner.zip">
+                    <t t-esc="(partner.city or '') + ((' ' + partner.zip) if partner.zip else '')"/>
+                    <t t-if="partner.country_id">, <t t-esc="partner.country_id.name"/></t>
+                  </t>
+                </div>
+              </div>
+              <div class="kv-row">
+                <div class="kv-label">Seller Factory Address</div>
+                <div class="kv-value">
+                  <t t-esc="company.street or ''"/>
+                  <t t-if="company.street2">, <t t-esc="company.street2"/></t>
+                  <t t-if="company.city">, <t t-esc="company.city"/></t>
+                  <t t-if="company.zip"> — <t t-esc="company.zip"/></t>
+                  <t t-if="company.country_id">, <t t-esc="company.country_id.name"/></t>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ 3. HEADING  -->
+        <div class="bc-heading">TO WHOM IT MAY CONCERN</div>
+
+        <!-- ══ 4. PARAGRAPH 1 — supply declaration  -->
+        <div class="bc-body">
+          This is to certify that we are the manufacturer of yarn and have supplied
+          <span class="ref"><t t-esc="'{:,.0f}'.format(total_qty)"/><span class="sp"/>kgs.</span>
+          of yarn
+          to<span class="sp"/><span class="ref"><t t-esc="partner.name"/></span>,
+          <t t-if="partner.street"><t t-esc="partner.street"/></t><t t-if="partner.city">, <t t-esc="partner.city"/></t><t t-if="partner.country_id">, <t t-esc="partner.country_id.name"/></t>,
+          under our Commercial Invoice No.<span class="sp"/><span class="ref"><t t-esc="move.name"/></span>
+          dated<span class="sp"/><span class="ref"><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></span>,
+          Proforma Invoice No.<span class="sp"/><span class="ref"><t t-if="so"><t t-esc="so.name"/></t></span>
+          dated<span class="sp"/><span class="ref"><t t-if="so"><t t-esc="so.date_order" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t></span>,
+          Truck Receipt/Challan No.<span class="sp"/><span class="ref"><t t-esc="move.name"/></span>
+          dated<span class="sp"/><span class="ref"><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></span>,
+          Delivery Challan No.<span class="sp"/><span class="ref"><t t-esc="move.name"/></span>
+          dated<span class="sp"/><span class="ref"><t t-esc="move.invoice_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></span>,
+          against LC No.<span class="sp"/><span class="ref"><t t-if="lc"><t t-esc="lc.customer_lc_number or ''"/></t></span>
+          dated<span class="sp"/><span class="ref"><t t-if="lc and lc.customer_lc_date"><t t-esc="lc.customer_lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t></span>,
+          which is issued against Export LC No.<span class="sp"/><span class="ref"><t t-if="lc"><t t-esc="lc.lc_number or ''"/></t></span>
+          dated<span class="sp"/><span class="ref"><t t-if="lc and lc.lc_date"><t t-esc="lc.lc_date" t-options='{"widget":"date","format":"dd-MMM-yyyy"}'/></t></span>,
+          and locally manufactured at our factory at
+          <span class="ref">
+            <t t-esc="company.street or ''"/>
+            <t t-if="company.street2">, <t t-esc="company.street2"/></t>
+            <t t-if="company.city">, <t t-esc="company.city"/></t>
+            <t t-if="company.zip"> — <t t-esc="company.zip"/></t>
+            <t t-if="company.country_id">, <t t-esc="company.country_id.name"/></t>
+          </span>.
+        </div>
+
+        <!-- ══ 5. PARAGRAPH 2 — bonded warehouse / duty drawback ════ -->
+        <div class="bc-body">
+          We further certify that we have not availed any Bonded Warehouse facilities for the
+          aforesaid supply, and we did not, nor shall we apply for, any duty drawback or cash
+          assistance facility against the aforesaid supply.
+        </div>
+
+        <div class="sig-wrap">
+            <div class="sig-left">
+                <strong>
+                    <t t-esc="company.name"/>
+                </strong>
+                <br/>
+
+                <t t-esc="company.street or ''"/>
+
+                <t t-if="company.street2">
+                    <span>,</span>
+                    <span style="display:inline-block; width:4px;"></span>
+                    <t t-esc="company.street2"/>
+                </t>
+
+                <t t-if="company.city">
+                    <span>,</span>
+                    <span style="display:inline-block; width:4px;"></span>
+                    <t t-esc="company.city"/>
+                </t>
+
+                <t t-if="company.zip">
+                    <span style="display:inline-block; width:4px;"></span>
+                    <span>—</span>
+                    <span style="display:inline-block; width:4px;"></span>
+                    <t t-esc="company.zip"/>
+                </t>
+
+                <t t-if="company.country_id">
+                    <span>,</span>
+                    <span style="display:inline-block; width:4px;"></span>
+                    <t t-esc="company.country_id.name"/>
+                </t>
+            </div>
+
+            <div class="sig-right">
+
+                <!-- Blank signature space -->
+                <div style="height:50pt; margin-bottom:4pt;"></div>
+
+                <div class="sig-line"></div>
+
+                <div class="sig-title">Authorized Signature</div>
+
+                <div class="sig-behalf">
+                    <span>On behalf of</span>
+                    <span style="display:inline-block; width:6px;"></span>
+                    <span>
+                        <t t-esc="company.name"/>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+      </div><!-- /body -->
+
+      <!-- ══ FOOTER  -->
+      <div class="doc-footer">
+        <div class="doc-footer-left">
+          <strong><t t-esc="company.name"/></strong><span class="sp"/><span class="sp"/>|<span class="sp"/><span class="sp"/>Beneficiary Certificate — LC Document Set<span class="sp"/><span class="sp"/>|<span class="sp"/><span class="sp"/>CONFIDENTIAL
+        </div>
+        <div class="doc-footer-right">
+          Page<span class="sp"/><span class="page"/><span class="sp"/>of<span class="sp"/><span class="topage"/>
+        </div>
+      </div>
+
+    </div><!-- /page -->
+  </template>
+
+  <!-- ── Standalone report template (direct print from invoice) ────── -->
+  <template id="report_beneficiary_certificate">
+    <t t-call="web.html_container">
+      <t t-call="zencore_clms.report_beneficiary_certificate_style"/>
+      <t t-foreach="docs" t-as="doc">
+        <t t-set="move" t-value="doc"/>
+        <t t-call="zencore_clms.report_beneficiary_certificate_document"/>
+      </t>
+    </t>
+  </template>
+
+</odoo>

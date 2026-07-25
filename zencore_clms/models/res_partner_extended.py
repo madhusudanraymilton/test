@@ -627,6 +627,10 @@ class ResPartnerExtended(models.Model):
 
     _inherit = 'res.partner'
 
+    
+    irc_no = fields.Char(string="IRC No")
+    atn_no = fields.Char(string="ATN No")
+
     # ─────────────────────────────────────────────────────────────────────────
     # CREDIT LIMITS  (SRS §5.1)
     # All limits maintained in company currency (USD per SRS §5.1).

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="paperformat_lc_document_set_a4" model="report.paperformat">
+        <field name="name">LC Document Set A4</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">0</field>
+        <field name="margin_bottom">0</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- LC DOCUMENT SET REPORT ACTION: Invoice Print Menu -->
+    <record id="action_report_lc_document_set" model="ir.actions.report">
+        <field name="name">LC Document Set</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">zencore_clms.report_lc_document_set</field>
+        <field name="report_file">zencore_clms.report_lc_document_set</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="zencore_clms.paperformat_lc_document_set_a4"/>
+    </record>
+
+    <!-- Combined PDF Template: Delivery Challan + Commercial Invoice -->
+    <template id="report_lc_document_set">
+        <t t-call="web.html_container">
+
+
+            <t t-call="zencore_clms.report_delivery_challan_style"/>
+            <t t-call="zencore_clms.report_commercial_invoice_zencore_style"/>
+            <t t-call="zencore_clms.report_certificate_of_origin_style"/>
+            <t t-call="zencore_clms.report_beneficiary_certificate_style"/>
+            <t t-call="zencore_clms.report_truck_challan_style"/>
+            <t t-call="zencore_clms.report_packing_list_style"/>
+
+            <style>
+                @page {
+                    size: A4;
+                    margin: 0 !important;
+                }
+
+                html,
+                body,
+                main,
+                .article,
+                .o_report_layout_standard {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+
+                /* Combined PDF page handling */
+                .dc-page,
+                .tc-page,
+                .pl-page,
+                .ci-page,
+                .co-page,
+                .bc-page {
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    box-sizing: border-box !important;
+                }
+
+                .dc-page {
+                    page-break-after: always;
+                }
+
+                .tc-page {
+                    page-break-before: auto;
+                    page-break-after: always;
+                }
+
+                .pl-page {
+                    page-break-before: auto;
+                    page-break-after: always;
+                }
+
+                .ci-page {
+                    page-break-before: auto;
+                    page-break-after: always;
+                }
+
+                .co-page {
+                    page-break-before: auto;
+                    page-break-after: always;
+                }
+
+                .bc-page {
+                    page-break-before: auto;
+                    page-break-after: auto;
+                }
+
+                /* Delivery Challan layout: this is the reference layout */
+                .dc-page .header-wrap,
+                .tc-page .header-wrap,
+                .pl-page .header-wrap,
+                .ci-page .header-wrap,
+                .co-page .header-wrap,
+                .bc-page .header-wrap {
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 12pt 2cm 10pt 2cm !important;
+                    display: table !important;
+                    background: #FFFFFF !important;
+                    border-bottom: 3pt solid #0070F2 !important;
+                    box-sizing: border-box !important;
+                }
+
+                .dc-page .body,
+                .tc-page .body,
+                .pl-page .body,
+                .ci-page .body,
+                .co-page .body,
+                .bc-page .body {
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 12pt 2cm !important;
+                    box-sizing: border-box !important;
+                }
+
+                .dc-page .doc-footer {
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 4pt 2cm !important;
+                    box-sizing: border-box !important;
+                }
+
+                .tc-page .doc-footer,
+                .pl-page .doc-footer,
+                .ci-page .doc-footer,
+                .co-page .doc-footer,
+                .bc-page .doc-footer {
+                    position: static !important;
+                    width: 100% !important;
+                    margin: 8pt 0 0 0 !important;
+                    padding: 4pt 2cm !important;
+                    display: table !important;
+                    background: #F5F6F7 !important;
+                    border-top: 1pt solid #E0E0E0 !important;
+                    font-size: 7pt !important;
+                    color: #6A6D70 !important;
+                    box-sizing: border-box !important;
+                }
+
+                /* Make Commercial Invoice content width and margins same as Delivery Challan */
+                .ci-page .two-col,
+                .ci-page .two-col-tight,
+                .ci-page .goods-card,
+                .ci-page .amount-words,
+                .ci-page .sec-card,
+                .ci-page .sig-wrap {
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+
+                /* Top two card headers should look like Delivery Challan top cards */
+                .tc-page .card-header,
+                .pl-page .card-header,
+                .ci-page .card-header,
+                .dc-page .card-header,
+                .co-page .card-header,
+                .bc-page .card-header {
+                    background: #F5F6F7 !important;
+                    border-left: none !important;
+                    border-bottom: 1pt solid #E0E0E0 !important;
+                    padding: 5pt 10pt !important;
+                    font-size: 8pt !important;
+                    font-weight: 600 !important;
+                    color: #32363A !important;
+                    letter-spacing: 0.3pt !important;
+                }
+
+                /* Accent headers keep the same small blue left border style */
+                .tc-page .goods-card-header,
+                .pl-page .goods-card-header,
+                .pl-page .sec-card-header,
+                .ci-page .card-header-accent,
+                .ci-page .sec-card-header,
+                .dc-page .sec-card-header,
+                .dc-page .goods-card-header {
+                    background: #F5F6F7 !important;
+                    border-left: 2px solid #0070F2 !important;
+                    border-bottom: 1pt solid #E0E0E0 !important;
+                    padding: 5pt 10pt !important;
+                    font-size: 8pt !important;
+                    font-weight: 600 !important;
+                    color: #32363A !important;
+                    letter-spacing: 0.3pt !important;
+                }
+            </style>
+
+            <t t-foreach="docs" t-as="move">
+                <!-- Page 1: Delivery Challan -->
+                <t t-call="zencore_clms.report_delivery_challan_document"/>
+
+                <!-- Page 2: Truck Challan / Receipt -->
+                <t t-call="zencore_clms.report_truck_challan_document"/>
+
+                <!-- Page 3: Packing List -->
+                <t t-call="zencore_clms.report_packing_list_document"/>
+
+                <!-- Page 4: Commercial Invoice -->
+                <t t-call="zencore_clms.report_commercial_invoice_document"/>
+
+                <!-- Page 5: Certificate of Origin -->
+                <t t-call="zencore_clms.report_certificate_of_origin_document"/>
+
+                <!-- Page 6: Beneficiary Certificate -->
+                <t t-call="zencore_clms.report_beneficiary_certificate_document"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>

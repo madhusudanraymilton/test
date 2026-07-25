@@ -12,50 +12,33 @@
 
             <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
 
-                <button
-                    name="action_view_limit_requests"
-                    type="object"
-                    class="oe_stat_button"
-                    icon="fa-file-text-o"
-                    invisible="clm_request_total_count == 0"
-                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
-                >
+                <button name="action_view_limit_requests" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="clm_request_total_count == 0" groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager">
                     <field name="clm_request_total_count" widget="statinfo" string="All Requests"/>
                 </button>
 
-                <button
-                    name="action_view_pending_requests"
-                    type="object"
-                    class="oe_stat_button"
-                    icon="fa-hourglass-half"
-                    invisible="clm_request_pending_count == 0"
-                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_ccm"
-                >
+                <button name="action_view_pending_requests" type="object" class="oe_stat_button" icon="fa-hourglass-half" invisible="clm_request_pending_count == 0" groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_ccm">
                     <field name="clm_request_pending_count" widget="statinfo" string="Pending FM"/>
                 </button>
 
-                <button
-                    name="action_view_limit_requests"
-                    type="object"
-                    class="oe_stat_button"
-                    icon="fa-check-circle"
-                    invisible="clm_request_approved_count == 0"
-                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
-                >
+                <button name="action_view_limit_requests" type="object" class="oe_stat_button" icon="fa-check-circle" invisible="clm_request_approved_count == 0" groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager">
                     <field name="clm_request_approved_count" widget="statinfo" string="Approved"/>
                 </button>
 
-                <button
-                    name="action_view_limit_requests"
-                    type="object"
-                    class="oe_stat_button"
-                    icon="fa-times-circle"
-                    invisible="clm_request_rejected_count == 0"
-                    groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
-                >
+                <button name="action_view_limit_requests" type="object" class="oe_stat_button" icon="fa-times-circle" invisible="clm_request_rejected_count == 0" groups="zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager">
                     <field name="clm_request_rejected_count" widget="statinfo" string="Rejected"/>
                 </button>
 
+            </xpath>
+        </field>
+    </record>
+    <record id="view_partner_form_irc_atn" model="ir.ui.view">
+        <field name="name">res.partner.form.irc.atn</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='vat']" position="after">
+                <!-- <field name="irc_no"/>
+                <field name="atn_no"/> -->
             </xpath>
         </field>
     </record>
@@ -83,38 +66,33 @@
         <field name="arch" type="xml">
 
             <xpath expr="//notebook/page[@name='sales_purchases']" position="after">
-                <page
-                    string="Credit Management"
-                    name="clm_credit"
-                    groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager"
-                >
+                <page string="Credit Management" name="clm_credit" groups="zencore_groups.group_zencore_clm_ccm,zencore_groups.group_zencore_clm_finance,zencore_groups.group_zencore_clm_sales_manager">
 
                     <!-- Stat fields consumed by smart buttons -->
-                    <field name="clm_request_total_count"     invisible="1"/>
-                    <field name="clm_request_pending_count"   invisible="1"/>
-                    <field name="clm_request_approved_count"  invisible="1"/>
-                    <field name="clm_request_rejected_count"  invisible="1"/>
-                    <field name="bucket_freeze_active"        invisible="1"/>
-                    <field name="clm_group_is_frozen"         invisible="1"/>
-                    <field name="clm_is_frozen"               invisible="1"/>
+                    <field name="clm_request_total_count" invisible="1"/>
+                    <field name="clm_request_pending_count" invisible="1"/>
+                    <field name="clm_request_approved_count" invisible="1"/>
+                    <field name="clm_request_rejected_count" invisible="1"/>
+                    <field name="bucket_freeze_active" invisible="1"/>
+                    <field name="clm_group_is_frozen" invisible="1"/>
+                    <field name="clm_is_frozen" invisible="1"/>
 
                     <!-- ════════════════════════════════════════════════════
                          A — FREEZE STATUS BANNERS
                     ════════════════════════════════════════════════════ -->
 
                     <!-- Standalone / child partner — individual or group freeze -->
-                    <div class="alert alert-danger" role="alert"
-                         invisible="not bucket_freeze_active or child_ids">
+                    <div class="alert alert-danger" role="alert" invisible="not bucket_freeze_active or child_ids">
                         <strong>⛔ Credit Freeze Active:</strong>
                         This customer or a member of their credit group has exceeded
                         a PI–Bucket 4 limit. New orders, confirmations, and deliveries
                         are blocked for all group members until resolved.
-                        <br/><em>Note: Bucket 5 (Overdue) does not trigger freeze (SRS §6.1).</em>
+                        <br/>
+                        <em>Note: Bucket 5 (Overdue) does not trigger freeze (SRS §6.1).</em>
                     </div>
 
                     <!-- Group head (parent) — any member breached -->
-                    <div class="alert alert-danger" role="alert"
-                         invisible="not clm_group_is_frozen or not child_ids">
+                    <div class="alert alert-danger" role="alert" invisible="not clm_group_is_frozen or not child_ids">
                         <strong>⛔ Group Credit Freeze Active:</strong>
                         One or more members of this group have exceeded a PI–Bucket 4
                         limit. All group members are blocked from new commercial activity.
@@ -135,79 +113,34 @@
                             <field name="clm_bucket_3_limit" readonly="1"/>
                             <field name="clm_bucket_4_limit" readonly="1"/>
                             <!-- BUG 7 FIX: Bucket 5 limit added with monitoring note -->
-                            <field
-                                name="clm_bucket_5_limit"
-                                readonly="1"
-                                string="Bucket 5 Limit"
-                            />
+                            <field name="clm_bucket_5_limit" readonly="1" string="Bucket 5 Limit" />
                         </group>
 
                         <group string="Current Exposure (Real-Time)">
-                            <field
-                                name="clm_proforma_balance"
-                                readonly="1"
-                                decoration-danger="clm_proforma_balance > clm_proforma_limit
-                                                   and clm_proforma_limit > 0"
-                                decoration-muted="clm_proforma_limit == 0"
-                            />
-                            <field
-                                name="clm_bucket_1_balance"
-                                readonly="1"
-                                decoration-danger="clm_bucket_1_balance > clm_bucket_1_limit
-                                                   and clm_bucket_1_limit > 0"
-                                decoration-muted="clm_bucket_1_limit == 0"
-                            />
-                            <field
-                                name="clm_bucket_2_balance"
-                                readonly="1"
-                                decoration-danger="clm_bucket_2_balance > clm_bucket_2_limit
-                                                   and clm_bucket_2_limit > 0"
-                                decoration-muted="clm_bucket_2_limit == 0"
-                            />
-                            <field
-                                name="clm_bucket_3_balance"
-                                readonly="1"
-                                decoration-danger="clm_bucket_3_balance > clm_bucket_3_limit
-                                                   and clm_bucket_3_limit > 0"
-                                decoration-muted="clm_bucket_3_limit == 0"
-                            />
-                            <field
-                                name="clm_bucket_4_balance"
-                                readonly="1"
-                                decoration-danger="clm_bucket_4_balance > clm_bucket_4_limit
-                                                   and clm_bucket_4_limit > 0"
-                                decoration-muted="clm_bucket_4_limit == 0"
-                            />
+                            <field name="clm_proforma_balance" readonly="1" decoration-danger="clm_proforma_balance > clm_proforma_limit
+                                                   and clm_proforma_limit > 0" decoration-muted="clm_proforma_limit == 0" />
+                            <field name="clm_bucket_1_balance" readonly="1" decoration-danger="clm_bucket_1_balance > clm_bucket_1_limit
+                                                   and clm_bucket_1_limit > 0" decoration-muted="clm_bucket_1_limit == 0" />
+                            <field name="clm_bucket_2_balance" readonly="1" decoration-danger="clm_bucket_2_balance > clm_bucket_2_limit
+                                                   and clm_bucket_2_limit > 0" decoration-muted="clm_bucket_2_limit == 0" />
+                            <field name="clm_bucket_3_balance" readonly="1" decoration-danger="clm_bucket_3_balance > clm_bucket_3_limit
+                                                   and clm_bucket_3_limit > 0" decoration-muted="clm_bucket_3_limit == 0" />
+                            <field name="clm_bucket_4_balance" readonly="1" decoration-danger="clm_bucket_4_balance > clm_bucket_4_limit
+                                                   and clm_bucket_4_limit > 0" decoration-muted="clm_bucket_4_limit == 0" />
                             <!--
                                 BUG 7 FIX: Bucket 5 balance added.
                                 decoration-warning (not danger) because Bucket 5
                                 exceeding its limit does NOT trigger freeze (SRS §6.1).
                                 It is a monitoring threshold, not an enforcement limit.
                             -->
-                            <field
-                                name="clm_bucket_5_balance"
-                                readonly="1"
-                                string="Bucket 5 Balance (Overdue)"
-                                decoration-warning="clm_bucket_5_balance > clm_bucket_5_limit
-                                                    and clm_bucket_5_limit > 0"
-                                decoration-muted="clm_bucket_5_limit == 0"
-                            />
+                            <field name="clm_bucket_5_balance" readonly="1" string="Bucket 5 Balance (Overdue)" decoration-warning="clm_bucket_5_balance > clm_bucket_5_limit
+                                                    and clm_bucket_5_limit > 0" decoration-muted="clm_bucket_5_limit == 0" />
                         </group>
                     </group>
 
                     <group>
-                        <field
-                            name="clm_is_frozen"
-                            readonly="1"
-                            widget="boolean_toggle"
-                            string="Own Limit Breached (PI–Bucket 4)"
-                        />
-                        <field
-                            name="bucket_freeze_active"
-                            readonly="1"
-                            widget="boolean_toggle"
-                            string="Group Freeze Active"
-                        />
+                        <field name="clm_is_frozen" readonly="1" widget="boolean_toggle" string="Own Limit Breached (PI–Bucket 4)" />
+                        <field name="bucket_freeze_active" readonly="1" widget="boolean_toggle" string="Group Freeze Active" />
                     </group>
 
                     <separator/>
@@ -217,22 +150,15 @@
                          Only visible for group head partners (those with children).
                          BUG 7 FIX: Bucket 5 aggregated fields added.
                     ════════════════════════════════════════════════════ -->
-                    <group
-                        string="Group Aggregated Credit (Sum of All Group Members)"
-                        invisible="not child_ids"
-                    >
+                    <group string="Group Aggregated Credit (Sum of All Group Members)" invisible="not child_ids">
                         <group string="Aggregated Limits">
-                            <field name="clm_agg_proforma_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_1_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_2_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_3_limit"   readonly="1"/>
-                            <field name="clm_agg_bucket_4_limit"   readonly="1"/>
+                            <field name="clm_agg_proforma_limit" readonly="1"/>
+                            <field name="clm_agg_bucket_1_limit" readonly="1"/>
+                            <field name="clm_agg_bucket_2_limit" readonly="1"/>
+                            <field name="clm_agg_bucket_3_limit" readonly="1"/>
+                            <field name="clm_agg_bucket_4_limit" readonly="1"/>
                             <!-- BUG 7 FIX -->
-                            <field
-                                name="clm_agg_bucket_5_limit"
-                                readonly="1"
-                                string="Aggregated Bucket 5 Limit (Overdue)"
-                            />
+                            <field name="clm_agg_bucket_5_limit" readonly="1" string="Aggregated Bucket 5 Limit (Overdue)" />
                         </group>
 
                         <group string="Aggregated Balances">
@@ -242,20 +168,11 @@
                             <field name="clm_agg_bucket_3_balance" readonly="1"/>
                             <field name="clm_agg_bucket_4_balance" readonly="1"/>
                             <!-- BUG 7 FIX -->
-                            <field
-                                name="clm_agg_bucket_5_balance"
-                                readonly="1"
-                                string="Aggregated Bucket 5 Balance (Overdue)"
-                            />
+                            <field name="clm_agg_bucket_5_balance" readonly="1" string="Aggregated Bucket 5 Balance (Overdue)" />
                         </group>
 
                         <group>
-                            <field
-                                name="clm_group_is_frozen"
-                                readonly="1"
-                                widget="boolean_toggle"
-                                string="Any Group Member Breached (PI–Bucket 4)"
-                            />
+                            <field name="clm_group_is_frozen" readonly="1" widget="boolean_toggle" string="Any Group Member Breached (PI–Bucket 4)" />
                         </group>
                     </group>
 
@@ -266,66 +183,37 @@
                     ════════════════════════════════════════════════════ -->
                     <group string="Active Limit Change Requests">
 
-                        <div class="mb-2"
-                             groups="zencore_groups.group_zencore_clm_ccm">
-                            <button
-                                name="action_clm_new_limit_request"
-                                type="object"
-                                string="➕ New Limit Change Request"
-                                class="btn btn-primary"
-                            />
+                        <div class="mb-2" groups="zencore_groups.group_zencore_clm_ccm">
+                            <button name="action_clm_new_limit_request" type="object" string="➕ New Limit Change Request" class="btn btn-primary" />
                         </div>
 
-                        <div class="alert alert-info small mb-2" role="alert"
-                             invisible="not child_ids"
-                             groups="zencore_groups.group_zencore_clm_ccm">
+                        <div class="alert alert-info small mb-2" role="alert" invisible="not child_ids" groups="zencore_groups.group_zencore_clm_ccm">
                             <strong>Note:</strong> A limit change request on this record
                             updates <em>this partner's own</em> bucket limits (shown in
                             Individual Credit Limits above). To change a child member's
                             limits, open that child's record instead.
                         </div>
 
-                        <div class="text-muted small mb-2"
-                             invisible="clm_request_pending_count != 0 or clm_request_total_count == 0"
-                             groups="zencore_groups.group_zencore_clm_finance">
+                        <div class="text-muted small mb-2" invisible="clm_request_pending_count != 0 or clm_request_total_count == 0" groups="zencore_groups.group_zencore_clm_finance">
                             No pending limit change requests for this customer.
                         </div>
 
-                        <field
-                            name="clm_active_request_ids"
-                            readonly="1"
-                            nolabel="1"
-                            invisible="clm_request_total_count == 0"
-                        >
-                            <list
-                                string="Active Requests"
-                                decoration-warning="state == 'draft'"
-                                decoration-info="state == 'pending_fm'"
-                            >
-                                <field name="name"           string="Reference"/>
-                                <field name="bucket"         string="Bucket"/>
-                                <field
-                                    name="request_type"
-                                    widget="badge"
-                                    decoration-danger="request_type == 'freeze_resolution'"
-                                    decoration-info="request_type == 'standard_increase'"
-                                />
-                                <field name="current_limit"  string="Current Limit"/>
+                        <field name="clm_active_request_ids" readonly="1" nolabel="1" invisible="clm_request_total_count == 0">
+                            <list string="Active Requests" decoration-warning="state == 'draft'" decoration-info="state == 'pending_fm'">
+                                <field name="name" string="Reference"/>
+                                <field name="bucket" string="Bucket"/>
+                                <field name="request_type" widget="badge" decoration-danger="request_type == 'freeze_resolution'" decoration-info="request_type == 'standard_increase'" />
+                                <field name="current_limit" string="Current Limit"/>
                                 <field name="proposed_limit" string="Proposed Limit"/>
-                                <field name="state"          widget="badge"/>
-                                <field name="initiated_by"   string="Submitted By"/>
+                                <field name="state" widget="badge"/>
+                                <field name="initiated_by" string="Submitted By"/>
                                 <field name="submitted_date" optional="show"/>
-                                <field name="currency_id"    invisible="1"/>
+                                <field name="currency_id" invisible="1"/>
                             </list>
                         </field>
 
                         <div class="mt-2" invisible="clm_request_total_count == 0">
-                            <button
-                                name="action_view_limit_requests"
-                                type="object"
-                                string="📋 View Full Request History"
-                                class="btn btn-link p-0"
-                            />
+                            <button name="action_view_limit_requests" type="object" string="📋 View Full Request History" class="btn btn-link p-0" />
                         </div>
 
                     </group>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Print menu cleanup — account.move (Customer Invoice)
+        ──────────────────────────────────────────────────────────────────
+        Business requirement: the invoice "Print" menu must show ONLY the
+        "LC Document Set" option (which itself prints all 4 LC documents —
+        Delivery Challan, Commercial Invoice, Certificate of Origin and
+        Beneficiary Certificate — together as one PDF).
+
+        The standalone "Certificate of Origin" and "Beneficiary Certificate"
+        entries are unbound directly on their own <ir.actions.report>
+        records (see report_certificate_of_origin.xml / report_beneficiary_
+        certificate.xml).
+
+        The two remaining default Odoo entries — "Invoice PDF"
+        (account.account_invoices) and "PDF without Payment"
+        (account.account_invoices_without_payment) — are core `account`
+        module reports bound to account.move by default. We unbind them
+        here (without touching/removing the reports themselves, so they
+        can still be used programmatically, e.g. for emailing invoices).
+    -->
+
+    <record id="account.account_invoices" model="ir.actions.report">
+        <field name="binding_model_id" eval="False"/>
+    </record>
+
+    <record id="account.account_invoices_without_payment" model="ir.actions.report">
+        <field name="binding_model_id" eval="False"/>
+    </record>
+</odoo>
