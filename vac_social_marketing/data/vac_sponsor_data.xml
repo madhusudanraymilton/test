@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+
+    <record id="sponsor_chris_french" model="vac.sponsor">
+        <field name="name">Chris French</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="sponsor_stacey_michelon" model="vac.sponsor">
+        <field name="name">Stacey Michelon</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="sponsor_rob_bailey" model="vac.sponsor">
+        <field name="name">Rob Bailey</field>
+        <field name="sequence">30</field>
+    </record>
+
+    <record id="sponsor_vac" model="vac.sponsor">
+        <field name="name">VAC</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="sponsor_webinar" model="vac.sponsor">
+        <field name="name">Webinar</field>
+        <field name="sequence">50</field>
+    </record>
+
+</odoo>

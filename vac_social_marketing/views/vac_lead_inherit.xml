@@ -1,0 +1,57 @@
+<odoo>
+
+    <!--
+        Event Lead Distribution
+        binding_domain was removed in Odoo 18; filtering is now handled
+        inside the Python method (action_lead_generation_bulk).
+    -->
+    <record id="action_server_lead_generation" model="ir.actions.server">
+        <field name="name">Event Lead Distribution</field>
+        <field name="model_id" ref="model_vac_event_lead"/>
+        <field name="binding_model_id" ref="model_vac_event_lead"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+records = records.filtered(lambda r: not r.social_fb_id and not r.social_ig_id and not r.social_office_id)
+if records:
+    action = records.action_lead_generation_bulk()
+        </field>
+    </record>
+
+    <!--
+        Social Lead Distribution
+        binding_domain was removed in Odoo 18; filtering is now handled
+        inside the Python code block.
+    -->
+    <record id="action_server_social_lead_distribution" model="ir.actions.server">
+        <field name="name">Social Lead Distribution</field>
+        <field name="model_id" ref="model_vac_event_lead"/>
+        <field name="binding_model_id" ref="model_vac_event_lead"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+records = records.filtered(lambda r: r.social_fb_id or r.social_ig_id or r.social_office_id or r.platform in ('facebook', 'instagram', 'office'))
+if records:
+    action = records.action_social_lead_distribution_bulk()
+        </field>
+    </record>
+
+    <!--
+        Confirm BAM Assignment (manual, one-by-one — NOT round robin)
+        User sets "Assigned BAM" inline per row for one or several leads,
+        selects those rows, then runs this once. Each lead goes to its own
+        already-chosen BAM user and straight to CRM.
+    -->
+    <record id="action_server_confirm_bam_assignment" model="ir.actions.server">
+        <field name="name">Confirm BAM Assignment</field>
+        <field name="model_id" ref="model_vac_event_lead"/>
+        <field name="binding_model_id" ref="model_vac_event_lead"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    action = records.action_confirm_bam_assignment_bulk()
+        </field>
+    </record>
+
+</odoo>

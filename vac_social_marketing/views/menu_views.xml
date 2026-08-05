@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ========================================== -->
+    <!-- ROOT MENU -->
+    <!-- ========================================== -->
+    
+    <menuitem id="vac_event_root_menu"
+              name="VAC Events"
+              sequence="10"/>
+
+
+    <!-- ========================================== -->
+    <!-- MAIN MENUS (Level 1 - Tabs) -->
+    <!-- ========================================== -->
+    
+    <!-- Social Tab -->
+    <menuitem id="vac_social_menu"
+              name="Social"
+              parent="vac_event_root_menu"
+              sequence="5"/>
+
+    <menuitem id="vac_social_menu_fb"
+              name="Facebook"
+              parent="vac_social_menu"
+              action="vac_social_fb_action"
+              sequence="10"/>
+
+    <menuitem id="vac_social_menu_ing"
+              name="Instagram"
+              parent="vac_social_menu"
+              action="vac_social_ing_action"
+              sequence="20"/>
+
+    <menuitem id="vac_social_menu_office"
+              name="Offices"
+              parent="vac_social_menu"
+              action="vac_social_office_action"
+              sequence="30"/>
+
+    <!-- Events Tab (parent menu — no direct action) -->
+    <menuitem id="vac_event_menu_events"
+              name="Events"
+              parent="vac_event_root_menu"
+              sequence="10"/>
+
+    <!-- Events → All Events (no filter — shows every event including old ones) -->
+    <menuitem id="vac_event_menu_all_events"
+              name="All Events"
+              parent="vac_event_menu_events"
+              action="vac_event_action"
+              sequence="5"/>
+
+    <!-- Events → Sponsor submenus -->
+    <menuitem id="vac_event_menu_chris_french"
+              name="Chris French's Event"
+              parent="vac_event_menu_events"
+              action="vac_event_action_chris_french"
+              sequence="10"/>
+
+    <menuitem id="vac_event_menu_stacey_michelon"
+              name="Stacey Michelon's Event"
+              parent="vac_event_menu_events"
+              action="vac_event_action_stacey_michelon"
+              sequence="20"/>
+
+    <menuitem id="vac_event_menu_rob_bailey"
+              name="Rob Bailey's Event"
+              parent="vac_event_menu_events"
+              action="vac_event_action_rob_bailey"
+              sequence="30"/>
+
+    <menuitem id="vac_event_menu_vac"
+              name="VAC's Events"
+              parent="vac_event_menu_events"
+              action="vac_event_action_vac"
+              sequence="40"/>
+
+    <menuitem id="vac_event_menu_webinar"
+              name="Webinar"
+              parent="vac_event_menu_events"
+              action="vac_event_action_webinar"
+              sequence="50"/>
+    
+    <!-- Leads Tab (parent, no action) -->
+    <menuitem id="vac_event_menu_leads"
+              name="Leads"
+              parent="vac_event_root_menu"
+              sequence="20"/>
+
+    <!-- Event Leads sub-menu -->
+    <menuitem id="vac_event_menu_leads_event"
+              name="Event Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_event_only"
+              sequence="10"/>
+
+    <!-- Social Media Leads sub-menu -->
+    <menuitem id="vac_event_menu_leads_social"
+              name="Social Media Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_social_only"
+              sequence="20"/>
+
+    <menuitem id="vac_event_menu_leads_chris_french"
+              name="Chris French's Event Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_chris_french"
+              sequence="30"/>
+
+    <menuitem id="vac_event_menu_leads_stacey_michelon"
+              name="Stacey Michelon's Event Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_stacey_michelon"
+              sequence="40"/>
+
+    <menuitem id="vac_event_menu_leads_rob_bailey"
+              name="Rob Bailey's Event Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_rob_bailey"
+              sequence="50"/>
+
+    <menuitem id="vac_event_menu_leads_vac"
+              name="VAC's Event Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_vac"
+              sequence="60"/>
+
+    <menuitem id="vac_event_menu_leads_webinar"
+              name="Webinar Event Leads"
+              parent="vac_event_menu_leads"
+              action="vac_event_lead_action_webinar"
+              sequence="70"/>
+    
+    <!-- Configuration Tab -->
+    <menuitem id="vac_event_menu_config"
+              name="Configuration"
+              parent="vac_event_root_menu"
+              sequence="100"/>
+
+
+    <!-- ========================================== -->
+    <!-- CONFIGURATION SUB-MENUS (Level 2) -->
+    <!-- ========================================== -->
+    
+    <menuitem id="vac_event_menu_config_event_stages"
+              name="Event Stages"
+              parent="vac_event_menu_config"
+              action="vac_event_stage_action"
+              sequence="10"/>
+
+    <!-- Event Lead Stages -->
+    <menuitem id="vac_event_menu_config_lead_stages"
+              name="Event Lead Stages"
+              parent="vac_event_menu_config"
+              action="vac_event_lead_stage_action"
+              sequence="20"/>
+
+    <!-- NEW: Social Lead Stages (dynamically created by users) -->
+    <menuitem id="vac_event_menu_config_social_lead_stages"
+              name="Social Lead Stages"
+              parent="vac_event_menu_config"
+              action="vac_social_lead_stage_action"
+              sequence="25"/>
+
+
+    
+    <menuitem id="vac_event_menu_config_email_templates"
+              name="Event Confirmation Email templates"
+              parent="vac_event_menu_config"
+              action="vac_mail_template_config_action"
+              sequence="50"/>
+    
+
+
+</odoo>

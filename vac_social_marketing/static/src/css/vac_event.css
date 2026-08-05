@@ -1,0 +1,178 @@
+/* ================================================= */
+/* VAC EVENTS - SMART BUTTONS STYLING */
+/* ================================================= */
+
+/* Button box container */
+.oe_button_box {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    margin-bottom: 16px !important;
+}
+
+/* Stat button - Light border style */
+.oe_button_box .oe_stat_button,
+.oe_button_box button.oe_stat_button {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-width: 100px !important;
+    max-width: 180px !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    margin: 0 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Hover effect */
+.oe_button_box .oe_stat_button:hover,
+.oe_button_box button.oe_stat_button:hover {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+}
+
+/* Focus state */
+.oe_button_box .oe_stat_button:focus,
+.oe_button_box button.oe_stat_button:focus {
+    outline: none !important;
+    border-color: #adb5bd !important;
+}
+
+/* Active/clicked state */
+.oe_button_box .oe_stat_button:active,
+.oe_button_box button.oe_stat_button:active {
+    background-color: #e9ecef !important;
+    border-color: #ced4da !important;
+}
+
+/* Icon in stat button */
+.oe_stat_button > i.fa,
+.oe_stat_button > i {
+    font-size: 20px !important;
+    color: #875a7b !important;
+    margin-right: 10px !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+}
+
+.oe_stat_button:hover > i.fa,
+.oe_stat_button:hover > i {
+    color: #6f4968 !important;
+}
+
+/* Stat info container */
+.oe_stat_button .o_stat_info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+/* Stat value (number) */
+.oe_stat_button .o_stat_value {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #212529 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+
+/* Stat text (label) */
+.oe_stat_button .o_stat_text {
+    font-size: 11px !important;
+    color: #6c757d !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    margin-top: 2px !important;
+}
+
+/* Remove default field widget styling */
+.oe_button_box .o_field_widget {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+/* Make the widget field transparent */
+.oe_button_box .o_field_widget[name="lead_stage_data"] {
+    display: contents !important;
+}
+
+.oe_button_box .o_field_widget[name="lead_stage_data"] > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .oe_button_box {
+        gap: 4px !important;
+    }
+    
+    .oe_button_box .oe_stat_button {
+        min-width: 90px !important;
+        padding: 6px 8px !important;
+    }
+}
+
+/* ================================================= */
+/* VAC MAIL TEMPLATE — BODY HTML EDITOR HEIGHT FIX   */
+/* ================================================= */
+
+/* Outer field wrapper — draw the visible box */
+.o_field_widget[name="body_html"] {
+    border: 2px solid #b0bec5 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+}
+
+.o_field_widget[name="body_html"]:focus-within {
+    border-color: #00838f !important;
+    box-shadow: 0 0 0 3px rgba(0,131,143,0.15) !important;
+}
+
+/* Toolbar area — give it a light separator */
+.o_field_widget[name="body_html"] .o_we_toolbar,
+.o_field_widget[name="body_html"] .odoo-editor-toolbar {
+    border-bottom: 1px solid #d0d7de !important;
+    background: #f8fafc !important;
+    padding: 6px 8px !important;
+}
+
+/* The actual typing area */
+.o_field_widget[name="body_html"] .odoo-editor-editable {
+    min-height: 450px !important;
+    font-size: 15px !important;
+    line-height: 1.8 !important;
+    padding: 20px 24px !important;
+    background: #ffffff !important;
+    color: #1a1a2e !important;
+}
+
+/* Editor wrapper height */
+.o_field_widget[name="body_html"] .odoo-editor {
+    min-height: 490px !important;
+    border: none !important;
+}
+
+/* Field html inner wrapper */
+.o_field_widget[name="body_html"] .o_field_html {
+    min-height: 490px !important;
+    border: none !important;
+}

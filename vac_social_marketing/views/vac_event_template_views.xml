@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View -->
+    <record id="view_vac_event_template_form" model="ir.ui.view">
+        <field name="name">vac.event.template.form</field>
+        <field name="model">vac.event.template</field>
+        <field name="arch" type="xml">
+            <form string="Event Template">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                    <group string="Description">
+                        <field name="description" placeholder="Describe this template..." nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_vac_event_template_list" model="ir.ui.view">
+        <field name="name">vac.event.template.list</field>
+        <field name="model">vac.event.template</field>
+        <field name="arch" type="xml">
+            <list string="Event Templates" editable="bottom" sample="1">
+                <field name="name"/>
+                <field name="description" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_vac_event_template" model="ir.actions.act_window">
+        <field name="name">Event Templates</field>
+        <field name="res_model">vac.event.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first event template
+            </p>
+            <p>
+                Templates help you quickly create events with predefined settings.
+            </p>
+        </field>
+    </record>
+</odoo>

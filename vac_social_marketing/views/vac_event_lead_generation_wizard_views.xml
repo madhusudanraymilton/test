@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lead Generation Wizard Form View -->
+    <record id="vac_event_lead_generation_wizard_form" model="ir.ui.view">
+        <field name="name">vac.event.lead.generation.wizard.form</field>
+        <field name="model">vac.event.lead.generation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Lead Generation &amp; Assignment">
+                <sheet>
+                    <!-- Title Section -->
+                    <div class="oe_title">
+                        <h1>Assign Signed Leads to BAM Users</h1>
+                        <p class="text-muted">
+                            Distribute signed leads from this event to Business Account Managers
+                        </p>
+                    </div>
+                    
+                    <!-- Summary Stats -->
+                    <group>
+                        <group string="Event Information">
+                            <field name="event_id" readonly="1" force_save="1"/>
+                        </group>
+                        <group string="Lead Summary">
+                            <field name="total_signed_leads" readonly="1" string="Total Signed Leads"/>
+                            <!-- <field name="available_leads" readonly="1" string="Available to Assign" 
+                                   class="text-success fw-bold"/> -->
+                        </group>
+                    </group>
+                    
+                    <!-- Assignment Instructions -->
+                    <div class="alert alert-info" role="alert" style="margin: 16px 0;">
+                        <i class="fa fa-info-circle"/> 
+                        <strong>Instructions:</strong> Add BAM users below and specify how many leads each should receive. 
+                        The total must not exceed the available unassigned leads.
+                    </div>
+                    
+                    <!-- Assignment Lines -->
+                    <notebook>
+                        <page string="Assignment Lines" name="assignment_lines">
+                            <field name="assignment_line_ids" 
+                                   nolabel="1"
+                                   context="{'default_count': 1}">
+                                <list string="Assign Leads to BAM Users" editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="user_id" 
+                                           string="BAM User"
+                                           placeholder="Select BAM User..."
+                                           options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_search_more': True, 'no_open': True}"
+                                           required="1"/>
+                                    <field name="count" 
+                                           string="Number of Leads"
+                                           sum="Total to Assign"/>
+                                </list>
+                            </field>
+                            
+                            <!-- Helper text -->
+                            <div class="text-muted mt-2">
+                                <i class="fa fa-lightbulb-o"/> 
+                                <small>Tip: Use the handle (⋮⋮) to reorder assignments. Leads will be assigned in this order.</small>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <!-- Footer Buttons -->
+                <footer>
+                    <button string="Assign Leads" 
+                            name="action_assign_leads" 
+                            type="object" 
+                            class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="View Signed Leads" 
+                            name="action_view_signed_leads" 
+                            type="object" 
+                            class="btn-secondary"
+                            data-hotkey="v"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel"
+                            data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================== -->
+    <!-- EVENT LEAD STAGE VIEWS -->
+    <!-- ============================================== -->
+
+    <record id="vac_event_lead_stage_view_form" model="ir.ui.view">
+        <field name="name">vac.event.lead.stage.form</field>
+        <field name="model">vac.event.lead.stage</field>
+        <field name="arch" type="xml">
+            <form string="Event Lead Stages">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="fold"/>
+                            <field name="active"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Stage description..."/>
+                    </group>
+                    <group>
+                        <field name="is_signed" widget="boolean_toggle"/>
+                        <field name="lead_count" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="vac_event_lead_stage_view_list" model="ir.ui.view">
+        <field name="name">vac.event.lead.stage.list</field>
+        <field name="model">vac.event.lead.stage</field>
+        <field name="arch" type="xml">
+            <list string="Event Lead Stages" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="fold"/>
+                <field name="is_signed" widget="boolean_toggle"/>
+                <field name="lead_count" readonly="1"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vac_event_lead_stage_action" model="ir.actions.act_window">
+        <field name="name">Event Lead Stages</field>
+        <field name="res_model">vac.event.lead.stage</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first event lead stage!
+            </p>
+            <p>
+                Stages represent the progression of event leads
+                (New Lead, Contacted, Converted, Lost, etc.)
+            </p>
+        </field>
+    </record>
+
+
+    <!-- ============================================== -->
+    <!-- SOCIAL LEAD STAGE VIEWS (dynamically created) -->
+    <!-- ============================================== -->
+
+    <record id="vac_social_lead_stage_view_form" model="ir.ui.view">
+        <field name="name">vac.social.lead.stage.form</field>
+        <field name="model">vac.social.lead.stage</field>
+        <field name="arch" type="xml">
+            <form string="Social Lead Stage">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="fold"/>
+                            <field name="active"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Stage description..."/>
+                    </group>
+                    <group>
+                        <field name="lead_count" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- editable="top" allows users to create stages directly in the list -->
+    <record id="vac_social_lead_stage_view_list" model="ir.ui.view">
+        <field name="name">vac.social.lead.stage.list</field>
+        <field name="model">vac.social.lead.stage</field>
+        <field name="arch" type="xml">
+            <list string="Social Lead Stages" editable="top">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="fold"/>
+                <field name="lead_count" readonly="1"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vac_social_lead_stage_action" model="ir.actions.act_window">
+        <field name="name">Social Lead Stages</field>
+        <field name="res_model">vac.social.lead.stage</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first social lead stage!
+            </p>
+            <p>
+                Social Lead Stages represent the progression of Facebook / Instagram / Offices leads.
+                You can create as many stages as you need.
+            </p>
+        </field>
+    </record>
+
+
+    <!-- ========================================== -->
+    <!-- LEAD STATUS VIEWS                         -->
+    <!-- ========================================== -->
+
+    <record id="vac_event_lead_status_view_form" model="ir.ui.view">
+        <field name="name">vac.event.lead.status.form</field>
+        <field name="model">vac.event.lead.status</field>
+        <field name="arch" type="xml">
+            <form string="Lead Status">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                        <group>
+                            <field name="is_blacklisted"/>
+                            <field name="is_customer"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Status description..."/>
+                    </group>
+                    <group>
+                        <field name="lead_count" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="vac_event_lead_status_view_list" model="ir.ui.view">
+        <field name="name">vac.event.lead.status.list</field>
+        <field name="model">vac.event.lead.status</field>
+        <field name="arch" type="xml">
+            <list string="Lead Status">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="is_blacklisted" widget="boolean_toggle"/>
+                <field name="is_customer" widget="boolean_toggle"/>
+                <field name="lead_count" readonly="1"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vac_event_lead_status_action" model="ir.actions.act_window">
+        <field name="name">Lead Status</field>
+        <field name="res_model">vac.event.lead.status</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first lead status!
+            </p>
+            <p>
+                Status represents the state of leads
+                (Active, Inactive, Blacklisted, Customer, etc.)
+            </p>
+        </field>
+    </record>
+
+
+    <!-- ========================================== -->
+    <!-- BRANCH/SERVICE VIEWS                      -->
+    <!-- ========================================== -->
+
+    <record id="vac_branch_service_view_form" model="ir.ui.view">
+        <field name="name">vac.branch.service.form</field>
+        <field name="model">vac.branch.service</field>
+        <field name="arch" type="xml">
+            <form string="Branch / Service">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="type"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Description..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="vac_branch_service_view_list" model="ir.ui.view">
+        <field name="name">vac.branch.service.list</field>
+        <field name="model">vac.branch.service</field>
+        <field name="arch" type="xml">
+            <list string="Branches / Services">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="type" widget="badge"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="vac_branch_service_action" model="ir.actions.act_window">
+        <field name="name">Branches / Services</field>
+        <field name="res_model">vac.branch.service</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first branch or service!
+            </p>
+        </field>
+    </record>
+
+</odoo>

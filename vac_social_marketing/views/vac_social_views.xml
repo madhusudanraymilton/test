@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--  =================================================  -->
+    <!--  FACEBOOK FORM VIEW                                  -->
+    <!--  =================================================  -->
+    <record id="vac_social_fb_view_form" model="ir.ui.view">
+        <field name="name">vac.social.fb.form</field>
+        <field name="model">vac.social.fb</field>
+        <field name="arch" type="xml">
+            <form string="Facebook Campaign">
+                <header>
+                    <button name="website_publish_button"
+                            string="Publish" type="object"
+                            class="btn-success"
+                            invisible="published"/>
+                    <button name="website_publish_button"
+                            string="Unpublish" type="object"
+                            class="btn-warning"
+                            invisible="not published"/>
+                    <button name="action_preview"
+                            string="Preview"
+                            type="object"
+                            class="btn-info"
+                            icon="fa-eye"
+                            invisible="not id"/>
+                    <button name="action_share_link" string="Share Campaign" type="object" class="btn-primary" invisible="not id"/>
+                    <field name="stage_id" widget="statusbar"
+                           statusbar_visible="Draft,Published,Ongoing,Completed"
+                           options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <!--  SMART BUTTONS  -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-users"
+                                invisible="not id">
+                            <field name="lead_count"
+                                   string="Leads"
+                                   widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <!--  BADGE + TITLE  -->
+                    <div class="oe_title">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <field name="badge_background" widget="image"
+                                       class="oe_avatar"
+                                       options="{'size': [150, 150]}"/>
+                                <field name="badge_background_filename" invisible="1"/>
+                                <div style="margin-top:4px; text-align:center; padding:3px 6px; background:#d1ecf1; border:1px solid #bee5eb; border-radius:4px; font-size:10px; color:#0c5460; font-weight:600;">
+                                    📷 800 × 800 px
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="title"/>
+                                <h1>
+                                    <field name="title" placeholder="e.g. Summer Facebook Campaign"/>
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--  MAIN INFO  -->
+                    <group col="2">
+                        <group>
+                            <field name="date_begin"
+                                   string="Campaign Start Date"
+                                   decoration-danger="date_begin and date_begin &lt; current_date"/>
+                            <field name="date_end"
+                                   string="Campaign End Date"/>
+                            <field name="timezone_id"/>
+                            <field name="published" widget="boolean_toggle"
+                                   readonly="not title or not date_begin or not date_end"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="company_display_name" readonly="1"/>
+                            <field name="social_link"
+                                   widget="copy_clipboard" readonly="1"
+                                   invisible="not id"/>
+                            <!-- QR code — positioned directly under the campaign link -->
+                            <div invisible="not id" style="margin-top:8px;">
+                                <div class="o_form_label">QR Code</div>
+                                <div>
+                                    <field name="qr_code"
+                                           widget="image"
+                                           options="{'size': [140, 140]}"
+                                           string="QR Code"
+                                           readonly="1"
+                                           help="Auto-generated QR code for this campaign's registration link."/>
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <button name="action_copy_qr_with_name"
+                                            type="object"
+                                            string="Copy QR"
+                                            class="btn btn-sm btn-secondary"
+                                            icon="fa-copy"
+                                            help="Copy QR code image (with campaign name) to clipboard"/>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="fa fa-qrcode me-1"/>
+                                    Scan to open the campaign registration page.
+                                </div>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  COVER PHOTO  -->
+                    <group string="Cover Photo">
+                        <group>
+                            <field name="cover_photo"
+                                   widget="image"
+                                   options="{'size': [200, 80]}"
+                                   string="Cover Photo"
+                                   help="Upload a cover/banner image. Recommended: 1200 × 400 px."/>
+                            <div style="display:inline-block; margin-top:6px; padding:4px 10px; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; font-size:12px; color:#856404; font-weight:600;">
+                                📐 Cover Photo: 1200 × 400 px  |  JPG / PNG
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  NOTEBOOK  -->
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" widget="html"
+                                   placeholder="Campaign description..."/>
+                        </page>
+                        <page string="Registration Fields" name="registration_fields">
+                            <div class="alert alert-info mb-3" role="status">
+                                <i class="fa fa-info-circle me-2"/>
+                                Click <strong>Add a line</strong> to add a field.
+                                For <strong>Dropdown</strong> type enter options in the
+                                <strong>Options</strong> column (one per line).
+                            </div>
+                            <field name="registration_field_ids"
+                                   context="{'default_social_fb_id': id}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="label" string="Field Label"/>
+                                    <field name="field_type" string="Type"/>
+                                    <field name="maps_to" string="Maps To"/>
+                                    <field name="is_required" string="Required"
+                                           widget="boolean_toggle"/>
+                                    <field name="placeholder" string="Placeholder"
+                                           optional="hide"/>
+                                    <field name="select_options"
+                                           string="Dropdown Options (one per line)"
+                                           widget="text" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  FACEBOOK LIST VIEW                                  -->
+    <!--  =================================================  -->
+    <record id="vac_social_fb_view_list" model="ir.ui.view">
+        <field name="name">vac.social.fb.list</field>
+        <field name="model">vac.social.fb</field>
+        <field name="arch" type="xml">
+            <list string="Facebook Campaigns" sample="1">
+                <field name="title"/>
+                <field name="date_begin" string="Campaign Start Date"/>
+                <field name="date_end"   string="Campaign End Date"/>
+                <field name="company_display_name" readonly="1"/>
+                <field name="timezone_id"/>
+                <field name="stage_id" string="Stage"/>
+                <field name="published" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  FACEBOOK KANBAN                                     -->
+    <!--  =================================================  -->
+    <record id="vac_social_fb_view_kanban" model="ir.ui.view">
+        <field name="name">vac.social.fb.kanban</field>
+        <field name="model">vac.social.fb</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" sample="1"
+                    group_expand="_read_group_stage_ids">
+                <field name="title"/>
+                <field name="stage_id"/>
+                <field name="published"/>
+                <field name="date_begin"/>
+                <field name="date_end"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <strong><field name="title"/></strong>
+                            <div class="text-muted small">
+                                <field name="date_begin" widget="date"/> → <field name="date_end" widget="date"/>
+                            </div>
+                            <div class="mt-1">
+                                <span t-attf-class="badge #{
+                                    record.stage_id.raw_value and (
+                                        record.stage_id.value.toLowerCase().includes('ongoing') ? 'text-bg-primary' :
+                                        record.stage_id.value.toLowerCase().includes('published') ? 'text-bg-success' :
+                                        record.stage_id.value.toLowerCase().includes('completed') ? 'text-bg-info' :
+                                        record.stage_id.value.toLowerCase().includes('cancelled') ? 'text-bg-danger' :
+                                        'text-bg-secondary'
+                                    ) or 'text-bg-secondary'
+                                }">
+                                    <t t-esc="record.stage_id.value or 'Draft'"/>
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  FACEBOOK ACTION                                     -->
+    <!--  =================================================  -->
+    <record id="vac_social_fb_action" model="ir.actions.act_window">
+        <field name="name">Facebook</field>
+        <field name="res_model">vac.social.fb</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Facebook campaign!</p>
+            <p>Manage Facebook marketing campaigns and collect leads through a custom registration form.</p>
+        </field>
+    </record>
+
+
+    <!--  =================================================  -->
+    <!--  INSTAGRAM FORM VIEW                                 -->
+    <!--  =================================================  -->
+    <record id="vac_social_ing_view_form" model="ir.ui.view">
+        <field name="name">vac.social.ing.form</field>
+        <field name="model">vac.social.ing</field>
+        <field name="arch" type="xml">
+            <form string="Instagram Campaign">
+                <header>
+                    <button name="website_publish_button"
+                            string="Publish" type="object"
+                            class="btn-success"
+                            invisible="published"/>
+                    <button name="website_publish_button"
+                            string="Unpublish" type="object"
+                            class="btn-warning"
+                            invisible="not published"/>
+                    <button name="action_preview"
+                            string="Preview"
+                            type="object"
+                            class="btn-info"
+                            icon="fa-eye"
+                            invisible="not id"/>
+                    <button name="action_share_link" string="Share Campaign" type="object" class="btn-primary" invisible="not id"/>
+                    <field name="stage_id" widget="statusbar"
+                           statusbar_visible="Draft,Published,Ongoing,Completed"
+                           options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <!--  SMART BUTTONS  -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-instagram"
+                                invisible="not id">
+                            <field name="lead_count"
+                                   string="Leads"
+                                   widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <!--  BADGE + TITLE  -->
+                    <div class="oe_title">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <field name="badge_background" widget="image"
+                                       class="oe_avatar"
+                                       options="{'size': [150, 150]}"/>
+                                <field name="badge_background_filename" invisible="1"/>
+                                <div style="margin-top:4px; text-align:center; padding:3px 6px; background:#d1ecf1; border:1px solid #bee5eb; border-radius:4px; font-size:10px; color:#0c5460; font-weight:600;">
+                                    📷 800 × 800 px
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="title"/>
+                                <h1>
+                                    <field name="title" placeholder="e.g. Spring Instagram Promo"/>
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--  MAIN INFO  -->
+                    <group col="2">
+                        <group>
+                            <field name="date_begin"
+                                   string="Campaign Start Date"
+                                   decoration-danger="date_begin and date_begin &lt; current_date"/>
+                            <field name="date_end"
+                                   string="Campaign End Date"/>
+                            <field name="timezone_id"/>
+                            <field name="published" widget="boolean_toggle"
+                                   readonly="not title or not date_begin or not date_end"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="company_display_name" readonly="1"/>
+                            <field name="social_link"
+                                   widget="copy_clipboard" readonly="1"
+                                   invisible="not id"/>
+                            <!-- QR code — positioned directly under the campaign link -->
+                            <div invisible="not id" style="margin-top:8px;">
+                                <div class="o_form_label">QR Code</div>
+                                <div>
+                                    <field name="qr_code"
+                                           widget="image"
+                                           options="{'size': [140, 140]}"
+                                           string="QR Code"
+                                           readonly="1"
+                                           help="Auto-generated QR code for this campaign's registration link."/>
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <button name="action_copy_qr_with_name"
+                                            type="object"
+                                            string="Copy QR"
+                                            class="btn btn-sm btn-secondary"
+                                            icon="fa-copy"
+                                            help="Copy QR code image (with campaign name) to clipboard"/>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="fa fa-qrcode me-1"/>
+                                    Scan to open the campaign registration page.
+                                </div>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  COVER PHOTO  -->
+                    <group string="Cover Photo">
+                        <group>
+                            <field name="cover_photo"
+                                   widget="image"
+                                   options="{'size': [200, 80]}"
+                                   string="Cover Photo"
+                                   help="Upload a cover/banner image. Recommended: 1200 × 400 px."/>
+                            <div style="display:inline-block; margin-top:6px; padding:4px 10px; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; font-size:12px; color:#856404; font-weight:600;">
+                                📐 Cover Photo: 1200 × 400 px  |  JPG / PNG
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  NOTEBOOK  -->
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" widget="html"
+                                   placeholder="Campaign description..."/>
+                        </page>
+                        <page string="Registration Fields" name="registration_fields">
+                            <div class="alert alert-info mb-3" role="status">
+                                <i class="fa fa-info-circle me-2"/>
+                                Click <strong>Add a line</strong> to add a field.
+                                For <strong>Dropdown</strong> type enter options in the
+                                <strong>Options</strong> column (one per line).
+                            </div>
+                            <field name="registration_field_ids"
+                                   context="{'default_social_ing_id': id}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="label" string="Field Label"/>
+                                    <field name="field_type" string="Type"/>
+                                    <field name="maps_to" string="Maps To"/>
+                                    <field name="is_required" string="Required"
+                                           widget="boolean_toggle"/>
+                                    <field name="placeholder" string="Placeholder"
+                                           optional="hide"/>
+                                    <field name="select_options"
+                                           string="Dropdown Options (one per line)"
+                                           widget="text" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  INSTAGRAM LIST VIEW                                 -->
+    <!--  =================================================  -->
+    <record id="vac_social_ing_view_list" model="ir.ui.view">
+        <field name="name">vac.social.ing.list</field>
+        <field name="model">vac.social.ing</field>
+        <field name="arch" type="xml">
+            <list string="Instagram Campaigns" sample="1">
+                <field name="title"/>
+                <field name="date_begin" string="Campaign Start Date"/>
+                <field name="date_end"   string="Campaign End Date"/>
+                <field name="company_display_name" readonly="1"/>
+                <field name="timezone_id"/>
+                <field name="stage_id" string="Stage"/>
+                <field name="published" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  INSTAGRAM KANBAN                                    -->
+    <!--  =================================================  -->
+    <record id="vac_social_ing_view_kanban" model="ir.ui.view">
+        <field name="name">vac.social.ing.kanban</field>
+        <field name="model">vac.social.ing</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" sample="1"
+                    group_expand="_read_group_stage_ids">
+                <field name="title"/>
+                <field name="stage_id"/>
+                <field name="published"/>
+                <field name="date_begin"/>
+                <field name="date_end"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <strong><field name="title"/></strong>
+                            <div class="text-muted small">
+                                <field name="date_begin" widget="date"/> → <field name="date_end" widget="date"/>
+                            </div>
+                            <div class="mt-1">
+                                <span t-attf-class="badge #{
+                                    record.stage_id.raw_value and (
+                                        record.stage_id.value.toLowerCase().includes('ongoing') ? 'text-bg-primary' :
+                                        record.stage_id.value.toLowerCase().includes('published') ? 'text-bg-success' :
+                                        record.stage_id.value.toLowerCase().includes('completed') ? 'text-bg-info' :
+                                        record.stage_id.value.toLowerCase().includes('cancelled') ? 'text-bg-danger' :
+                                        'text-bg-secondary'
+                                    ) or 'text-bg-secondary'
+                                }">
+                                    <t t-esc="record.stage_id.value or 'Draft'"/>
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  INSTAGRAM ACTION                                    -->
+    <!--  =================================================  -->
+    <record id="vac_social_ing_action" model="ir.actions.act_window">
+        <field name="name">Instagram</field>
+        <field name="res_model">vac.social.ing</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Instagram campaign!</p>
+            <p>Manage Instagram marketing campaigns and collect leads through a custom registration form.</p>
+        </field>
+    </record>
+
+
+    <!--  =================================================  -->
+    <!--  OFFICES FORM VIEW                                    -->
+    <!--  =================================================  -->
+    <record id="vac_social_office_view_form" model="ir.ui.view">
+        <field name="name">vac.social.office.form</field>
+        <field name="model">vac.social.office</field>
+        <field name="arch" type="xml">
+            <form string="Offices Campaign">
+                <header>
+                    <button name="website_publish_button"
+                            string="Publish" type="object"
+                            class="btn-success"
+                            invisible="published"/>
+                    <button name="website_publish_button"
+                            string="Unpublish" type="object"
+                            class="btn-warning"
+                            invisible="not published"/>
+                    <button name="action_preview"
+                            string="Preview"
+                            type="object"
+                            class="btn-info"
+                            icon="fa-eye"
+                            invisible="not id"/>
+                    <button name="action_share_link" string="Share Campaign" type="object" class="btn-primary" invisible="not id"/>
+                    <field name="stage_id" widget="statusbar"
+                           statusbar_visible="Draft,Published,Ongoing,Completed"
+                           options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <!--  SMART BUTTONS  -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-users"
+                                invisible="not id">
+                            <field name="lead_count"
+                                   string="Leads"
+                                   widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <!--  BADGE + TITLE  -->
+                    <div class="oe_title">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <field name="badge_background" widget="image"
+                                       class="oe_avatar"
+                                       options="{'size': [150, 150]}"/>
+                                <field name="badge_background_filename" invisible="1"/>
+                                <div style="margin-top:4px; text-align:center; padding:3px 6px; background:#d1ecf1; border:1px solid #bee5eb; border-radius:4px; font-size:10px; color:#0c5460; font-weight:600;">
+                                    📷 800 × 800 px
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="title"/>
+                                <h1>
+                                    <field name="title" placeholder="e.g. Downtown Offices Campaign"/>
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--  MAIN INFO  -->
+                    <group col="2">
+                        <group>
+                            <field name="date_begin"
+                                   string="Campaign Start Date"
+                                   decoration-danger="date_begin and date_begin &lt; current_date"/>
+                            <field name="date_end"
+                                   string="Campaign End Date"/>
+                            <field name="timezone_id"/>
+                            <field name="published" widget="boolean_toggle"
+                                   readonly="not title or not date_begin or not date_end"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="company_display_name" readonly="1"/>
+                            <field name="social_link"
+                                   widget="copy_clipboard" readonly="1"
+                                   invisible="not id"/>
+                            <!-- QR code — positioned directly under the campaign link -->
+                            <div invisible="not id" style="margin-top:8px;">
+                                <div class="o_form_label">QR Code</div>
+                                <div>
+                                    <field name="qr_code"
+                                           widget="image"
+                                           options="{'size': [140, 140]}"
+                                           string="QR Code"
+                                           readonly="1"
+                                           help="Auto-generated QR code for this campaign's registration link."/>
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <button name="action_copy_qr_with_name"
+                                            type="object"
+                                            string="Copy QR"
+                                            class="btn btn-sm btn-secondary"
+                                            icon="fa-copy"
+                                            help="Copy QR code image (with campaign name) to clipboard"/>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="fa fa-qrcode me-1"/>
+                                    Scan to open the campaign registration page.
+                                </div>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  COVER PHOTO  -->
+                    <group string="Cover Photo">
+                        <group>
+                            <field name="cover_photo"
+                                   widget="image"
+                                   options="{'size': [200, 80]}"
+                                   string="Cover Photo"
+                                   help="Upload a cover/banner image. Recommended: 1200 × 400 px."/>
+                            <div style="display:inline-block; margin-top:6px; padding:4px 10px; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; font-size:12px; color:#856404; font-weight:600;">
+                                📐 Cover Photo: 1200 × 400 px  |  JPG / PNG
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  NOTEBOOK  -->
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" widget="html"
+                                   placeholder="Campaign description..."/>
+                        </page>
+                        <page string="Registration Fields" name="registration_fields">
+                            <div class="alert alert-info mb-3" role="status">
+                                <i class="fa fa-info-circle me-2"/>
+                                Click <strong>Add a line</strong> to add a field.
+                                For <strong>Dropdown</strong> type enter options in the
+                                <strong>Options</strong> column (one per line).
+                            </div>
+                            <field name="registration_field_ids"
+                                   context="{'default_social_office_id': id}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="label" string="Field Label"/>
+                                    <field name="field_type" string="Type"/>
+                                    <field name="maps_to" string="Maps To"/>
+                                    <field name="is_required" string="Required"
+                                           widget="boolean_toggle"/>
+                                    <field name="placeholder" string="Placeholder"
+                                           optional="hide"/>
+                                    <field name="select_options"
+                                           string="Dropdown Options (one per line)"
+                                           widget="text" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  OFFICES LIST VIEW                                    -->
+    <!--  =================================================  -->
+    <record id="vac_social_office_view_list" model="ir.ui.view">
+        <field name="name">vac.social.office.list</field>
+        <field name="model">vac.social.office</field>
+        <field name="arch" type="xml">
+            <list string="Offices Campaigns" sample="1">
+                <field name="title"/>
+                <field name="date_begin" string="Campaign Start Date"/>
+                <field name="date_end"   string="Campaign End Date"/>
+                <field name="company_display_name" readonly="1"/>
+                <field name="timezone_id"/>
+                <field name="stage_id" string="Stage"/>
+                <field name="published" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  OFFICES KANBAN                                       -->
+    <!--  =================================================  -->
+    <record id="vac_social_office_view_kanban" model="ir.ui.view">
+        <field name="name">vac.social.office.kanban</field>
+        <field name="model">vac.social.office</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" sample="1"
+                    group_expand="_read_group_stage_ids">
+                <field name="title"/>
+                <field name="stage_id"/>
+                <field name="published"/>
+                <field name="date_begin"/>
+                <field name="date_end"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <strong><field name="title"/></strong>
+                            <div class="text-muted small">
+                                <field name="date_begin" widget="date"/> → <field name="date_end" widget="date"/>
+                            </div>
+                            <div class="mt-1">
+                                <span t-attf-class="badge #{
+                                    record.stage_id.raw_value and (
+                                        record.stage_id.value.toLowerCase().includes('ongoing') ? 'text-bg-primary' :
+                                        record.stage_id.value.toLowerCase().includes('published') ? 'text-bg-success' :
+                                        record.stage_id.value.toLowerCase().includes('completed') ? 'text-bg-info' :
+                                        record.stage_id.value.toLowerCase().includes('cancelled') ? 'text-bg-danger' :
+                                        'text-bg-secondary'
+                                    ) or 'text-bg-secondary'
+                                }">
+                                    <t t-esc="record.stage_id.value or 'Draft'"/>
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  OFFICES ACTION                                       -->
+    <!--  =================================================  -->
+    <record id="vac_social_office_action" model="ir.actions.act_window">
+        <field name="name">Offices</field>
+        <field name="res_model">vac.social.office</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Offices campaign!</p>
+            <p>Manage Offices marketing campaigns and collect leads through a custom registration form.</p>
+        </field>
+    </record>
+
+</odoo>

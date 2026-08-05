@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <record id="lead_stage_new" model="vac.event.lead.stage">
+            <field name="name">New Lead</field>
+            <field name="sequence">10</field>
+            <field name="description">Freshly captured leads from events</field>
+            <field name="color">1</field>
+        </record>
+        
+        <record id="lead_stage_contacted" model="vac.event.lead.stage">
+            <field name="name">Contacted</field>
+            <field name="sequence">20</field>
+            <field name="description">BAM has made initial contact</field>
+            <field name="color">3</field>
+        </record>
+        
+        <record id="lead_stage_followup" model="vac.event.lead.stage">
+            <field name="name">Follow-up</field>
+            <field name="sequence">30</field>
+            <field name="description">Ongoing follow-up in progress</field>
+            <field name="color">5</field>
+        </record>
+        
+        <record id="lead_stage_converted" model="vac.event.lead.stage">
+            <field name="name">Converted</field>
+            <field name="sequence">40</field>
+            <field name="description">Lead successfully converted to customer</field>
+            <field name="color">10</field>
+            <field name="fold" eval="True"/>
+        </record>
+        
+        <record id="lead_stage_lost" model="vac.event.lead.stage">
+            <field name="name">Lost</field>
+            <field name="sequence">50</field>
+            <field name="description">Lead lost or not interested</field>
+            <field name="color">1</field>
+            <field name="fold" eval="True"/>
+        </record>
+        
+    </data>
+</odoo>

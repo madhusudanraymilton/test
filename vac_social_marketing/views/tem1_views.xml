@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="event_registration_template" name="Event Registration Page">
+<t t-call="website.layout">
+<div id="wrap" class="oe_structure">
+
+    <t t-set="has_cover_photo" t-value="bool(event.cover_photo)"/>
+    <t t-set="cover_photo_url" t-value="cover_photo_url or ('/event/cover/%s' % event.id)"/>
+
+    <!-- ═══════════════════════════════════
+         HERO BANNER
+    ═══════════════════════════════════ -->
+    <section class="ev-hero" t-if="has_cover_photo"
+             t-attf-style="background-image: url(#{cover_photo_url});">
+        <div class="ev-hero-overlay"/>
+    </section>
+    <section class="ev-hero ev-hero-plain" t-else=""/>
+
+    <!-- ═══════════════════════════════════
+         MAIN PAGE BODY
+    ═══════════════════════════════════ -->
+    <div class="ev-page-body">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="ev-breadcrumb" aria-label="breadcrumb">
+                <a href="/events">All Events</a>
+                <span class="ev-breadcrumb-sep">/</span>
+                <span t-field="event.title_name"/>
+            </nav>
+
+            <div class="row g-5">
+
+                <!-- ─── LEFT: Main Content ─── -->
+                <div class="col-lg-8">
+
+                    <h1 class="ev-title" t-field="event.title_name"/>
+                    <p class="ev-organizer-line">
+                        <i class="fa fa-building-o me-1"/>
+                        Organized by <strong t-field="event.organizer_id.name"/>
+                    </p>
+
+                    <hr class="ev-divider"/>
+
+                    <!-- About / Description -->
+                    <div class="ev-section-block" t-if="event.description">
+                        <h2 class="ev-section-title">About This Event</h2>
+                        <div class="ev-description">
+                            <t t-raw="event.description"/>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ─── RIGHT: Sidebar ─── -->
+                <div class="col-lg-4">
+                    <div class="ev-sidebar">
+
+                        <!-- Unpublished badge — only shown when sold out -->
+                        <t t-if="is_sold_out">
+                            <div class="ev-status-badge ev-status-unpublished mb-3">
+                                <div class="ev-status-icon">
+                                    <i class="fa fa-eye-slash"/>
+                                </div>
+                                <div class="ev-status-text">
+                                    <span class="ev-status-label">Unpublished</span>
+                                    <span class="ev-status-sub">This event is not yet live</span>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- SOLD OUT BANNER -->
+                        <t t-if="is_sold_out">
+                            <div class="ev-sold-out-banner mb-3">
+                                <i class="fa fa-ban me-2"/>
+                                <strong>Sold Out</strong>
+                            </div>
+                        </t>
+
+                        <!-- REGISTER BUTTON — only when published -->
+                        <t t-if="not is_sold_out and event.registration_field_ids">
+                            <button type="button"
+                                    class="btn ev-cta-btn w-100 mb-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#registrationModal">
+                                <i class="fa fa-user-plus me-2"/>Register Now
+                            </button>
+                        </t>
+
+                        <!-- Date &amp; Time card -->
+                        <div class="ev-card ev-date-card">
+                            <div class="ev-date-big">
+                                <span class="ev-date-day"
+                                      t-field="event.date"
+                                      t-options="{'widget': 'date', 'format': 'dd'}"/>
+                                <div class="ev-date-right">
+                                    <span class="ev-date-monthyear"
+                                          t-field="event.date"
+                                          t-options="{'widget': 'date', 'format': 'MMMM yyyy'}"/>
+                                    <span class="ev-date-timezone">
+                                        <i class="fa fa-clock-o me-1"/>
+                                        <t t-esc="event.timezone_id"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Venue card -->
+                        <div class="ev-card ev-venue-card" t-if="event.venue">
+                            <h5 class="ev-card-heading">
+                                <i class="fa fa-map-marker me-2 text-danger"/>Location
+                            </h5>
+                            <p class="ev-venue-text mb-0" t-field="event.venue"/>
+                        </div>
+
+                        <!-- Organizer -->
+                        <div class="ev-organizer-plain">
+                            <h5 class="ev-organizer-heading">
+                                <i class="fa fa-user me-2 text-danger"/>Organizer
+                            </h5>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="ev-org-avatar">
+                                    <i class="fa fa-building"/>
+                                </div>
+                                <div>
+                                    <div class="ev-org-name" t-field="event.organizer_id.name"/>
+                                    <div class="ev-org-label">Event Organizer</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Share -->
+                        <div class="ev-share-plain">
+                            <h5 class="ev-share-title">Share</h5>
+                            <p class="ev-share-desc">Find out what people see and say about this event, and join the conversation.</p>
+                            <div class="ev-share-buttons">
+                                <a class="ev-share-btn ev-share-fb"
+                                   t-attf-href="https://www.facebook.com/sharer/sharer.php?u=#{request.httprequest.url}"
+                                   target="_blank" rel="noopener" title="Share on Facebook">
+                                    <i class="fa fa-facebook"/>
+                                </a>
+                                <a class="ev-share-btn ev-share-x"
+                                   t-attf-href="https://twitter.com/intent/tweet?url=#{request.httprequest.url}&amp;text=#{event.title_name}"
+                                   target="_blank" rel="noopener" title="Share on X">
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                    </svg>
+                                </a>
+                                <a class="ev-share-btn ev-share-li"
+                                   t-attf-href="https://www.linkedin.com/sharing/share-offsite/?url=#{request.httprequest.url}"
+                                   target="_blank" rel="noopener" title="Share on LinkedIn">
+                                    <i class="fa fa-linkedin"/>
+                                </a>
+                                <a class="ev-share-btn ev-share-wa"
+                                   t-attf-href="https://wa.me/?text=#{event.title_name}%20#{request.httprequest.url}"
+                                   target="_blank" rel="noopener" title="Share on WhatsApp">
+                                    <i class="fa fa-whatsapp"/>
+                                </a>
+                                <a class="ev-share-btn ev-share-pin"
+                                   t-attf-href="https://pinterest.com/pin/create/button/?url=#{request.httprequest.url}&amp;description=#{event.title_name}"
+                                   target="_blank" rel="noopener" title="Share on Pinterest">
+                                    <i class="fa fa-pinterest"/>
+                                </a>
+                                <a class="ev-share-btn ev-share-mail"
+                                   t-attf-href="mailto:?subject=#{event.title_name}&amp;body=Check out this event: #{request.httprequest.url}"
+                                   title="Share via Email">
+                                    <i class="fa fa-envelope"/>
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         REGISTRATION MODAL
+    ═══════════════════════════════════ -->
+    <div class="modal fade" id="registrationModal" tabindex="-1"
+         aria-labelledby="registrationModalLabel" aria-hidden="true"
+         t-if="not is_sold_out and event.registration_field_ids">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content ev-modal-content">
+
+                <div class="modal-header ev-modal-header">
+                    <div class="ev-modal-header-inner">
+                        <div class="ev-modal-icon">
+                            <i class="fa fa-calendar-check-o"/>
+                        </div>
+                        <div>
+                            <h4 class="modal-title ev-modal-title" id="registrationModalLabel">
+                                Register for this Event
+                            </h4>
+                            <p class="ev-modal-subtitle mb-0" t-field="event.title_name"/>
+                        </div>
+                    </div>
+                    <button type="button" class="ev-modal-close"
+                            data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fa fa-times"/>
+                    </button>
+                </div>
+
+                <div class="ev-modal-progress">
+                    <div class="ev-step ev-step-active">
+                        <div class="ev-step-dot">1</div>
+                        <span>Your Details</span>
+                    </div>
+                    <div class="ev-step-line"/>
+                    <div class="ev-step">
+                        <div class="ev-step-dot">2</div>
+                        <span>Confirmation</span>
+                    </div>
+                </div>
+
+                <div class="px-4 pt-3">
+                    <div class="alert alert-danger mb-0" role="alert"
+                         t-if="request.params.get('error') == 'missing_fields'">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        Please fill in all required fields.
+                    </div>
+                    <div class="alert alert-danger mb-0" role="alert"
+                         t-if="request.params.get('error') == 'registration_failed'">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        Registration failed. Please try again.
+                    </div>
+                </div>
+
+                <div class="modal-body ev-modal-body">
+                    <form id="ev-reg-form"
+                          t-attf-action="/event/register/submit/#{event.id}"
+                          method="POST"
+                          enctype="application/x-www-form-urlencoded">
+
+                        <input type="hidden" name="csrf_token"
+                               t-att-value="request.csrf_token()"/>
+
+                        <div class="row g-3">
+                            <t t-foreach="event.registration_field_ids" t-as="field">
+                                <t t-set="field_name"    t-value="'custom_%d' % field.id"/>
+                                <t t-set="field_html_id" t-value="'custom_field_%d' % field.id"/>
+
+                                <div t-attf-class="#{
+                                    'col-12' if field.field_type in ('textarea','checkbox')
+                                    else 'col-md-6'
+                                }">
+                                    <label t-if="field.field_type != 'checkbox'"
+                                           t-att-for="field_html_id"
+                                           class="ev-field-label">
+                                        <t t-esc="field.label"/>
+                                        <span class="text-danger" t-if="field.is_required"> *</span>
+                                    </label>
+
+                                    <!-- ── text ───────────────────────────────── -->
+                                    <t t-if="field.field_type == 'text'">
+                                        <input type="text" class="form-control ev-input"
+                                               t-att-id="field_html_id"
+                                               t-att-name="field_name"
+                                               t-att-placeholder="field.placeholder or ''"
+                                               t-att-required="'required' if field.is_required else None"/>
+                                    </t>
+
+                                    <!-- ── textarea ───────────────────────────── -->
+                                    <t t-if="field.field_type == 'textarea'">
+                                        <textarea class="form-control ev-input" rows="3"
+                                                  t-att-id="field_html_id"
+                                                  t-att-name="field_name"
+                                                  t-att-placeholder="field.placeholder or ''"
+                                                  t-att-required="'required' if field.is_required else None"/>
+                                    </t>
+
+                                    <!-- ── number ─────────────────────────────── -->
+                                    <t t-if="field.field_type == 'number'">
+                                        <input type="number" class="form-control ev-input"
+                                               t-att-id="field_html_id"
+                                               t-att-name="field_name"
+                                               t-att-placeholder="field.placeholder or ''"
+                                               t-att-required="'required' if field.is_required else None"/>
+                                    </t>
+
+                                    <!-- ── email ──────────────────────────────── -->
+                                    <t t-if="field.field_type == 'email'">
+                                        <input type="email" class="form-control ev-input"
+                                               t-att-id="field_html_id"
+                                               t-att-name="field_name"
+                                               t-att-placeholder="field.placeholder or 'email@example.com'"
+                                               t-att-required="'required' if field.is_required else None"/>
+                                    </t>
+
+                                    <!-- ── tel ────────────────────────────────── -->
+                                    <t t-if="field.field_type == 'tel'">
+                                        <input type="tel" class="form-control ev-input"
+                                               t-att-id="field_html_id"
+                                               t-att-name="field_name"
+                                               t-att-placeholder="field.placeholder or '+1 234 567 8900'"
+                                               t-att-required="'required' if field.is_required else None"/>
+                                    </t>
+
+                                    <!-- ── date ───────────────────────────────── -->
+                                    <t t-if="field.field_type == 'date'">
+                                        <input type="date" class="form-control ev-input"
+                                               t-att-id="field_html_id"
+                                               t-att-name="field_name"
+                                               t-att-required="'required' if field.is_required else None"/>
+                                    </t>
+
+                                    <!-- ── select: branch_service ─────────────── -->
+                                    <t t-if="field.field_type == 'select' and field.maps_to == 'branch_service'">
+                                        <select class="form-select ev-input"
+                                                t-att-id="field_html_id"
+                                                t-att-name="field_name"
+                                                t-att-required="'required' if field.is_required else None">
+                                            <option value="">-- Select Branch / Service --</option>
+                                            <t t-foreach="field.get_branch_service_options()" t-as="opt">
+                                                <option t-att-value="opt" t-esc="opt"/>
+                                            </t>
+                                        </select>
+                                    </t>
+
+                                    <!-- ── select: all other dropdowns ─────────── -->
+                                    <t t-if="field.field_type == 'select' and field.maps_to != 'branch_service'">
+                                        <select class="form-select ev-input"
+                                                t-att-id="field_html_id"
+                                                t-att-name="field_name"
+                                                t-att-required="'required' if field.is_required else None">
+                                            <option value="">-- Select an option --</option>
+                                            <t t-foreach="field.get_select_options_list()" t-as="opt">
+                                                <option t-att-value="opt" t-esc="opt"/>
+                                            </t>
+                                        </select>
+                                    </t>
+
+                                    <!-- ── checkbox ───────────────────────────── -->
+                                    <t t-if="field.field_type == 'checkbox'">
+                                        <div class="ev-checkbox-wrap">
+                                            <input class="ev-checkbox-input"
+                                                   type="checkbox" value="1"
+                                                   t-att-id="field_html_id"
+                                                   t-att-name="field_name"
+                                                   t-att-required="'required' if field.is_required else None"/>
+                                            <label class="ev-checkbox-label"
+                                                   t-att-for="field_html_id">
+                                                <t t-esc="field.label"/>
+                                                <span class="text-danger" t-if="field.is_required"> *</span>
+                                            </label>
+                                        </div>
+                                    </t>
+
+                                </div>
+                            </t>
+                        </div>
+
+                    </form>
+                </div>
+
+                <div class="modal-footer ev-modal-footer">
+                    <div class="ev-secure-note">
+                        <i class="fa fa-lock me-1"/>Your information is secure &amp; confidential
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn ev-cancel-btn"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" form="ev-reg-form" class="btn ev-submit-btn" id="ev-submit-btn">
+                            <span id="ev-submit-text"><i class="fa fa-check me-2"/>Complete Registration</span>
+                            <span id="ev-submit-spinner" style="display:none;"><span class="ev-btn-spinner"></span> Submitting...</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script t-if="request.params.get('error') and not is_sold_out" type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = new bootstrap.Modal(document.getElementById('registrationModal'));
+            modal.show();
+        });
+    </script>
+
+    <style>
+        .ev-hero { width: 100%; height: 280px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; overflow: hidden; }
+        .ev-hero-plain { background: linear-gradient(135deg, #714B67 0%, #4B2B67 100%); }
+        .ev-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.38) 100%); }
+        .ev-page-body { padding: 2.5rem 0 4rem; background: #fff; }
+        .ev-breadcrumb { font-size: 0.85rem; color: #888; margin-bottom: 1.5rem; }
+        .ev-breadcrumb a { color: #714B67; text-decoration: none; font-weight: 500; }
+        .ev-breadcrumb a:hover { text-decoration: underline; }
+        .ev-breadcrumb-sep { margin: 0 0.5rem; color: #bbb; }
+        .ev-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; color: #1a1a2e; line-height: 1.2; margin-bottom: 0.5rem; }
+        .ev-organizer-line { font-size: 0.9rem; color: #888; margin-bottom: 0; }
+        .ev-divider { border-color: #ebebeb; margin: 1.5rem 0; }
+        .ev-section-title { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #f0f0f0; }
+        .ev-section-block { margin-bottom: 2.5rem; }
+        .ev-description { font-size: 0.97rem; color: #444; line-height: 1.75; }
+        .ev-sidebar { position: sticky; top: 24px; }
+        .ev-status-badge { width: 100%; border-radius: 10px; padding: 0.85rem 1.1rem; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 0.85rem; }
+        .ev-status-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .ev-status-text { display: flex; flex-direction: column; gap: 0.1rem; }
+        .ev-status-label { font-size: 0.92rem; font-weight: 700; line-height: 1.2; }
+        .ev-status-sub { font-size: 0.75rem; font-weight: 400; opacity: 0.75; }
+        .ev-status-published { background: #edfbf0; border: 1.5px solid #a3d9b1; color: #1e6e36; }
+        .ev-status-published .ev-status-icon { background: #c8f0d4; color: #1e6e36; }
+        .ev-status-unpublished { background: #fff8ec; border: 1.5px solid #ffd08a; color: #8a4f00; }
+        .ev-status-unpublished .ev-status-icon { background: #ffe8b8; color: #8a4f00; }
+        .ev-sold-out-banner { width: 100%; background: #fce8f0; border: 1.5px solid #f5c2d0; border-radius: 10px; padding: 0.9rem 1.2rem; color: #b0304f; font-size: 1rem; font-weight: 700; text-align: center; letter-spacing: 0.3px; }
+        .ev-cta-btn { background: #714B67; color: #fff !important; border: none; border-radius: 10px; padding: 0.85rem; font-weight: 700; font-size: 1rem; letter-spacing: 0.3px; transition: background 0.2s, transform 0.15s; box-shadow: 0 4px 16px rgba(113,75,103,0.30); }
+        .ev-cta-btn:hover { background: #5a3a52; transform: translateY(-2px); }
+        .ev-card { background: #fff; border: 1px solid #ebebeb; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .ev-card-heading { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: #555; margin-bottom: 0.85rem; }
+        .ev-date-big { display: flex; align-items: center; gap: 1rem; }
+        .ev-date-day { font-size: 3rem; font-weight: 900; color: #714B67; line-height: 1; }
+        .ev-date-right { display: flex; flex-direction: column; gap: 0.2rem; }
+        .ev-date-monthyear { font-size: 1rem; font-weight: 700; color: #1a1a2e; }
+        .ev-date-timezone { font-size: 0.82rem; color: #888; }
+        .ev-venue-text { font-size: 0.92rem; color: #444; line-height: 1.6; }
+        .ev-org-avatar { width: 44px; height: 44px; border-radius: 50%; background: #714B67; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .ev-org-name { font-weight: 700; font-size: 0.95rem; color: #1a1a2e; }
+        .ev-org-label { font-size: 0.78rem; color: #999; }
+        .ev-organizer-plain { padding: 0.25rem 0 0.5rem; }
+        .ev-organizer-heading { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: #555; margin-bottom: 0.85rem; }
+        .ev-share-plain { padding: 0.25rem 0 0.5rem; }
+        .ev-share-title { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.4rem; }
+        .ev-share-desc { font-size: 0.82rem; color: #888; line-height: 1.5; margin-bottom: 0.9rem; }
+        .ev-share-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .ev-share-btn { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; text-decoration: none; border: 1.5px solid #e8e8e8; background: #fff; color: #555; transition: all 0.2s ease; flex-shrink: 0; }
+        .ev-share-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .ev-share-fb:hover  { background: #1877F2; border-color: #1877F2; color: #fff; }
+        .ev-share-x:hover   { background: #000;    border-color: #000;    color: #fff; }
+        .ev-share-li:hover  { background: #0A66C2; border-color: #0A66C2; color: #fff; }
+        .ev-share-wa:hover  { background: #25D366; border-color: #25D366; color: #fff; }
+        .ev-share-pin:hover { background: #E60023; border-color: #E60023; color: #fff; }
+        .ev-share-mail:hover{ background: #714B67; border-color: #714B67; color: #fff; }
+        .ev-modal-content { border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.18); }
+        .ev-modal-header { background: linear-gradient(135deg, #714B67 0%, #4B2B67 100%); padding: 1.5rem 1.75rem; border-bottom: none; display: flex; align-items: center; justify-content: space-between; }
+        .ev-modal-header-inner { display: flex; align-items: center; gap: 1rem; }
+        .ev-modal-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff; flex-shrink: 0; }
+        .ev-modal-title { color: #fff; font-weight: 800; font-size: 1.1rem; margin-bottom: 0.15rem; }
+        .ev-modal-subtitle { color: rgba(255,255,255,0.75); font-size: 0.85rem; }
+        .ev-modal-close { background: rgba(255,255,255,0.18); border: none; color: #fff; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .ev-modal-close:hover { background: rgba(255,255,255,0.32); }
+        .ev-modal-progress { display: flex; align-items: center; padding: 1rem 1.75rem 0; }
+        .ev-step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #bbb; font-weight: 600; }
+        .ev-step-active { color: #714B67; }
+        .ev-step-dot { width: 26px; height: 26px; border-radius: 50%; background: #eee; color: #bbb; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .ev-step-active .ev-step-dot { background: #714B67; color: #fff; box-shadow: 0 2px 8px rgba(113,75,103,0.35); }
+        .ev-step-line { flex: 1; height: 2px; background: #eee; margin: 0 0.75rem; }
+        .ev-modal-body { padding: 1.5rem 1.75rem; }
+        .ev-field-label { display: block; font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 0.35rem; }
+        .ev-input { border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.92rem; color: #333; background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
+        .ev-input:focus { border-color: #714B67; box-shadow: 0 0 0 3px rgba(113,75,103,0.13); background: #fff; outline: none; }
+        .ev-checkbox-wrap { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.5rem 0; }
+        .ev-checkbox-input { width: 18px; height: 18px; margin-top: 2px; accent-color: #714B67; flex-shrink: 0; cursor: pointer; }
+        .ev-checkbox-label { font-size: 0.88rem; color: #444; font-weight: 500; cursor: pointer; }
+        .ev-modal-footer { padding: 1rem 1.75rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+        .ev-secure-note { font-size: 0.78rem; color: #aaa; }
+        .ev-cancel-btn { border: 1.5px solid #ddd; color: #666; border-radius: 8px; padding: 0.55rem 1.4rem; font-weight: 600; font-size: 0.9rem; background: #fff; transition: all 0.2s; }
+        .ev-cancel-btn:hover { border-color: #bbb; background: #f8f8f8; }
+        .ev-submit-btn { background: #714B67; color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1.75rem; font-weight: 700; font-size: 0.95rem; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(113,75,103,0.28); }
+        .ev-submit-btn:hover { background: #5a3a52; color: #fff; transform: translateY(-1px); }
+        @media (max-width: 991px) { .ev-sidebar { position: static; } }
+        @media (max-width: 768px) {
+            .ev-hero { height: 180px; }
+            .ev-modal-footer { flex-direction: column; align-items: stretch; text-align: center; }
+            .ev-modal-footer .d-flex { flex-direction: column; }
+            .ev-cancel-btn, .ev-submit-btn { width: 100%; }
+        }
+
+        /* ── Loading overlay spinner ── */
+        .vac-ring-spinner {
+            width: 58px; height: 58px; border-radius: 50%;
+            border: 5px solid #e8e8e8; border-top-color: #714B67;
+            animation: vac-spin 0.8s linear infinite;
+        }
+        @keyframes vac-spin { to { transform: rotate(360deg); } }
+        .ev-btn-spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff; border-radius: 50%;
+            animation: vac-spin 0.7s linear infinite;
+            vertical-align: middle; margin-right: 6px;
+        }
+    </style>
+
+    <!-- ── Full-screen loading overlay ── -->
+    <div id="vac-loading-overlay" style="
+        display:none; position:fixed; inset:0; z-index:99999;
+        background:rgba(255,255,255,0.92); backdrop-filter:blur(4px);
+        flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+        <div class="vac-ring-spinner"></div>
+        <p style="font-size:1rem;font-weight:600;color:#333;margin:0;letter-spacing:0.3px;">Submitting your registration…</p>
+        <p style="font-size:0.82rem;color:#888;margin:0;">Please wait, do not close this page.</p>
+    </div>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var form       = document.getElementById('ev-reg-form');
+            var overlay    = document.getElementById('vac-loading-overlay');
+            var btnText    = document.getElementById('ev-submit-text');
+            var btnSpinner = document.getElementById('ev-submit-spinner');
+            var submitBtn  = document.getElementById('ev-submit-btn');
+
+            if (form &amp;&amp; overlay) {
+                form.addEventListener('submit', function () {
+                    overlay.style.display = 'flex';
+                    if (btnText)    btnText.style.display    = 'none';
+                    if (btnSpinner) btnSpinner.style.display = 'inline';
+                    if (submitBtn)  submitBtn.disabled       = true;
+                });
+            }
+        });
+    </script>
+
+</div>
+</t>
+</template>
+
+
+<!-- ═══════════════ SUCCESS ═══════════════ -->
+<template id="event_registration_success" name="Registration Success">
+<t t-call="website.layout">
+<div id="wrap" class="oe_structure">
+<section class="py-5">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-7">
+<div class="card shadow-lg border-0 text-center">
+<div class="card-body p-5">
+<div class="mb-4">
+    <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center"
+         style="width: 90px; height: 90px;">
+        <i class="fa fa-check fa-3x"/>
+    </div>
+</div>
+<h1 class="h2 fw-bold text-success mb-3">Registration Successful!</h1>
+<p class="text-muted mb-4">
+    Thank you for registering for <strong t-field="event.title_name"/>
+</p>
+<div class="bg-light rounded-3 p-4 mb-4 text-start">
+    <h6 class="fw-bold mb-3 text-muted text-uppercase" style="letter-spacing:1px;">Registration Details</h6>
+    <div class="row g-2">
+        <div class="col-md-6">
+            <span class="text-muted small">Name</span>
+            <div class="fw-semibold" t-field="lead.name"/>
+        </div>
+        <div class="col-md-6">
+            <span class="text-muted small">Email</span>
+            <div class="fw-semibold" t-field="lead.email"/>
+        </div>
+        <div class="col-md-6" t-if="lead.mobile">
+            <span class="text-muted small">Mobile / Phone</span>
+            <div class="fw-semibold" t-field="lead.mobile"/>
+        </div>
+        <div class="col-md-6" t-if="lead.whatsapp_number">
+            <span class="text-muted small">WhatsApp Number</span>
+            <div class="fw-semibold" t-esc="lead.whatsapp_number or ''"/>
+        </div>
+        <div class="col-md-6" t-if="lead.branch_service_id">
+            <span class="text-muted small">Branch / Service</span>
+            <div class="fw-semibold" t-esc="lead.branch_service_id.name or ''"/>
+        </div>
+        <div class="col-md-6" t-if="lead.current_va_disability_rating">
+            <span class="text-muted small">Current VA Disability Rating</span>
+            <div class="fw-semibold" t-esc="int(lead.current_va_disability_rating)"/>
+        </div>
+        <div class="col-md-6">
+            <span class="text-muted small">US Veteran</span>
+            <div class="fw-semibold" t-esc="'Yes' if lead.is_veteran else 'No'"/>
+        </div>
+        <div class="col-md-6">
+            <span class="text-muted small">Has DD214 Access</span>
+            <div class="fw-semibold" t-esc="'Yes' if (lead.has_dd214_copy or lead.has_dd214_access) else 'No'"/>
+        </div>
+        <div class="col-md-6" t-if="lead.is_current_client">
+            <span class="text-muted small">Current VAC Client</span>
+            <div class="fw-semibold">Yes</div>
+        </div>
+        <div class="col-md-6" t-if="lead.physical_address">
+            <span class="text-muted small">Physical Address</span>
+            <div class="fw-semibold" t-esc="lead.physical_address or ''"/>
+        </div>
+        <div class="col-md-6">
+            <span class="text-muted small">Event Date</span>
+            <div class="fw-semibold" t-field="event.date"
+                 t-options="{'widget': 'date'}"/>
+        </div>
+    </div>
+</div>
+<div class="d-flex justify-content-center gap-3 mt-3">
+    <a t-attf-href="/event/invite/#{event.id}" class="btn btn-outline-secondary">
+        <i class="fa fa-arrow-left me-2"/>Back to Event
+    </a>
+    <a href="/events" class="btn" style="background:#714B67;color:#fff;">
+        <i class="fa fa-calendar me-2"/>All Events
+    </a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     NOT FOUND template  (unchanged)
+═══════════════════════════════════════════════════════════════════ -->
+<template id="event_not_found" name="Event Not Found">
+<t t-call="website.layout">
+<div id="wrap" class="oe_structure">
+
+    <t t-set="has_cover_photo" t-value="bool(event and event.cover_photo)"/>
+    <t t-set="cover_photo_url" t-value="(cover_photo_url or ('/event/cover/%s' % event.id)) if event else ''"/>
+
+    <section class="ev-hero" t-if="event and has_cover_photo"
+             t-attf-style="background-image: url(#{cover_photo_url});">
+        <div class="ev-hero-overlay"/>
+    </section>
+    <section class="ev-hero ev-hero-plain" t-else=""/>
+
+    <div class="ev-page-body">
+        <div class="container">
+
+            <nav class="ev-breadcrumb" aria-label="breadcrumb">
+                <a href="/events">All Events</a>
+                <span class="ev-breadcrumb-sep">/</span>
+                <span t-if="event" t-field="event.title_name"/>
+                <span t-else="">Event</span>
+            </nav>
+
+            <!-- CASE B: unpublished active event — full page layout -->
+            <t t-if="event">
+                <div class="row g-5">
+                    <div class="col-lg-8">
+                        <h1 class="ev-title" t-field="event.title_name"/>
+                        <p class="ev-organizer-line">
+                            <i class="fa fa-building-o me-1"/>
+                            Organized by <strong t-field="event.organizer_id.name"/>
+                        </p>
+                        <hr class="ev-divider"/>
+                        <div class="ev-section-block" t-if="event.description">
+                            <h2 class="ev-section-title">About This Event</h2>
+                            <div class="ev-description">
+                                <t t-raw="event.description"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="ev-sidebar">
+                            <div class="ev-status-badge ev-status-unpublished mb-2">
+                                <div class="ev-status-icon"><i class="fa fa-eye-slash"/></div>
+                                <div class="ev-status-text">
+                                    <span class="ev-status-label">Unpublished</span>
+                                    <span class="ev-status-sub">This event is not yet live</span>
+                                </div>
+                            </div>
+                            <div class="ev-sold-out-banner mb-3">
+                                <i class="fa fa-ban me-2"/><strong>Sold Out</strong>
+                            </div>
+                            <div class="ev-card ev-date-card" t-if="event.date">
+                                <div class="ev-date-big">
+                                    <span class="ev-date-day" t-field="event.date"
+                                          t-options="{'widget': 'date', 'format': 'dd'}"/>
+                                    <div class="ev-date-right">
+                                        <span class="ev-date-monthyear" t-field="event.date"
+                                              t-options="{'widget': 'date', 'format': 'MMMM yyyy'}"/>
+                                        <span class="ev-date-timezone">
+                                            <i class="fa fa-clock-o me-1"/>
+                                            <t t-esc="event.timezone_id"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ev-card ev-venue-card" t-if="event.venue">
+                                <h5 class="ev-card-heading">
+                                    <i class="fa fa-map-marker me-2 text-danger"/>Location
+                                </h5>
+                                <p class="ev-venue-text mb-0" t-field="event.venue"/>
+                            </div>
+                            <div class="ev-organizer-plain">
+                                <h5 class="ev-organizer-heading">
+                                    <i class="fa fa-user me-2 text-danger"/>Organizer
+                                </h5>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="ev-org-avatar"><i class="fa fa-building"/></div>
+                                    <div>
+                                        <div class="ev-org-name" t-field="event.organizer_id.name"/>
+                                        <div class="ev-org-label">Event Organizer</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+            <!-- CASE A: truly missing/archived -->
+            <t t-else="">
+                <div class="row justify-content-center">
+                    <div class="col-lg-5 py-5">
+                        <div class="ev-coming-soon-card">
+                            <div class="ev-coming-soon-icon">
+                                <i class="fa fa-hourglass-half"/>
+                            </div>
+                            <h1 class="ev-coming-soon-title">New Event Coming Soon</h1>
+                            <p class="ev-coming-soon-desc">
+                                Something exciting is on the way!<br/>
+                                Stay tuned for our upcoming events.
+                            </p>
+                            <a href="/events" class="btn ev-coming-soon-btn">
+                                <i class="fa fa-calendar me-2"/>Browse All Events
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+        </div>
+    </div>
+
+    <style>
+        .ev-hero { width:100%; height:280px; background-size:cover; background-position:center; background-repeat:no-repeat; position:relative; overflow:hidden; }
+        .ev-hero-plain { background: linear-gradient(135deg, #714B67 0%, #4B2B67 100%); }
+        .ev-hero-overlay { position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.38) 100%); }
+        .ev-page-body { padding: 2.5rem 0 4rem; background: #fff; }
+        .ev-breadcrumb { font-size:0.85rem; color:#888; margin-bottom:1.5rem; }
+        .ev-breadcrumb a { color:#714B67; text-decoration:none; font-weight:500; }
+        .ev-breadcrumb a:hover { text-decoration:underline; }
+        .ev-breadcrumb-sep { margin:0 0.5rem; color:#bbb; }
+        .ev-title { font-size:clamp(1.6rem,3vw,2.4rem); font-weight:800; color:#1a1a2e; line-height:1.2; margin-bottom:0.5rem; }
+        .ev-organizer-line { font-size:0.9rem; color:#888; margin-bottom:0; }
+        .ev-divider { border-color:#ebebeb; margin:1.5rem 0; }
+        .ev-section-title { font-size:1.1rem; font-weight:700; color:#1a1a2e; margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:2px solid #f0f0f0; }
+        .ev-section-block { margin-bottom:2.5rem; }
+        .ev-description { font-size:0.97rem; color:#444; line-height:1.75; }
+        .ev-sidebar { position:sticky; top:24px; }
+        .ev-status-badge { width:100%; border-radius:10px; padding:0.85rem 1.1rem; font-size:0.88rem; font-weight:600; display:flex; align-items:center; gap:0.85rem; }
+        .ev-status-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+        .ev-status-text { display:flex; flex-direction:column; gap:0.1rem; }
+        .ev-status-label { font-size:0.92rem; font-weight:700; line-height:1.2; }
+        .ev-status-sub { font-size:0.75rem; font-weight:400; opacity:0.75; }
+        .ev-status-unpublished { background:#fff8ec; border:1.5px solid #ffd08a; color:#8a4f00; }
+        .ev-status-unpublished .ev-status-icon { background:#ffe8b8; color:#8a4f00; }
+        .ev-sold-out-banner { width:100%; background:#fce8f0; border:1.5px solid #f5c2d0; border-radius:10px; padding:0.9rem 1.2rem; color:#b0304f; font-size:1rem; font-weight:700; text-align:center; letter-spacing:0.3px; }
+        .ev-card { background:#fff; border:1px solid #ebebeb; border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1rem; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+        .ev-card-heading { font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.9px; color:#555; margin-bottom:0.85rem; }
+        .ev-date-big { display:flex; align-items:center; gap:1rem; }
+        .ev-date-day { font-size:3rem; font-weight:900; color:#714B67; line-height:1; }
+        .ev-date-right { display:flex; flex-direction:column; gap:0.2rem; }
+        .ev-date-monthyear { font-size:1rem; font-weight:700; color:#1a1a2e; }
+        .ev-date-timezone { font-size:0.82rem; color:#888; }
+        .ev-venue-text { font-size:0.92rem; color:#444; line-height:1.6; }
+        .ev-org-avatar { width:44px; height:44px; border-radius:50%; background:#714B67; color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+        .ev-org-name { font-weight:700; font-size:0.95rem; color:#1a1a2e; }
+        .ev-org-label { font-size:0.78rem; color:#999; }
+        .ev-organizer-plain { padding:0.25rem 0 0.5rem; }
+        .ev-organizer-heading { font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.9px; color:#555; margin-bottom:0.85rem; }
+        .ev-coming-soon-card { background:#fff; border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,0.10); border:1px solid #f0f0f0; padding:3rem 2.5rem; text-align:center; }
+        .ev-coming-soon-icon { width:90px; height:90px; border-radius:50%; background:#f5edf3; color:#714B67; display:inline-flex; align-items:center; justify-content:center; font-size:2.5rem; margin-bottom:1.5rem; box-shadow:0 4px 16px rgba(113,75,103,0.15); }
+        .ev-coming-soon-title { font-size:1.9rem; font-weight:800; color:#1a1a2e; margin-bottom:0.85rem; line-height:1.2; }
+        .ev-coming-soon-desc { font-size:1rem; color:#777; line-height:1.75; margin-bottom:2rem; }
+        .ev-coming-soon-btn { background:#714B67; color:#fff !important; border:none; border-radius:10px; padding:.75rem 2rem; font-weight:700; font-size:.95rem; text-decoration:none; box-shadow:0 4px 16px rgba(113,75,103,0.28); transition:background 0.2s, transform 0.15s; }
+        .ev-coming-soon-btn:hover { background:#5a3a52; transform:translateY(-2px); }
+        @media (max-width:991px) { .ev-sidebar { position:static; } }
+        @media (max-width:768px) { .ev-hero { height:180px; } .ev-coming-soon-card { padding:2rem 1.25rem; } }
+    </style>
+
+</div>
+</t>
+</template>
+
+</odoo>

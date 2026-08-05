@@ -1,0 +1,477 @@
+<odoo>
+    <!--  =================================================  -->
+    <!--  LEAD ASSIGNMENT LIST VIEW                          -->
+    <!--  =================================================  -->
+    <record id="vac_event_lead_assignment_view_tree" model="ir.ui.view">
+        <field name="name">vac.event.lead.assignment.tree</field>
+        <field name="model">vac.event.lead.assignment</field>
+        <field name="arch" type="xml">
+            <list string="Lead Assignments" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="BAM User" options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_search_more': True}"/>
+                <field name="count" string="Assigned Count"/>
+                <field name="lead_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  ASSIGNED LEADS KANBAN VIEW (vac.event.lead)        -->
+    <!--  =================================================  -->
+    <record id="vac_event_lead_view_kanban_assigned" model="ir.ui.view">
+        <field name="name">vac.event.lead.kanban.assigned</field>
+        <field name="model">vac.event.lead</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" quick_create="false" sample="1">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="mobile"/>
+                <field name="stage_id"/>
+                <field name="birthday"/>
+                <field name="ssn"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click p-3">
+                            <!-- Lead Name -->
+                            <div class="o_kanban_record_top mb-2">
+                                <strong class="o_kanban_record_title fs-6">
+                                    <field name="name"/>
+                                </strong>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="text-muted small mb-1">
+                                <i class="fa fa-envelope me-1"/>
+                                <field name="email"/>
+                            </div>
+
+                            <!-- Mobile -->
+                            <div class="text-muted small mb-1">
+                                <i class="fa fa-phone me-1"/>
+                                <field name="mobile"/>
+                            </div>
+
+                            <!-- SSN -->
+                            <div class="text-muted small mb-1">
+                                <i class="fa fa-id-card me-1"/>
+                                <field name="ssn"/>
+                            </div>
+
+                            <!-- Birthday -->
+                            <div class="text-muted small mb-2">
+                                <i class="fa fa-birthday-cake me-1"/>
+                                <field name="birthday"/>
+                            </div>
+
+                            <!-- Stage badge -->
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <field name="stage_id" widget="badge"
+                                       decoration-info="1"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  EVENT FORM VIEW                                    -->
+    <!--  =================================================  -->
+    <record id="vac_event_view_form" model="ir.ui.view">
+        <field name="name">vac.event.form</field>
+        <field name="model">vac.event</field>
+        <field name="arch" type="xml">
+            <form string="Event">
+                <header>
+                    <field name="stage_id" widget="statusbar" options="{'clickable': true}"/>
+                    <button name="action_preview"
+                            string="Preview"
+                            type="object"
+                            class="btn-info"
+                            icon="fa-eye"/>
+                    <button name="action_invite"
+                            string="Share Event"
+                            type="object"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+
+                    <!--  ═══════════════════════════════════════════════════  -->
+                    <!--  SMART BUTTONS                                        -->
+                    <!--                                                       -->
+                    <!--  Button 1 — Leads (fa-users)                         -->
+                    <!--    Always visible. Shows total lead count across all  -->
+                    <!--    stages. Clicking opens list view grouped by stage. -->
+                    <!--                                                       -->
+                    <!--  Button 2 — Lead Distribution (fa-trophy)            -->
+                    <!--    Only visible when signed leads exist.              -->
+                    <!--    Clicking opens the Lead Generation wizard.         -->
+                    <!--                                                       -->
+                    <!--  Button 3 — Assigned Leads (fa-check-circle)         -->
+                    <!--    Only visible when at least one lead is assigned.   -->
+                    <!--    Clicking opens kanban view grouped by stage.       -->
+                    <!--  ═══════════════════════════════════════════════════  -->
+                    <div class="oe_button_box" name="button_box">
+
+                        <!-- Button 1 — Leads -->
+                        <button name="action_view_all_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-users">
+                            <field name="total_lead_count"
+                                   string="Leads"
+                                   widget="statinfo"/>
+                        </button>
+
+                        <!-- Button 2 — Lead Distribution (signed leads only) -->
+                        <button name="action_lead_generation"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-trophy"
+                                invisible="not show_lead_generation">
+                            <field name="signed_lead_count"
+                                   string="Lead Distribution"
+                                   widget="statinfo"/>
+                        </button>
+
+                        <!-- Button 3 — Assigned Leads (only when assignments exist) -->
+                        <button name="action_view_assigned_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-check-circle"
+                                invisible="not show_assigned_leads">
+                            <field name="assigned_lead_count"
+                                   string="Assigned"
+                                   widget="statinfo"/>
+                        </button>
+
+                        <!-- Button 4 — Sent to CRM (only when leads have been sent) -->
+                        <button name="action_view_crm_sent_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cloud-upload"
+                                invisible="not show_crm_sent_leads">
+                            <field name="crm_sent_lead_count"
+                                   string="Sent to CRM"
+                                   widget="statinfo"/>
+                        </button>
+
+                        <!-- Hidden helper fields for visibility conditions -->
+                        <field name="show_lead_generation" invisible="1"/>
+                        <field name="show_assigned_leads"  invisible="1"/>
+                        <field name="show_crm_sent_leads"  invisible="1"/>
+
+                    </div>
+
+                    <!--  BADGE + TITLE  -->
+                    <div class="oe_title">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <field name="badge_background"
+                                       widget="image"
+                                       class="oe_avatar"
+                                       options="{'size': [150, 150]}"/>
+                                <field name="badge_background_filename" invisible="1"/>
+                                <div style="margin-top:4px; text-align:center; padding:3px 6px; background:#d1ecf1; border:1px solid #bee5eb; border-radius:4px; font-size:10px; color:#0c5460; font-weight:600;">
+                                    📷 800 × 800 px
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="title_name"/>
+                                <h1>
+                                    <field name="title_name"
+                                           placeholder="e.g. Conference for Architects"/>
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--  MAIN INFO  -->
+                    <group col="2">
+                        <group>
+                            <label for="date_begin" string="Event Planned Date"/>
+                            <div class="d-inline-flex w-100">
+                                <field name="date_begin"
+                                       nolabel="1"
+                                       widget="daterange"
+                                       options="{'end_date_field': 'date_end'}"
+                                       decoration-danger="date_begin and date_begin &lt; current_date and stage_id.name not in ['Done', 'Cancelled']"/>
+                                <field name="date_end"
+                                       nolabel="1"
+                                       invisible="1"/>
+                            </div>
+                            <field name="timezone_id"/>
+                            <field name="email_config_id"
+                                   string="Event Confirmation Email template"
+                                   options="{'no_create': True}"
+                                   placeholder="Default confirmation email"/>
+                            <field name="mail_template_id"
+                                   string="Email Template (legacy)"
+                                   options="{'no_create': True}"
+                                   groups="base.group_system"
+                                   invisible="email_config_id != False"/>
+                            <field name="published" widget="boolean_toggle"
+                                   readonly="not title_name or not date_begin or not date_end"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="company_display_name" readonly="1"/>
+                            <field name="sponsor_id"
+                                   string="Sponsor"
+                                   widget="vac_no_search_more_many2one"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_search_more': True, 'limit': 20}"/>
+                            <field name="event_link"
+                                   widget="copy_clipboard"
+                                   readonly="1"/>
+                            <!-- QR code — positioned directly under the event link -->
+                            <div invisible="not event_link or not qr_code" style="margin-top:8px;">
+                                <div class="o_form_label">QR Code</div>
+                                <div>
+                                    <field name="qr_code"
+                                           widget="image"
+                                           options="{'size': [140, 140]}"
+                                           string="QR Code"
+                                           readonly="1"
+                                           help="Auto-generated QR code for this event's registration link."/>
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <button name="action_copy_qr_with_name"
+                                            type="object"
+                                            string="Copy QR"
+                                            class="btn btn-sm btn-secondary"
+                                            icon="fa-copy"
+                                            help="Copy QR code image (with event name) to clipboard"/>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="fa fa-qrcode me-1"/>
+                                    Scan to open the registration page.
+                                </div>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  COVER PHOTO  -->
+                    <group string="Cover Photo">
+                        <group>
+                            <field name="cover_photo"
+                                   widget="image"
+                                   options="{'size': [200, 80]}"
+                                   string="Cover Photo"
+                                   help="Upload a cover/banner image. Recommended: 1200 × 400 px."/>
+                            <div style="display:inline-block; margin-top:6px; padding:4px 10px; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; font-size:12px; color:#856404; font-weight:600;">
+                                📐 Cover Photo: 1200 × 400 px  |  JPG / PNG
+                            </div>
+                        </group>
+                    </group>
+
+                    <!--  NOTEBOOK  -->
+                    <notebook>
+                        <page string="Description">
+                            <field name="description"
+                                   widget="html"
+                                   placeholder="Event description..."/>
+                        </page>
+                        <page string="Assigned Leads" invisible="not show_assigned_leads">
+                            <field name="assignment_ids"/>
+                        </page>
+                        <page string="Registration Fields" name="registration_fields">
+                            <div class="alert alert-info mb-3" role="status">
+                                <i class="fa fa-info-circle me-2"/>
+                                Click <strong>Add a line</strong> to add a field.
+                                For <strong>Dropdown</strong> type enter options in the
+                                <strong>Options</strong> column (one per line).
+                            </div>
+                            <field name="registration_field_ids"
+                                   context="{'default_event_id': id}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="label" string="Field Label"/>
+                                    <field name="field_type" string="Type"/>
+                                    <field name="maps_to" string="Maps To"/>
+                                    <field name="is_required"
+                                           string="Required"
+                                           widget="boolean_toggle"/>
+                                    <field name="placeholder"
+                                           string="Placeholder"
+                                           optional="hide"/>
+                                    <field name="select_options"
+                                           string="Dropdown Options (one per line)"
+                                           widget="text"
+                                           optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  EVENT LIST VIEW                                    -->
+    <!--  =================================================  -->
+    <record id="vac_event_view_list" model="ir.ui.view">
+        <field name="name">vac.event.list</field>
+        <field name="model">vac.event</field>
+        <field name="arch" type="xml">
+            <list string="Events" sample="1">
+                <field name="title_name"/>
+                <field name="date"/>
+                <field name="venue"/>
+                <field name="stage_id" widget="badge"/>
+                <field name="published" widget="boolean_toggle"/>
+                <field name="total_lead_count" string="Leads"/>
+                <field name="signed_lead_count" string="Signed" optional="show"/>
+                <field name="assigned_lead_count" string="Assigned" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  EVENT KANBAN VIEW                                  -->
+    <!--  =================================================  -->
+    <record id="vac_event_view_kanban" model="ir.ui.view">
+        <field name="name">vac.event.kanban</field>
+        <field name="model">vac.event</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" quick_create="false" sample="1"
+                    group_expand="_read_group_stage_ids">
+                <field name="title_name"/>
+                <field name="date"/>
+                <field name="venue"/>
+                <field name="published"/>
+                <field name="total_lead_count"/>
+                <field name="signed_lead_count"/>
+                <field name="assigned_lead_count"/>
+                <field name="stage_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top mb-2">
+                                <strong class="o_kanban_record_title">
+                                    <field name="title_name"/>
+                                </strong>
+                                <span t-attf-class="badge #{
+                                    record.stage_id.raw_value and (
+                                        record.stage_id.value.toLowerCase().includes('ongoing') ? 'text-bg-primary' :
+                                        record.stage_id.value.toLowerCase().includes('published') ? 'text-bg-success' :
+                                        record.stage_id.value.toLowerCase().includes('completed') ? 'text-bg-info' :
+                                        record.stage_id.value.toLowerCase().includes('cancelled') ? 'text-bg-danger' :
+                                        'text-bg-secondary'
+                                    ) or 'text-bg-secondary'
+                                }">
+                                    <t t-esc="record.stage_id.value or 'Draft'"/>
+                                </span>
+                            </div>
+                            <div class="text-muted mb-1">
+                                <i class="fa fa-calendar me-1"/>
+                                <field name="date"/>
+                            </div>
+                            <div class="text-muted mb-2" t-if="record.venue.raw_value">
+                                <i class="fa fa-map-marker me-1"/>
+                                <field name="venue"/>
+                            </div>
+                            <div class="text-info mb-1">
+                                <i class="fa fa-users me-1"/>
+                                <strong><field name="total_lead_count"/></strong> Leads
+                                <t t-if="record.signed_lead_count.raw_value > 0">
+                                    <span class="ms-2">
+                                        <i class="fa fa-trophy text-success me-1"/>
+                                        <strong class="text-success">
+                                            <field name="signed_lead_count"/>
+                                        </strong> Signed
+                                    </span>
+                                </t>
+                            </div>
+                            <!-- Assigned leads count -->
+                            <t t-if="record.assigned_lead_count.raw_value > 0">
+                                <div class="text-warning mb-2">
+                                    <i class="fa fa-check-circle me-1"/>
+                                    <strong>
+                                        <field name="assigned_lead_count"/>
+                                    </strong> Assigned
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--  =================================================  -->
+    <!--  EVENT ACTION                                       -->
+    <!--  =================================================  -->
+    <record id="vac_event_action" model="ir.actions.act_window">
+        <field name="name">Events</field>
+        <field name="res_model">vac.event</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_upcoming': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first event!</p>
+            <p>Manage marketing events, track leads, and organize your campaigns.</p>
+        </field>
+    </record>
+
+    <!-- ================================================== -->
+    <!-- SPONSOR-FILTERED EVENT ACTIONS                      -->
+    <!-- ================================================== -->
+
+    <record id="vac_event_action_chris_french" model="ir.actions.act_window">
+        <field name="name">Chris French's Events</field>
+        <field name="res_model">vac.event</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain" eval="[('sponsor_id', '=', ref('vac_social_marketing.sponsor_chris_french'))]"/>
+        <field name="context" eval="{'default_sponsor_name': 'Chris French', 'default_sponsor_id': ref('vac_social_marketing.sponsor_chris_french')}"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No events for Chris French yet!</p>
+        </field>
+    </record>
+
+    <record id="vac_event_action_rob_bailey" model="ir.actions.act_window">
+        <field name="name">Rob Bailey's Events</field>
+        <field name="res_model">vac.event</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain" eval="[('sponsor_id', '=', ref('vac_social_marketing.sponsor_rob_bailey'))]"/>
+        <field name="context" eval="{'default_sponsor_name': 'Rob Bailey', 'default_sponsor_id': ref('vac_social_marketing.sponsor_rob_bailey')}"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No events for Rob Bailey yet!</p>
+        </field>
+    </record>
+
+    <record id="vac_event_action_stacey_michelon" model="ir.actions.act_window">
+        <field name="name">Stacey Michelon's Events</field>
+        <field name="res_model">vac.event</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain" eval="[('sponsor_id', '=', ref('vac_social_marketing.sponsor_stacey_michelon'))]"/>
+        <field name="context" eval="{'default_sponsor_name': 'Stacey Michelon', 'default_sponsor_id': ref('vac_social_marketing.sponsor_stacey_michelon')}"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No events for Stacey Michelon yet!</p>
+        </field>
+    </record>
+
+    <record id="vac_event_action_vac" model="ir.actions.act_window">
+        <field name="name">VAC's Events</field>
+        <field name="res_model">vac.event</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain" eval="[('sponsor_id', '=', ref('vac_social_marketing.sponsor_vac'))]"/>
+        <field name="context" eval="{'default_sponsor_name': 'VAC', 'default_sponsor_id': ref('vac_social_marketing.sponsor_vac')}"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No events for VAC yet!</p>
+        </field>
+    </record>
+
+    <record id="vac_event_action_webinar" model="ir.actions.act_window">
+        <field name="name">Webinar Events</field>
+        <field name="res_model">vac.event</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain" eval="[('sponsor_id', '=', ref('vac_social_marketing.sponsor_webinar'))]"/>
+        <field name="context" eval="{'default_sponsor_name': 'Webinar', 'default_sponsor_id': ref('vac_social_marketing.sponsor_webinar')}"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No webinar events yet!</p>
+        </field>
+    </record>
+
+</odoo>

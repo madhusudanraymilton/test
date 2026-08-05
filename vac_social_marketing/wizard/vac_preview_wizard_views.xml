@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================ -->
+    <!--  EVENT PREVIEW WIZARD                                             -->
+    <!-- ================================================================ -->
+    <record id="vac_event_preview_wizard_view_form" model="ir.ui.view">
+        <field name="name">vac.event.preview.wizard.form</field>
+        <field name="model">vac.event.preview.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Event Preview">
+                <sheet>
+                    <!-- Hidden fields -->
+                    <field name="event_id"   invisible="1"/>
+                    <field name="published"  invisible="1"/>
+                    <field name="preview_url" invisible="1"/>
+
+                    <!-- Title bar -->
+                    <div class="oe_title">
+                        <h2>
+                            <i class="fa fa-eye me-2 text-primary"/>
+                            Preview: <field name="title_name" readonly="1" class="oe_inline"/>
+                        </h2>
+                    </div>
+
+                    <!-- Status banner -->
+                    <div class="alert alert-warning mb-3" role="status"
+                         invisible="published">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <strong>Draft</strong> — This event is not yet published.
+                        The preview below shows the full registration form as it will appear when live.
+                        Click <strong>Publish Now</strong> when ready.
+                    </div>
+                    <div class="alert alert-success mb-3" role="status"
+                         invisible="not published">
+                        <i class="fa fa-check-circle me-2"/>
+                        <strong>Published</strong> — This event is already live.
+                    </div>
+
+                    <!-- ── LIVE PAGE PREVIEW (iframe via computed html) ── -->
+                    <group string="Registration Form Preview" invisible="not preview_url">
+                        <field name="preview_html"
+                               widget="html"
+                               readonly="1"
+                               nolabel="1"
+                               sanitize="0"/>
+                    </group>
+
+                    <!-- Fallback when no link yet -->
+                    <div class="alert alert-info mt-3" role="status" invisible="preview_url">
+                        <i class="fa fa-info-circle me-2"/>
+                        No public link generated yet. Save the event first so a registration link can be created.
+                    </div>
+
+                </sheet>
+
+                <footer>
+                    <button string="Close"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- ================================================================ -->
+    <!--  SOCIAL CAMPAIGN PREVIEW WIZARD                                   -->
+    <!-- ================================================================ -->
+    <record id="vac_social_preview_wizard_view_form" model="ir.ui.view">
+        <field name="name">vac.social.preview.wizard.form</field>
+        <field name="model">vac.social.preview.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Campaign Preview">
+                <sheet>
+                    <!-- Hidden fields -->
+                    <field name="source_model" invisible="1"/>
+                    <field name="source_id"    invisible="1"/>
+                    <field name="published"    invisible="1"/>
+                    <field name="preview_url"  invisible="1"/>
+
+                    <!-- Title bar -->
+                    <div class="oe_title">
+                        <h2>
+                            <i class="fa fa-eye me-2 text-primary"/>
+                            Preview: <field name="title" readonly="1" class="oe_inline"/>
+                        </h2>
+                    </div>
+
+                    <!-- Status banner -->
+                    <div class="alert alert-warning mb-3" role="status"
+                         invisible="published">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <strong>Draft</strong> — This campaign is not yet published.
+                        The preview below shows the full registration form as it will appear when live.
+                        Click <strong>Publish Now</strong> when ready.
+                    </div>
+                    <div class="alert alert-success mb-3" role="status"
+                         invisible="not published">
+                        <i class="fa fa-check-circle me-2"/>
+                        <strong>Published</strong> — This campaign is already live.
+                    </div>
+
+                    <!-- ── LIVE PAGE PREVIEW (iframe via computed html) ── -->
+                    <group string="Registration Form Preview" invisible="not preview_url">
+                        <field name="preview_html"
+                               widget="html"
+                               readonly="1"
+                               nolabel="1"
+                               sanitize="0"/>
+                    </group>
+
+                    <!-- Fallback when no link yet -->
+                    <div class="alert alert-info mt-3" role="status" invisible="preview_url">
+                        <i class="fa fa-info-circle me-2"/>
+                        No public link generated yet. Save the campaign first so a registration link can be created.
+                    </div>
+
+                </sheet>
+
+                <footer>
+                    <button string="Close"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

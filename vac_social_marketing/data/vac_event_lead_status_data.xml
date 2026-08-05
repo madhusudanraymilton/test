@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <record id="lead_status_active" model="vac.event.lead.status">
+            <field name="name">Active</field>
+            <field name="description">Lead is active and can be contacted</field>
+            <field name="color">10</field>
+        </record>
+        
+        <record id="lead_status_inactive" model="vac.event.lead.status">
+            <field name="name">Inactive</field>
+            <field name="description">Lead is temporarily inactive</field>
+            <field name="color">4</field>
+        </record>
+        
+        <record id="lead_status_blacklisted" model="vac.event.lead.status">
+            <field name="name">Blacklisted</field>
+            <field name="description">Do not contact - blacklisted</field>
+            <field name="is_blacklisted" eval="True"/>
+            <field name="color">1</field>
+        </record>
+        
+        <record id="lead_status_customer" model="vac.event.lead.status">
+            <field name="name">Customer</field>
+            <field name="description">Converted to customer</field>
+            <field name="is_customer" eval="True"/>
+            <field name="color">9</field>
+        </record>
+        
+    </data>
+</odoo>
